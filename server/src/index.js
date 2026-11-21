@@ -17,7 +17,7 @@ console.log(`💾 Database: ${resolve(here, '..', env.DB_PATH || './data/otteroy
 const store = createStore(db);
 const social = createSocial(db, store);
 const siteUrl = env.SITE_URL || 'https://otteroyster.online';
-const allowedOrigins = (env.ALLOWED_ORIGINS || 'https://otteroyster.online,https://www.otteroyster.online').split(',').map((s) => s.trim()).filter(Boolean);
+const allowedOrigins = (env.ALLOWED_ORIGINS || 'https://otteroyster.online,https://www.otteroyster.online,https://otterly-adorable-21.github.io').split(',').map((s) => s.trim()).filter(Boolean);
 
 const auth = createAuth({
   store,
