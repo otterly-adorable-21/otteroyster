@@ -17,7 +17,7 @@ minigames, and bring them along to Discord, where friends can play together.
   - Skill: Tide Fishing, Bubble Burst, Crab Catcher
   - Puzzle: Shell Match, Pearl Pop (match-3), Shell Shuffle, Word Tide (word search)
 - **Friends:** friend codes, visiting dens, daily hugs that cheer up friends' otters, gifts of pearls and furniture, and friendship levels. Works with a website-only account or through Discord.
-- **Saving:** automatic saves on the device, an optional online save, one-time codes to load your otter on another device, and downloadable backups. A header badge always shows the save status.
+- **Saving:** automatic saves on the device, **Sign in with Discord** (your otter on any device, no codes), an optional online save, one-time codes to load your otter on another device, and downloadable backups. A header badge always shows the save status.
 - **Personalities:** otters become Adventurous, Sleepy, Foodie, Social, Competitive or Tidy from how you play, each with a small perk, and are born with a favorite snack, place and game.
 - **Seasonal events:** six yearly events (Winter Lantern Festival, Sweetheart Shoals, Spring Bloom, Summer Splash, Spooky Seas, Harvest Moon) with their own tokens, 3 daily quests, a limited shop of outfits and den furniture, limited discoveries, and seasonal effects on the pond. Preview any event with `?event=spooky`.
 - **Discord bot:** the same otter follows you into Discord with 9 solo games, 3 friend challenges, 5 voice-chat party games, daily chests, missions and leaderboards. See [`server/README.md`](server/README.md).

@@ -43,6 +43,22 @@ and cover the linking/sync API.
 The bot registers its slash commands automatically every time it starts, so there's
 no separate setup step.
 
+### Sign in with Discord (website)
+
+Lets players sign in on the website with their Discord account: no codes, no
+downloads, and their otter is there on any device, even after clearing browser data.
+
+1. Developer Portal → your app → **OAuth2**:
+   - Under **Redirects**, add `https://otteroyster.online/auth/discord/callback` and save.
+   - Copy the **Client Secret** (press Reset Secret if it's hidden). **This is secret too.**
+2. Railway → Variables → add `DISCORD_CLIENT_SECRET` = that secret. (`DISCORD_APP_ID` is already there.)
+3. Redeploy. The logs say `🔑 Sign in with Discord is on. Redirect URL: …`, and that URL must
+   match the one in step 1 exactly. A "Sign in with Discord" button then appears on the website.
+
+If the website stays on GitHub Pages while the server is on Railway, also set
+`PUBLIC_URL` to the server's Railway address and use
+`https://<that address>/auth/discord/callback` as the redirect in step 1.
+
 ### Keeping the token secret
 
 The token is like a password for the bot. It never goes in the code, in GitHub or on

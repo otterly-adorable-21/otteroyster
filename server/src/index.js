@@ -6,6 +6,7 @@ import { openDb } from './db.js';
 import { createStore } from './players.js';
 import { createSocial } from './social.js';
 import { startHttp } from './http.js';
+import { createAuth } from './auth.js';
 
 loadEnv();
 const here = dirname(fileURLToPath(import.meta.url));
@@ -18,12 +19,24 @@ const social = createSocial(db, store);
 const siteUrl = env.SITE_URL || 'https://otteroyster.online';
 const allowedOrigins = (env.ALLOWED_ORIGINS || 'https://otteroyster.online,https://www.otteroyster.online').split(',').map((s) => s.trim()).filter(Boolean);
 
+const auth = createAuth({
+  store,
+  db,
+  clientId: env.DISCORD_APP_ID,
+  clientSecret: env.DISCORD_CLIENT_SECRET,
+  publicUrl: env.PUBLIC_URL || siteUrl, // where this server is reachable (for the Discord redirect)
+  siteUrl,
+});
+if (auth.enabled) console.log(`🔑 Sign in with Discord is on. Redirect URL: ${auth.redirectUri}`);
+else console.log('ℹ️  Sign in with Discord is off (set DISCORD_APP_ID and DISCORD_CLIENT_SECRET to turn it on).');
+
 let bot = null;
 const invite = env.DISCORD_APP_ID ? `https://discord.com/oauth2/authorize?client_id=${env.DISCORD_APP_ID}` : null;
 
 startHttp({
   store,
   social,
+  auth,
   port: Number(env.PORT || 8787),
   siteRoot: resolve(here, '..', '..'),
   allowedOrigins,

@@ -16,12 +16,12 @@ function ls(k, v) {
 
 let base = API_BASE;
 
-async function call(path, { method = 'GET', body, auth = true, timeout = 8000, keepalive = false, at = base } = {}) {
+async function call(path, { method = 'GET', body, auth = true, timeout = 8000, keepalive = false, at = base, token: useToken } = {}) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeout);
   try {
     const headers = { 'Content-Type': 'application/json' };
-    const token = ls(TOKEN_KEY);
+    const token = useToken || ls(TOKEN_KEY);
     if (auth && token) headers.Authorization = `Bearer ${token}`;
     const res = await fetch(`${at}${path}`, { method, headers, body: body ? JSON.stringify(body) : undefined, signal: ctrl.signal, keepalive });
     const data = await res.json().catch(() => ({}));
@@ -112,6 +112,28 @@ export const sync = {
     if (r.status === 401) this.unlink();
     return { status: r.status, ok: r.ok, ...r.data };
   },
+  get token() { return ls(TOKEN_KEY); },
+  get discordLoginUrl() { return this.info?.discordLogin ? `${base}/auth/discord` : null; },
+
+  // Peek at an account by token without switching to it.
+  async peek(token) {
+    const r = await call('/api/save', { token });
+    return r.ok ? r.data : null;
+  },
+
+  // Switch this device to the account behind `token`.
+  useToken(token, version = 0) {
+    ls(TOKEN_KEY, token);
+    this.version = version;
+  },
+
+  // Merge the account behind `otherToken` into the account behind `intoToken`.
+  // keep: 'this' (keep intoToken's otter) | 'other' (keep otherToken's otter)
+  async merge(intoToken, otherToken, keep) {
+    const r = await call('/api/merge', { method: 'POST', token: intoToken, body: { token: otherToken, keep } });
+    return { status: r.status, ok: r.ok, ...r.data };
+  },
+
   // One-time code to load this otter on another device (enter it like a /link code).
   deviceCode() { return this.api('/api/device-code', {}); },
   friends() { return this.api('/api/friends'); },

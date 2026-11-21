@@ -94,9 +94,10 @@ function savePanelHTML(extra = '') {
       <div class="save-row"><span>🗂️</span><div><b>Backup file</b><div class="muted">${lastBackup ? `Last downloaded ${ago(lastBackup)}` : 'No backup yet'}</div></div></div>
     </div>
     ${extra}
+    ${!signedIn || !linkedName ? discordButton(signedIn ? 'Link Discord sign-in' : 'Sign in with Discord') : ''}
     <div class="save-actions">
       <button class="btn primary" data-action="save-now">💾 Save now</button>
-      ${online && !signedIn ? '<button class="btn" data-action="register">☁️ Save my otter online</button>' : ''}
+      ${online && !signedIn && !sync.discordLoginUrl ? '<button class="btn" data-action="register">☁️ Save my otter online</button>' : ''}
       ${online && signedIn ? '<button class="btn" data-action="device-code">📲 Use on another device</button>' : ''}
     </div>
     ${online ? `<form class="link-form" data-form="link"><input name="code" maxlength="6" autocomplete="off" placeholder="CODE" aria-label="Device or Discord code" required><button class="btn" type="submit">Load otter</button></form>
@@ -112,6 +113,62 @@ function savePanelHTML(extra = '') {
 }
 
 function showSavePanel(extra = '') { showModal(savePanelHTML(extra)); }
+
+function discordButton(label = 'Sign in with Discord') {
+  const url = sync.discordLoginUrl;
+  return url ? `<a class="btn discord-btn" href="${esc(url)}"><svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20"><path fill="currentColor" d="M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.6 1.3a18.4 18.4 0 0 0-5.5 0L8.6 3a19.7 19.7 0 0 0-4.9 1.5C.6 9 0 13.5.3 17.9A19.9 19.9 0 0 0 6.3 21l1.3-2a12.9 12.9 0 0 1-2-1l.5-.4a14.2 14.2 0 0 0 12 0l.5.4a12.9 12.9 0 0 1-2 1l1.3 2a19.8 19.8 0 0 0 6-3.1c.5-5.1-.8-9.5-3.6-13.5ZM8.7 15.2c-1.2 0-2.1-1.1-2.1-2.4s.9-2.4 2.1-2.4 2.1 1.1 2.1 2.4-1 2.4-2.1 2.4Zm6.6 0c-1.2 0-2.1-1.1-2.1-2.4s.9-2.4 2.1-2.4 2.1 1.1 2.1 2.4-.9 2.4-2.1 2.4Z"/></svg>${label}</a>` : '';
+}
+
+// Coming back from Discord: #login=<token> or #login-error=<message>
+async function finishDiscordLogin() {
+  const h = location.hash;
+  if (!h.startsWith('#login')) return;
+  history.replaceState(null, '', location.pathname + location.search);
+  const params = new URLSearchParams(h.slice(1));
+  if (params.get('login-error')) { toast(`⚠️ ${params.get('login-error')}`); return; }
+  const newTok = params.get('login');
+  if (!newTok || !(await sync.check())) { toast('⚠️ Could not finish signing in. Please try again.'); return; }
+  const acct = await sync.peek(newTok);
+  if (!acct) { toast('⚠️ Could not finish signing in. Please try again.'); return; }
+
+  const finish = (st, version, msg) => {
+    sync.useToken(newTok, version);
+    linkedName = acct.discordName || linkedName;
+    friendsData = null;
+    adoptRemote(st, version, msg);
+    saveInfo.cloud = 'ok';
+    saveInfo.cloudAt = Date.now();
+    closeModal();
+  };
+
+  // Nothing on this device: just load the Discord account's otter (or adopt one).
+  if (!state.name) {
+    finish(acct.state, acct.version, acct.state.name ? `👋 Welcome back, ${acct.state.name}!` : '👋 Signed in! Now adopt your otter.');
+    return;
+  }
+  // This device's otter needs an online account before it can be merged.
+  let oldTok = sync.token;
+  if (oldTok) {
+    const mine = await sync.peek(oldTok);
+    if (mine?.discordName && mine.discordName === acct.discordName) { finish(acct.state, acct.version, '👋 Signed in with Discord!'); return; }
+  } else {
+    const reg = await sync.register(state);
+    if (!reg.token) { toast(reg.error || 'Could not save this otter online.'); return; }
+    oldTok = reg.token;
+  }
+  const doMerge = async (keep) => {
+    const r = await sync.merge(newTok, oldTok, keep);
+    if (!r.ok) { toast(r.error || 'Could not finish signing in.'); return; }
+    finish(r.state, r.version, `👋 Signed in with Discord! ${r.state.name} is saved to your account.`);
+  };
+  if (!acct.state.name) { await doMerge('other'); return; }
+  showModal(`<div class="result"><div class="result-icon">🦦🦦</div><h2>Two otters!</h2>
+    <p>Your Discord account has <b>${esc(acct.state.name)}</b> (level ${acct.state.level}). This device has <b>${esc(state.name)}</b> (level ${state.level}). Which otter do you want to keep?</p>
+    <div class="row"><button class="btn primary" data-login-keep="this">Keep ${esc(acct.state.name)}<br><small>(Discord account)</small></button>
+    <button class="btn" data-login-keep="other">Keep ${esc(state.name)}<br><small>(this device)</small></button></div>
+    <p class="muted">The other otter will be released back to the sea. Your friends from both are kept.</p></div>`, { locked: true });
+  document.querySelectorAll('[data-login-keep]').forEach((b) => b.addEventListener('click', () => doMerge(b.dataset.loginKeep), { once: true }));
+}
 
 function downloadBackup() {
   const data = { app: 'otteroyster', kind: 'backup', exported: new Date().toISOString(), state };
@@ -626,7 +683,8 @@ function panelFriends() {
       <img class="hero-art" src="${art.float || 'assets/web/otter-float.webp'}" alt="">
       <h2 class="section-title flush">Make otter friends 🦦💕</h2>
       <p class="flush-p">Save ${esc(state.name || 'your otter')} online to add friends, visit their dens, give hugs and send gifts. Your otter then also works on other devices and in Discord.</p>
-      <button class="btn primary wide" data-action="register">Save my otter online</button>
+      ${discordButton()}
+      <button class="btn ${sync.discordLoginUrl ? '' : 'primary'} wide" data-action="register">${sync.discordLoginUrl ? 'Or save online without Discord' : 'Save my otter online'}</button>
       <p class="muted center">Already use the Discord bot? Link it below instead.</p></div>
       ${discordSection()}`;
   }
@@ -1199,6 +1257,8 @@ runTick();
 commit({ push: false });
 if (!state.name && !sync.linked) askName(true);
 
+finishDiscordLogin();
+window.addEventListener('hashchange', () => { if (location.hash.startsWith('#login')) finishDiscordLogin(); });
 sync.check().then(async (online) => {
   if (!online) return renderAll();
   if (sync.linked) await pullNow();

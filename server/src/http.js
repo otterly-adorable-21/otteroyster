@@ -20,7 +20,7 @@ function limiter(max, windowMs) {
   };
 }
 
-export function startHttp({ store, social, port, siteRoot, allowedOrigins, info }) {
+export function startHttp({ store, social, auth, port, siteRoot, allowedOrigins, info }) {
   const linkLimit = limiter(10, 60_000);
   const registerLimit = limiter(20, 60_000);
   const apiLimit = limiter(240, 60_000);
@@ -61,7 +61,23 @@ export function startHttp({ store, social, port, siteRoot, allowedOrigins, info 
 
     switch (route) {
       case 'GET /api/info':
-        return send(res, 200, { app: 'otteroyster', ...info() });
+        return send(res, 200, { app: 'otteroyster', discordLogin: !!auth?.enabled, ...info() });
+
+      // Bring a website-only account (or another account) into the signed-in one.
+      // body: { token: <the other account's token>, keep: 'this' | 'other' }
+      case 'POST /api/merge': {
+        const p = authed(req);
+        if (!p) return send(res, 401, { error: 'Not signed in' });
+        const b = await body(req);
+        const other = store.byToken(String(b.token || ''));
+        if (!other) return send(res, 404, { error: 'Nothing to merge.' });
+        if (other.id !== p.id) {
+          const keepState = b.keep === 'other' ? other.state : p.state;
+          social.merge(p.id, other.id, keepState.name ? keepState : (other.state.name ? other.state : p.state));
+        }
+        const fresh = store.get(p.id);
+        return send(res, 200, { state: fresh.state, version: fresh.version, discordName: fresh.discordName });
+      }
 
       case 'POST /api/register': {
         if (!registerLimit(ip)) return send(res, 429, { error: 'Too many tries. Wait a minute.' });
@@ -209,6 +225,13 @@ export function startHttp({ store, social, port, siteRoot, allowedOrigins, info 
     cors(req, res);
     if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
     try {
+      if (url.pathname === '/auth/discord' || url.pathname === '/auth/discord/callback') {
+        const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress;
+        if (!apiLimit(ip)) { res.writeHead(429); return res.end('Slow down a little!'); }
+        const r = url.pathname === '/auth/discord' ? auth.start() : await auth.callback(url.searchParams);
+        res.writeHead(r.status, { Location: r.location, 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' });
+        return res.end();
+      }
       if (url.pathname.startsWith('/api/')) return await api(req, res, url);
       if (req.method === 'GET' || req.method === 'HEAD') return await staticFile(req, res, url);
       res.writeHead(405); res.end();

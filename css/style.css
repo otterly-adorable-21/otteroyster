@@ -719,3 +719,7 @@ details.cmd-list[open] summary { margin-bottom: 6px; }
 .den-sub.dark { color: var(--deep); margin: 4px 0 0; }
 .device-code { text-align: center; background: #fff9db; border-radius: 16px; padding: 12px; box-shadow: var(--gold-ring); display: grid; gap: 4px; }
 .friend-code.big { font-size: 2rem; letter-spacing: .2em; }
+
+.discord-btn { display: flex; width: 100%; padding: 12px; font-size: 1rem; text-decoration: none; gap: 10px;
+  background: #5865f2 !important; color: #fff !important; box-shadow: 0 3px 0 #3c45a5 !important; }
+.discord-btn:hover { filter: brightness(1.06); }

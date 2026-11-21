@@ -185,6 +185,21 @@ test('device codes load the same otter on another device', async () => {
   assert.equal((await call('/api/save', { token: fresh.data.token })).data.state.name, 'Roamer');
 });
 
+test('merge: bring a website account into a Discord account', async () => {
+  const W = (await call('/api/register', { method: 'POST', body: { state: { ...core.defaultState(), name: 'Websy', pearls: 77 } } })).data;
+  const d = store.forDiscord({ id: 'disc-merge-2', username: 'mergey' });
+  store.mutate(d.id, (s) => { s.name = 'Discy'; });
+  const { randomBytes, createHash } = await import('node:crypto');
+  const dTok = randomBytes(32).toString('hex');
+  db.prepare('INSERT INTO tokens (hash, player_id, created) VALUES (?, ?, ?)').run(createHash('sha256').update(dTok).digest('hex'), d.id, Date.now());
+  const r = await call('/api/merge', { method: 'POST', token: dTok, body: { token: W.token, keep: 'other' } });
+  assert.equal(r.status, 200);
+  assert.equal(r.data.state.name, 'Websy');
+  assert.equal(r.data.state.pearls, 77);
+  // the old website token now opens the merged Discord account
+  assert.equal(store.byToken(W.token).discordId, 'disc-merge-2');
+});
+
 // Runs last: it deliberately uses up the link rate limit.
 test('link endpoint is rate limited', async () => {
   let limited = false;
