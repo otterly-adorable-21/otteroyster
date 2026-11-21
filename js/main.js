@@ -4,6 +4,7 @@ import { otterSVG, itemPreviewSVG } from './otter.js';
 import { LOADERS } from './games/index.js';
 import { sync } from './sync.js';
 import { detectArt, art } from './assets.js';
+import { playCare, setSleeping } from './animations.js';
 import { FURNITURE, WALLPAPERS, FLOORS, DEN_CATS } from './den-data.js';
 import { denSVG, furniturePreviewSVG } from './den.js';
 import { LOCATIONS, LOC, RARITY, FINDS, TOTAL_FINDS, EXPLORE_ENERGY, SET_REWARD } from './world.js';
@@ -381,6 +382,7 @@ function renderScene() {
   thought.hidden = !(!away && !state.sleeping && low);
   if (!thought.hidden) thought.textContent = NEEDS[low[0]];
   renderAmbience(scene, away);
+  setSleeping(state.sleeping && !away);
 }
 
 // ---------- the living pond ----------
@@ -636,32 +638,38 @@ function todayCard() {
 function panelHome() {
   const claimed = state.lastDaily === core.dayKey();
   const asleep = state.sleeping;
-  return `${eventBanner()}
-    ${todayCard()}
-    <h2 class="section-title">Snacks</h2>
+  const nm = esc(state.name || 'your otter');
+  return `
+    <h2 class="section-title">Take care of ${nm}</h2>
+    <div class="actions">
+      <button class="action" data-action="pet"><span>🤗</span>Cuddle</button>
+      <button class="action" data-action="bath"><span>🛁</span>Bath</button>
+      <button class="action" data-action="sleep"><span>${asleep ? '☀️' : '🌙'}</span>${asleep ? 'Wake up' : 'Nap'}</button>
+    </div>
     <div class="snacks">
       ${SNACKS.map((s) => `<button class="snack" data-action="feed" data-id="${s.id}" ${state.pearls < s.price ? 'disabled' : ''}>
         <span class="snack-icon">${s.icon}</span>${state.persona?.fav.snack === s.id ? '<span class="fav-heart" title="Favorite!">❤️</span>' : ''}<span class="snack-name">${s.name}</span>
         <span class="snack-price">${s.price ? `<span class="pearl-icon"></span> ${s.price}` : 'Free'}</span></button>`).join('')}
     </div>
-    <h2 class="section-title">Care</h2>
-    <div class="actions">
-      <button class="action" data-action="pet"><span>🤗</span>Cuddle</button>
-      <button class="action" data-action="bath"><span>🛁</span>Bath</button>
-      <button class="action" data-action="sleep"><span>${asleep ? '☀️' : '🌙'}</span>${asleep ? 'Wake up' : 'Nap'}</button>
-      <button class="action ${claimed ? '' : 'glow'}" data-action="daily"><span>🎁</span>${claimed ? 'Gift claimed' : 'Daily gift'}</button>
-    </div>
-    ${personaCard()}
+    <h2 class="section-title">Today</h2>
+    <button class="daily-btn ${claimed ? 'done' : 'glow'}" data-action="daily" ${claimed ? 'disabled' : ''}><span>🎁</span>${claimed ? "Today's gift claimed. Come back tomorrow!" : 'Open your daily gift'}</button>
+    ${eventBanner()}
+    ${todayCard()}
+    <h2 class="section-title">About ${nm}</h2>
+    ${growthCard()}
+    ${personaCard().replace('<h2 class="section-title">Personality</h2>', '')}
     ${achievementsCard()}
-    <div class="emote-row self-emotes">${Object.entries(EMOTES).map(([id, [ic, label]]) => `<button class="btn small" data-action="emote-self" data-id="${id}" aria-label="${label}">${ic}</button>`).join('')}</div>
     <h2 class="section-title">Journal</h2>
     <ul class="journal">
       ${state.log.slice(0, 6).map((l) => `<li><time>${new Date(l.t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</time>${esc(l.msg)}</li>`).join('') || '<li>Nothing yet. Say hi to your otter!</li>'}
     </ul>
+    ${state.name ? '<button class="link center-link block-link" data-action="adventure-book">📔 Open the adventure book</button>' : ''}
     <div class="settings">
       <button class="link" data-action="rename">Rename</button>·<button class="link" data-action="reset">Start over</button>
     </div>`;
 }
+
+function growthCard() { return ''; }
 
 function panelCloset() {
   const toggle = `<div class="segmented">
@@ -918,7 +926,6 @@ const POSTCARD_ART = {
   reef: { name: 'Pearl Reef', icon: '🐠' },
   moon: { name: 'Moonlit Night', icon: '🌙' },
 };
-const EMOTES = { wave: ['👋', 'Wave'], dance: ['💃', 'Dance'], splash: ['💦', 'Splash'], spin: ['💫', 'Spin'], love: ['💖', 'Love'] };
 
 function socialSections() {
   const sd = socialData;
@@ -993,8 +1000,6 @@ async function visitFriend(code) {
       <button class="btn" data-action="fr-gift" data-code="${code}" data-name="${esc(o.name)}">🎁 Gift</button>
       <button class="btn" data-action="mail-write" data-code="${code}" data-name="${esc(o.name)}">✉️ Postcard</button>
     </div>
-    <h3 class="den-sub dark">Say hi</h3>
-    <div class="emote-row">${Object.entries(EMOTES).map(([id, [ic, label]]) => `<button class="btn small" data-action="emote-send" data-code="${code}" data-id="${id}">${ic} ${label}</button>`).join('')}</div>
     <h3 class="den-sub dark">Pet-sit ${esc(o.name)}</h3>
     <div class="emote-row"><button class="btn small" data-action="sit" data-code="${code}" data-id="feed">🐟 Snack</button><button class="btn small" data-action="sit" data-code="${code}" data-id="cuddle">🤗 Cuddle</button><button class="btn small" data-action="sit" data-code="${code}" data-id="bath">🛁 Bath</button>
       <button class="btn small" data-action="sleep-invite" data-code="${code}">🌙 Sleepover</button></div>
@@ -1345,11 +1350,19 @@ document.addEventListener('click', async (e) => {
   if (!a) return;
   const id = a.dataset.id;
   switch (a.dataset.action) {
-    case 'feed': return act(core.feed(state, id));
-    case 'pet': { const r = act(core.cuddle(state)); if (r.ok) animateOtter('cuddling', 1200); return r; }
-    case 'bath': { const r = act(core.bath(state)); if (r.ok) { animateOtter('bathing', 2600); burst(['🫧', '🫧', '🫧', '💧', '🧼'], 14); } return r; }
-    case 'sleep': return act(core.toggleSleep(state));
-    case 'daily': return act(core.claimDaily(state));
+    case 'feed': { const r = act(core.feed(state, id)); if (r.ok) playCare('feed', { snack: id }); return r; }
+    case 'pet': return careCuddle();
+    case 'bath': {
+      const r = act(core.bath(state));
+      if (r.ok && !(await playCare('bath'))) { animateOtter('bathing', 2600); burst(['🫧', '🫧', '🫧', '💧', '🧼'], 14); }
+      return r;
+    }
+    case 'sleep': {
+      const r = act(core.toggleSleep(state));
+      if (r.ok) { if (state.sleeping) playCare('nap').then(() => setSleeping(true)); else { setSleeping(false); playCare('wake'); } }
+      return r;
+    }
+    case 'daily': { const r = act(core.claimDaily(state)); if (r.ok) playCare('gift'); return r; }
     case 'buy': return requestPurchase('item', id);
     case 'try': return shopPreview(a.dataset.kind, id);
     case 'confirm-buy': {
@@ -1380,19 +1393,6 @@ document.addEventListener('click', async (e) => {
       return null;
     }
     case 'mail-write': return writePostcard(a.dataset.code, a.dataset.name || 'your friend');
-    case 'emote-self': {
-      const [ic] = EMOTES[id];
-      if (tab !== 'home') { tab = 'home'; renderPanel(); }
-      animateOtter(`emote-${id}`, 1600);
-      burst([ic, ic, '✨'], 8);
-      return null;
-    }
-    case 'emote-send': {
-      const r = await sync.emote(a.dataset.code, id);
-      toast(r.ok ? `${EMOTES[id][0]} Sent!` : r.error || 'Could not send that.');
-      if (r.ok) { a.disabled = true; burst([EMOTES[id][0]], 5); }
-      return null;
-    }
     case 'sit': {
       const r = await sync.sit(a.dataset.code, id);
       toast(r.ok ? r.msg : r.error || 'Could not do that right now.');
@@ -1619,7 +1619,12 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-$('#otter-wrap').addEventListener('click', () => act(core.cuddle(state)));
+async function careCuddle() {
+  const r = act(core.cuddle(state));
+  if (r.ok && !(await playCare('cuddle'))) animateOtter('cuddling', 1200);
+  return r;
+}
+$('#otter-wrap').addEventListener('click', () => careCuddle());
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) { saveLocal(); if (sync.linked && sync.online) pushNow({ keepalive: true }); return; }

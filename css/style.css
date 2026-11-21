@@ -849,12 +849,16 @@ details.cmd-list[open] summary { margin-bottom: 6px; }
 .pc-form h2 { font-size: 1.5rem; color: var(--deep); text-align: center; }
 textarea.note-input { resize: vertical; font: inherit; }
 .pick-list { display: grid; gap: 6px; width: 100%; }
-/* own emotes */
-#otter-wrap.emote-wave #otter { animation: em-wave .4s ease-in-out 4; transform-origin: 50% 90%; }
-@keyframes em-wave { 50% { transform: rotate(-8deg); } }
-#otter-wrap.emote-dance #otter { animation: em-dance .4s ease-in-out 4; }
-@keyframes em-dance { 25% { transform: translateY(-14px) rotate(-6deg); } 75% { transform: translateY(-14px) rotate(6deg); } }
-#otter-wrap.emote-splash #otter { animation: squish .5s ease 3; }
-#otter-wrap.emote-spin #otter { animation: em-spin 1.2s ease-in-out; }
-@keyframes em-spin { to { transform: rotate(360deg); } }
-#otter-wrap.emote-love #otter { animation: snug 1.2s ease; }
+
+/* ---------- care animations (assets/animations) ---------- */
+.care-anim { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; pointer-events: none; z-index: 2; }
+#otter-wrap.anim-replace #otter { visibility: hidden; }
+/* ---------- otter page ---------- */
+.actions { grid-template-columns: repeat(3, 1fr); margin-bottom: 8px; }
+.daily-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; border: 0; border-radius: 16px; font-weight: 800; color: var(--ink); background: var(--card); box-shadow: var(--gold-ring), var(--shadow); }
+.daily-btn span { font-size: 1.5rem; }
+.daily-btn.glow { background: linear-gradient(180deg, #fff4cf, var(--card)); box-shadow: 0 0 0 2px var(--gold), 0 0 18px rgba(243, 217, 140, .45), var(--shadow); }
+.daily-btn.done { opacity: .75; font-weight: 700; }
+.event-banner, .today { margin-top: 10px; }
+.persona, .ach { margin-top: 10px; }
+.block-link { display: block; margin: 10px auto 0; }
