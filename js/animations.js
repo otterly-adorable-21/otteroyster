@@ -28,6 +28,8 @@ export const SLOTS = {
   plant: { duration: 1800, label: 'Planting a seed' },
   water: { duration: 1800, label: 'Watering the garden' },
   harvest: { duration: 2200, label: 'Harvesting the garden' },
+  investigate: { duration: 2000, label: 'Finding a mystery clue' },
+  'mystery-solved': { duration: 3200, label: 'Solving a mystery' },
 };
 
 let manifest = null; // optional assets/animations/animations.json

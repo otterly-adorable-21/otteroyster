@@ -366,3 +366,14 @@ test('friends can water your garden for a bonus, and Otter Lane shows doors and 
   assert.equal(house.door.wreath, 'wreath-lily');
   assert.equal(house.companion, 'duckling');
 });
+
+test('the Pond Gazette hears about big moments', async () => {
+  const mk = (name) => ({ ...core.defaultState(), name, pearls: 200 });
+  const A = (await call('/api/register', { method: 'POST', body: { state: mk('Moonie') } })).data;
+  const p = store.byToken(A.token);
+  store.mutate(p.id, (s) => { s.collection.rainbowpearl = 1; s.lore.solved.push('song'); });
+  const w = (await call('/api/world')).data;
+  assert.ok(w.feed.some((f) => /Moonie found a legendary/.test(f.text)), JSON.stringify(w.feed));
+  assert.ok(w.feed.some((f) => /Moonie solved the mystery “The Singing Shell”/.test(f.text)));
+  assert.ok(w.activeToday >= 1);
+});

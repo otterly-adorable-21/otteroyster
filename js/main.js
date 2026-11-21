@@ -10,6 +10,10 @@ import { COMPANIONS, BOND_PERK, BOND_NAMES, bondLevel, TREAT_PRICE, PLAY_COOLDOW
 import { CROPS, PLOT_LEVELS, plotStage, plotReadyAt } from './garden.js';
 import { DOOR_ITEMS, DOOR_KINDS } from './door.js';
 import { companionSVG, gardenSVG, houseFrontSVG } from './extras-draw.js';
+import { SPECIES } from './otter.js';
+import { NPCS, NPC_PAGE_AT, NPC_MAX, MYSTERIES, PLACE_LORE, TOTAL_PAGES } from './lore.js';
+import { happeningsAt, npcWhere, npcsAt, npcLine, merchantDocked, crittersFor, CRITTERS, gazetteHeadline } from './worldsim.js';
+import { MASTERIES, TIERS, RANKS, LEGACY_LEVEL, legacyStars, rankOf, nextRank } from './legacy.js';
 import { STAGES, stageOf, nextStage, TRICKS, isBirthday, nextBirthday, birthdayLabel } from './growth.js';
 import { FURNITURE, WALLPAPERS, FLOORS, DEN_CATS } from './den-data.js';
 import { denSVG, furniturePreviewSVG } from './den.js';
@@ -384,6 +388,7 @@ function renderScene() {
     const svg = otterSVG(state);
     if (svg !== lastOtter) { $('#otter').innerHTML = svg; lastOtter = svg; }
   }
+  renderCritters(scene, away);
   const comp = core.activeCompanion(state);
   const compEl = $('#companion');
   compEl.parentElement.hidden = !comp || away;
@@ -670,6 +675,43 @@ function todayCard() {
   </div>`;
 }
 
+// ---------- sea or river ----------
+function speciesBanner() {
+  if (!state.name || state.speciesSet) return '';
+  const st = { ...state, sleeping: false, equipped: {} };
+  return `<div class="card species-banner"><b>Is ${esc(state.name)} a sea otter or a river otter?</b><small class="muted">You can choose once.</small>
+    <div class="species-pick small">${['sea', 'river'].map((sp) => `<button class="species-card" data-action="species" data-id="${sp}">
+      <svg viewBox="0 -24 200 254" aria-hidden="true">${otterSVG({ ...st, species: sp }, { idPrefix: `sb-${sp}` })}</svg>
+      <b>${SPECIES[sp].icon} ${SPECIES[sp].name}</b><small>${SPECIES[sp].desc}</small></button>`).join('')}</div></div>`;
+}
+
+// ---------- legacy ----------
+function legacyCard() {
+  if (!state.name) return '';
+  const stars = legacyStars(state);
+  const rank = rankOf(stars);
+  const nx = nextRank(stars);
+  if (state.level < LEGACY_LEVEL) {
+    return `<div class="card legacy teaser"><div class="persona-head"><span class="persona-icon">🦉</span><div><b>Legacy</b>
+      <div class="muted">When ${esc(state.name)} becomes a Wise Otter (level ${LEGACY_LEVEL}), lifelong goals open up: Legend ranks, titles and big rewards. Everything you do now already counts!</div></div></div></div>`;
+  }
+  const titles = core.allTitles(state);
+  return `<div class="card legacy"><div class="persona-head"><span class="persona-icon">${rank.icon}</span><div><b>${rank.name}</b>
+      <div class="muted">⭐ ${stars} Legacy star${stars === 1 ? '' : 's'}${nx ? ` · ${nx.stars - stars} more to become a ${nx.icon} ${nx.name}` : ' · the highest rank!'}</div></div></div>
+    <div class="masteries">${MASTERIES.map((m) => {
+    const v = m.value(state);
+    const have = state.legacy.claimed[m.id] || 0;
+    const goal = m.goals[Math.min(have, m.goals.length - 1)];
+    const can = have < m.goals.length && v >= m.goals[have];
+    return `<div class="mastery"><span class="m-icon">${m.icon}</span><div class="m-body"><b>${m.name}</b> <span class="m-tiers">${TIERS.map((t, k) => (k < have ? t.icon : '▫️')).join('')}</span>
+        <div class="bar"><div style="width:${have >= m.goals.length ? 100 : Math.min(100, (v / goal) * 100)}%"></div></div>
+        <small class="muted">${m.desc}: ${v}${have < m.goals.length ? ` / ${goal}` : ' · complete!'}</small></div>
+        ${can ? `<button class="btn small primary" data-action="legacy-claim" data-id="${m.id}">${TIERS[have].icon} Claim</button>` : ''}</div>`;
+  }).join('')}</div>
+    ${titles.length ? `<label class="title-pick">🏷️ Title: <select data-title-pick><option value="">(none)</option>${titles.map((t) => `<option ${state.legacy.title === t ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></label>` : ''}
+  </div>`;
+}
+
 // ---------- companions ----------
 function companionCard() {
   if (!state.name) return '';
@@ -719,6 +761,7 @@ function panelHome() {
   const asleep = state.sleeping;
   const nm = esc(state.name || 'your otter');
   return `
+    ${speciesBanner()}
     <h2 class="section-title">Take care of ${nm}</h2>
     <div class="actions">
       <button class="action" data-action="pet"><span>🤗</span>Cuddle</button>
@@ -738,6 +781,7 @@ function panelHome() {
     ${todayCard()}
     <h2 class="section-title">About ${nm}</h2>
     ${growthCard()}
+    ${legacyCard()}
     ${personaCard().replace('<h2 class="section-title">Personality</h2>', '')}
     ${achievementsCard()}
     <h2 class="section-title">Journal</h2>
@@ -862,13 +906,13 @@ function museumView() {
 
 function houseSVG(h, k, you = false) {
   const lvl = h.mood === 'sad' ? 20 : 80;
-  const st = { ...core.defaultState(), stats: { hunger: lvl, happiness: 90, energy: 90, clean: 90 }, equipped: h.equipped || {}, sleeping: h.sleeping };
+  const st = { ...core.defaultState(), species: you ? state.species : h.species, stats: { hunger: lvl, happiness: 90, energy: 90, clean: 90 }, equipped: h.equipped || {}, sleeping: h.sleeping };
   return `<button class="house ${you ? 'you' : ''} ${h.friend ? 'friend' : ''}" data-action="lane-house" data-code="${h.code}" data-you="${you ? 1 : ''}" data-x="${k}" aria-label="${esc(h.name)}'s den">
     <svg viewBox="0 0 120 130" aria-hidden="true">${houseFrontSVG(you ? state.door : h.door || { paint: null }, { cozyStar: h.cozy >= 15, balloon: h.birthday })}</svg>
     ${h.companion && COMPANIONS[h.companion] ? `<svg class="porch-comp" viewBox="0 0 100 100" aria-hidden="true">${companionSVG(h.companion, { sleeping: h.sleeping })}</svg>` : ''}
     ${h.home && !h.sleeping ? `<svg class="porch-otter" viewBox="0 -24 200 254" aria-hidden="true">${otterSVG(st, { idPrefix: `ln${k}` })}</svg>` : ''}
     ${h.sleeping ? '<span class="house-zzz">z z</span>' : !h.home ? '<span class="house-zzz">🧭 out</span>' : ''}
-    <span class="house-sign">${you ? '🏠 ' : h.friend ? '💗 ' : ''}${esc(h.name)} <small>${h.stage || ''} Lv ${h.level}</small></span>
+    <span class="house-sign">${you ? '🏠 ' : h.friend ? '💗 ' : ''}${esc(h.name)} <small>${h.stage || ''} Lv ${h.level}</small>${h.title ? `<small class="house-title">${esc(h.title)}</small>` : ''}</span>
   </button>`;
 }
 
@@ -965,14 +1009,19 @@ function panelMissions() {
   const missions = loc.missions.map((id) => MISSIONS.find((m) => m.id === id));
   const games = loc.games.map((id) => GAME_LIST.find((g) => g.id === id));
   return `${head}
+    ${gazetteCard()}
     <div class="explore-head"><h2 class="section-title">Explore</h2>
-      <button class="btn small" data-action="journal">📖 Journal ${found}/${TOTAL_FINDS}</button></div>
+      <div class="row"><button class="btn small" data-action="lore-book">📜 Lore ${state.lore.pages.length}/${TOTAL_PAGES}</button><button class="btn small" data-action="journal">📖 Journal ${found}/${TOTAL_FINDS}</button></div></div>
     <div class="map-wrap">${mapSVG(state, loc.id)}</div>
     <div class="card loc-card ${locked ? 'locked' : ''}">
       <div class="loc-title"><span class="loc-icon">${ic(`places/${loc.id}`, loc.icon)}</span><div><h3>${loc.name}${state.sets.includes(loc.id) ? ' 🏅' : ''}${state.persona?.fav.place === loc.id ? ` <span class="fav-tag">❤️ ${esc(state.name)}'s favorite</span>` : ''}</h3><p class="muted">${loc.desc}</p></div></div>
       ${loc.id === 'lilypond' ? '<div class="row"><button class="btn small" data-tab="home">🦦 Visit your otter</button><button class="btn small" data-tab="den">🏡 Go to the den</button></div>' : ''}
       ${(() => { const l = exploreLuck(loc.id); return l > 1.01 && !locked ? `<p class="luck-note">✨ ${tideAt().state === 'low' && LOW_TIDE_PLACES.includes(loc.id) ? 'Low tide' : WEATHER[weatherAt()].name + ' weather'}: finds here are luckier right now!</p>` : ''; })()}
+      ${happeningNote(loc.id)}
       ${exploreBtn}
+      ${residentsHere(loc.id)}
+      ${cluesHere(loc.id)}
+      ${loc.id === 'shipwreck' && merchantDocked() ? '<button class="btn merchant-btn" data-action="merchant">⛵ Captain Barnacle\'s boat is docked! Browse the bargains</button>' : ''}
       ${busyMsg ? `<p class="muted small-note">${esc(state.name)} is ${busyMsg === 'away' ? 'out on a mission' : 'napping'} right now.</p>` : ''}
       <h4 class="loc-sub">Discoveries · ${loc.finds.filter((f) => state.collection[f.id]).length}/${loc.finds.length}</h4>
       <div class="finds">${loc.finds.map(findTile).join('')}</div>
@@ -981,6 +1030,138 @@ function panelMissions() {
       <div class="loc-games">${games.map((g) => `<button class="loc-game" data-action="game" data-id="${g.id}"><span>${ic(`games/${g.id}`, g.icon)}</span><b>${g.name}</b><small>⚡${g.energy}</small></button>`).join('')}</div>
     </div>
     <p class="note">Missions run in real time, even when this page is closed. Explore from Discord with <code>/explore</code>.</p>`;
+}
+
+// ---------- the living world ----------
+let worldData = null;
+let worldLoading = false;
+async function loadWorld() {
+  if (worldLoading || !sync.online) return;
+  worldLoading = true;
+  const r = await sync.world().catch(() => null);
+  worldLoading = false;
+  if (r?.ok) { worldData = { ...r, at: Date.now() }; if (tab === 'missions' && !placeView && !journalOpen) renderPanel(); }
+}
+function gazetteCard() {
+  if (!worldData || Date.now() - worldData.at > 5 * 60000) loadWorld();
+  const now = Date.now();
+  const haps = happeningsAt(now);
+  const feed = (worldData?.feed || []).slice(0, 4);
+  return `<div class="card gazette"><div class="gz-head"><b>🗞️ The Pond Gazette</b><small class="muted">${new Date().toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' })}</small></div>
+    ${haps.map((h) => `<div class="gz-item"><span class="gz-icon">${ic(`happenings/${h.id}`, h.icon)}</span><div><b>${h.name}</b> <small class="muted">at ${LOC[h.place].name} · until ${new Date(h.endsAt).toLocaleTimeString([], { hour: 'numeric' })}</small><div class="muted">${h.text}</div></div></div>`).join('')}
+    ${merchantDocked(now) ? '<div class="gz-item"><span class="gz-icon">⛵</span><div><b>Captain Barnacle is in port</b><div class="muted">His boat is docked at Shipwreck Cove today, with bargains aboard.</div></div></div>' : ''}
+    ${feed.length ? `<div class="gz-feed"><small class="muted">Around the pond${worldData?.activeToday ? ` · ${worldData.activeToday} otters out and about today` : ''}</small>${feed.map((f) => `<div>${f.icon || '📣'} ${esc(f.text)} <small class="muted">${timeAgo(f.at)}</small></div>`).join('')}</div>` : ''}
+  </div>`;
+}
+function timeAgo(t) {
+  const m = Math.round((Date.now() - t) / 60000);
+  return m < 60 ? `${Math.max(1, m)}m ago` : m < 1440 ? `${Math.round(m / 60)}h ago` : `${Math.round(m / 1440)}d ago`;
+}
+function happeningNote(locId) {
+  const h = happeningsAt().find((x) => x.place === locId);
+  return h ? `<p class="luck-note">${h.icon} <b>${h.name}:</b> ${h.text}</p>` : '';
+}
+
+// Residents at a place right now, with Talk buttons.
+function residentsHere(place) {
+  const here = npcsAt(place);
+  if (!here.length) return '';
+  return `<h4 class="loc-sub">Who's here</h4><div class="residents">${here.map((id) => {
+    const n = NPCS[id];
+    const f = core.npcFriendship(state, id);
+    return `<button class="resident" data-action="npc" data-id="${id}">${npcPortrait(id)}<b>${n.name}</b><small>${'💕'.repeat(Math.min(5, Math.ceil(f / 2))) || 'new'}</small></button>`;
+  }).join('')}</div>`;
+}
+const npcPortrait = (id) => `<span class="npc-face">${ic(`npcs/${id}`, NPCS[id].icon)}</span>`;
+
+function openNpc(id) {
+  const n = NPCS[id];
+  const where = npcWhere(id);
+  const talk = core.talkTo(state, id);
+  if (talk.ok && talk.msg) { commit(); }
+  const f = core.npcFriendship(state, id);
+  const favor = core.favorFor(state, id);
+  const rec = state.lore.npc[id] || {};
+  const helped = rec.favor === core.dayKey();
+  const nextPage = NPC_PAGE_AT.find((at) => f < at);
+  showModal(`<div class="npc-talk">
+    <div class="game-top"><h2>${n.icon} ${n.name}</h2><button class="icon-btn" data-close aria-label="Close">✕</button></div>
+    <div class="npc-row"><div class="npc-big">${ic(`npcs/${id}`, n.icon)}</div><div class="speech-bubble">“${esc(npcLine(id))}”</div></div>
+    <p class="muted">${n.species}. ${n.about}</p>
+    <p>${'💕'.repeat(Math.ceil(f / 2)) || '🤍'} Friendship ${f}/${NPC_MAX}${nextPage ? ` · next Lore Book page at ${nextPage}` : ' · all their stories shared'}</p>
+    ${talk.ok && talk.msg ? `<p class="note">${esc(talk.msg)}</p>` : ''}
+    ${favor ? `<div class="card favor"><b>Today's favor</b><p>“${esc(favor.text)}”</p>
+      ${helped ? '<small class="muted">You already helped today. 💕</small>' : `<button class="btn small primary" data-action="favor" data-id="${id}" ${favor.done(state) ? '' : 'disabled'}>${favor.done(state) ? 'Help out · +20 pearls' : 'Not yet'}</button>`}</div>` : ''}
+    ${!where ? '<p class="muted">They\'re resting now.</p>' : ''}
+  </div>`, { wide: true });
+}
+
+// Mystery chapters you can work on at this place.
+function cluesHere(place) {
+  const act = core.activeChapters(state).filter((a) => a.chapter.need.place === place);
+  if (!act.length) return '';
+  return `<h4 class="loc-sub">🔍 Mysteries</h4>${act.map(({ mystery: m, k, chapter }) => {
+    const miss = core.chapterMissing(state, chapter.need, place);
+    return `<div class="card clue ${miss.length ? '' : 'ready'}"><b>${m.icon} ${m.name}</b> <small class="muted">chapter ${k + 1}/${m.chapters.length}</small>
+      <p class="muted">${esc(chapter.hint)}</p>
+      ${miss.length ? `<small>Still needed: ${miss.map(esc).join(' · ')}</small>` : `<button class="btn small primary" data-action="investigate" data-id="${m.id}" data-place="${place}">🔍 Investigate</button>`}</div>`;
+  }).join('')}`;
+}
+
+function openLoreBook() {
+  const pages = new Set(state.lore.pages);
+  const mys = MYSTERIES.map((m) => {
+    const solved = state.lore.solved.includes(m.id);
+    const k = state.lore.mysteries[m.id] || 0;
+    const open = core.mysteryAvailable(state, m);
+    return `<div class="card lore-mystery ${solved ? 'solved' : ''}"><b>${m.icon} ${m.name}</b> <small class="muted">${solved ? '✅ solved' : open ? `chapter ${k + 1}/${m.chapters.length}` : `🔒 ${m.level > state.level ? `level ${m.level}` : 'solve the earlier mysteries first'}`}</small>
+      <p class="muted">${esc(m.intro)}</p>
+      ${m.chapters.map((c, i) => (pages.has(`m:${m.id}:${i}`) ? `<p class="lore-page">📜 ${esc(c.text)}</p>` : '')).join('')}
+      ${open && !solved ? `<p><b>Next clue:</b> ${esc(m.chapters[k].hint)}</p>` : ''}
+      ${solved ? `<small>Reward: ${m.reward.pearls} pearls and the title “${m.reward.title}”</small>` : ''}</div>`;
+  }).join('');
+  const people = Object.entries(NPCS).map(([id, n]) => `<div class="card lore-npc"><b>${n.icon} ${n.name}</b> <small class="muted">${n.species} · 💕 ${core.npcFriendship(state, id)}/${NPC_MAX} · ${npcWhere(id) ? `now at ${LOC[npcWhere(id)]?.name || 'the museum'}` : 'resting'}</small>
+    ${n.pages.map((pg, k) => (pages.has(`npc:${id}:${k}`) ? `<details class="lore-page"><summary>📜 ${esc(pg.title)}</summary><p>${esc(pg.text)}</p></details>` : `<p class="muted lore-locked">🔒 A story at friendship ${NPC_PAGE_AT[k]}</p>`)).join('')}</div>`).join('');
+  const places = LOCATIONS.map((l) => (pages.has(`place:${l.id}`) ? `<details class="lore-page"><summary>${l.icon} ${l.name}</summary><p>${esc(PLACE_LORE[l.id])}</p></details>` : `<p class="muted lore-locked">🔒 ${l.icon} Explore ${l.name}</p>`)).join('');
+  showModal(`<div class="lore-book"><div class="game-top"><h2>📜 The Lore Book</h2><button class="icon-btn" data-close aria-label="Close">✕</button></div>
+    <p class="muted">${pages.size} of ${TOTAL_PAGES} pages. Solve mysteries, befriend the pond folk and explore to fill it in.</p>
+    <h3 class="den-sub dark">Mysteries</h3>${mys}
+    <h3 class="den-sub dark">The pond folk</h3>${people}
+    <h3 class="den-sub dark">Places</h3><div class="card">${places}</div></div>`, { wide: true });
+}
+
+function openMerchant() {
+  const wares = core.merchantWares();
+  if (!wares.length) return toast('⛵ The captain is out at sea today.');
+  showModal(`<div class="merchant"><div class="game-top"><h2>⛵ Captain Barnacle's Boat</h2><button class="icon-btn" data-close aria-label="Close">✕</button></div>
+    <div class="npc-row"><div class="npc-big">${ic('npcs/barnacle', '🦀')}</div><div class="speech-bubble">“Fresh from the far coast! Thirty percent off, today only.”</div></div>
+    <div class="grid">${wares.map((w) => {
+    const owned = (w.kind === 'item' && state.owned.includes(w.id)) || (w.kind === 'door' && state.doorItems.includes(w.id));
+    const art = w.kind === 'item' ? itemPreviewSVG(w.id) : w.kind === 'furn' ? furniturePreviewSVG(w.id) : `<svg viewBox="0 0 120 130">${houseFrontSVG({ paint: DOOR_ITEMS[w.id].kind === 'paint' ? w.id : state.door.paint, [DOOR_ITEMS[w.id].kind]: w.id })}</svg>`;
+    return `<div class="card item"><div class="item-art ${w.kind === 'furn' ? 'den-art' : w.kind === 'door' ? 'door-art' : ''}">${art}</div><div class="item-name">${esc(w.name)}</div>
+      <small class="muted"><s>${w.full}</s></small>
+      ${owned ? '<button class="btn small" disabled>Owned ✓</button>' : `<button class="btn small primary" data-action="merchant-buy" data-id="${w.key}" ${state.pearls < w.price ? 'disabled' : ''}><span class="pearl-icon"></span> ${w.price}</button>`}</div>`;
+  }).join('')}</div></div>`, { wide: true });
+}
+
+// Wildlife wandering across the pond (just for fun).
+let critterKey = '';
+function renderCritters(scene, away) {
+  const box = $('#critters');
+  if (!box) return;
+  const list = away ? [] : crittersFor();
+  const key = list.join(',');
+  if (key === critterKey) return;
+  critterKey = key;
+  box.innerHTML = list.map((id, k) => `<i class="critter c-${id}" style="--d:${14 + ((k * 7) % 11)}s;--delay:${-k * 3.3}s;--y:${12 + ((k * 23) % 60)}%">${ic(`critters/${id}`, CRITTERS[id])}</i>`).join('');
+}
+
+function showWelcomeBack(stories) {
+  if (!stories.length || !state.name) return;
+  showModal(`<div class="result welcome-back"><div class="result-icon">🦦</div><h2>Welcome back!</h2>
+    <p class="muted">While you were away…</p>
+    <ul class="away-list">${stories.map((x) => `<li>${esc(x.text)}${x.pearls ? ` <small>+${x.pearls} pearls</small>` : ''}</li>`).join('')}</ul>
+    <button class="btn primary" data-close>Hi, ${esc(state.name)}!</button></div>`);
 }
 
 function bestLabel(g) {
@@ -1043,7 +1224,7 @@ async function refreshInbox() {
 // A small otter portrait from a friend's public info.
 function miniOtter(f, prefix) {
   const lvl = f.mood === 'happy' ? 90 : f.mood === 'sad' ? 20 : 60;
-  const st = { ...core.defaultState(), stats: { hunger: lvl, happiness: lvl, energy: lvl, clean: lvl }, equipped: f.equipped || {}, sleeping: !!f.sleeping };
+  const st = { ...core.defaultState(), species: f.species, stats: { hunger: lvl, happiness: lvl, energy: lvl, clean: lvl }, equipped: f.equipped || {}, sleeping: !!f.sleeping };
   return `<svg viewBox="0 -24 200 254" aria-hidden="true">${otterSVG(st, { idPrefix: prefix })}</svg>`;
 }
 
@@ -1469,6 +1650,7 @@ function watchMoments() {
 }
 
 function commit({ push = true } = {}) {
+  if (!document.hidden) state.lastSeen = Date.now();
   celebrateAchievements();
   watchMoments();
   saveLocal();
@@ -1594,9 +1776,12 @@ function askName(first) {
   showModal(`
     <form class="adopt" data-form="name">
       ${first ? `<img class="adopt-logo" src="${art.logo || 'assets/web/logo.webp'}" alt="Otter &amp; Oyster">` : ''}
-      <div class="adopt-otter"><svg viewBox="0 -24 200 254">${otterSVG(preview, { idPrefix: 'adopt-otter' })}</svg></div>
-      <h2>${first ? 'A baby otter washed up with an oyster!' : 'Rename your otter'}</h2>
-      ${first ? '<p>Give your new friend a name. Feed them, dress them up, send them on adventures and play games together.</p>' : ''}
+      ${first ? `<h2>A baby otter is waiting for you!</h2><p>Which kind of otter will they be?</p>
+      <div class="species-pick">${['sea', 'river'].map((sp) => `<label class="species-card"><input type="radio" name="species" value="${sp}" ${sp === 'sea' ? 'checked' : ''}>
+        <svg viewBox="0 -24 200 254" aria-hidden="true">${otterSVG({ ...preview, species: sp }, { idPrefix: `adopt-${sp}` })}</svg>
+        <b>${SPECIES[sp].icon} ${SPECIES[sp].name}</b><small>${SPECIES[sp].desc}</small></label>`).join('')}</div>
+      <p>Now give your new friend a name. Feed them, dress them up, send them on adventures and play games together.</p>`
+    : `<div class="adopt-otter"><svg viewBox="0 -24 200 254">${otterSVG({ ...state, sleeping: false }, { idPrefix: 'adopt-otter' })}</svg></div><h2>Rename your otter</h2>`}
       <input name="name" maxlength="16" required autocomplete="off" placeholder="${idea}" value="${first ? '' : esc(state.name)}" aria-label="Otter name">
       <button class="btn primary" type="submit">${first ? 'Adopt 🦦' : 'Save'}</button>
       ${first ? '<button class="link" type="button" data-action="havediscord">Already have an otter? Load it from another device, Discord or a backup</button>' : ''}
@@ -1862,6 +2047,25 @@ document.addEventListener('click', async (e) => {
     }
     case 'journal': journalOpen = !journalOpen; renderPanel(); window.scrollTo({ top: 0 }); return null;
     case 'den-edit': denEdit = !denEdit; denSel = null; return renderPanel();
+    case 'species': { const r = act(core.setSpecies(state, id)); lastOtter = ''; return r; }
+    case 'legacy-claim': return act(core.claimLegacy(state, id));
+    case 'lore-book': return openLoreBook();
+    case 'npc': return openNpc(id);
+    case 'favor': { const r = act(core.doFavor(state, id)); if (r.ok) openNpc(id); return r; }
+    case 'investigate': {
+      const r = core.investigate(state, id, a.dataset.place);
+      if (!r.ok) return toast(r.msg);
+      commit();
+      if (r.ups) levelUp();
+      playCare(r.solved ? 'mystery-solved' : 'investigate');
+      const m = MYSTERIES.find((x) => x.id === id);
+      return showModal(`<div class="result"><div class="result-icon">${r.solved ? m.icon : '🔍'}</div><h2>${r.solved ? 'Mystery solved!' : `Chapter ${r.chapter + 1} of ${m.chapters.length}`}</h2>
+        <p class="lore-page">${esc(r.msg.replace(/^🔍 /, ''))}</p>
+        ${r.solved ? `<div class="rewards"><span class="chip"><span class="pearl-icon"></span> +${m.reward.pearls}</span><span class="chip">🏷️ “${m.reward.title}”</span></div>` : `<p class="muted"><b>Next:</b> ${esc(m.chapters[r.chapter + 1].hint)}</p>`}
+        <button class="btn primary" data-close>${r.solved ? 'Wonderful!' : 'Onward'}</button></div>`);
+    }
+    case 'merchant': return openMerchant();
+    case 'merchant-buy': { const r = act(core.buyMerchant(state, id)); if (r.ok) openMerchant(); return r; }
     case 'den-view': denView = id; denEdit = false; denSel = null; return renderPanel();
     case 'door-kind': doorKind = id; return renderPanel();
     case 'door-buy': return requestPurchase('door', id);
@@ -1948,7 +2152,8 @@ document.addEventListener('submit', (e) => {
     const first = !state.name;
     const name = form.name.value.trim().slice(0, 16) || form.name.placeholder;
     state.name = name;
-    if (first) core.log(state, `You adopted ${name}! 🦦`);
+    if (first && form.species) core.setSpecies(state, form.species.value);
+    if (first) core.log(state, `You adopted ${name}, a ${state.species} otter! 🦦`);
     closeModal();
     commit();
     if (first) burst(['💖', '🦦', '✨'], 10);
@@ -2002,6 +2207,7 @@ document.addEventListener('submit', (e) => {
 });
 
 document.addEventListener('change', (e) => {
+  if (e.target.matches('[data-title-pick]')) { act(core.setTitle(state, e.target.value)); return; }
   if (e.target.matches('[data-lane-public]')) {
     const on = e.target.checked;
     pushNow().then(() => sync.lanePublic(on)).then((r) => {
@@ -2034,8 +2240,10 @@ $('#otter-wrap').addEventListener('click', () => careCuddle());
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) { saveLocal(); if (sync.linked && sync.online) pushNow({ keepalive: true }); return; }
+  const away = state.name ? core.welcomeBack(state) : [];
   runTick();
   commit({ push: false });
+  if (away.length && $('#modal').hidden) showWelcomeBack(away);
   pullNow();
 });
 
@@ -2054,10 +2262,12 @@ function applyArtChrome() {
 detectArt();
 await loadArtManifest();
 applyArtChrome();
+const awayOnBoot = state.name ? core.welcomeBack(state) : [];
 if (PANELS[location.hash.slice(1)]) tab = location.hash.slice(1);
 runTick();
 commit({ push: false });
 if (!state.name && !sync.linked) askName(true);
+else if (awayOnBoot.length) showWelcomeBack(awayOnBoot);
 
 finishDiscordLogin();
 window.addEventListener('hashchange', () => { if (location.hash.startsWith('#login')) finishDiscordLogin(); });

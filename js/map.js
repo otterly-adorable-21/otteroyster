@@ -1,6 +1,8 @@
 // Illustrated world map (viewBox 0 0 400 460) with tappable places.
 import { LOCATIONS, LOC, ROUTES } from './world.js';
 import { artUrl, svgIcon } from './art.js';
+import { happeningsAt, npcsAt } from './worldsim.js';
+import { NPCS } from './lore.js';
 
 const willow = (x, y, k = 1) => `<g transform="translate(${x} ${y}) scale(${k})">
   <rect x="-3" y="-4" width="6" height="22" rx="2" fill="#5a3f2a"/>
@@ -67,7 +69,10 @@ export function mapSVG(state, selected) {
     const my = (A.y + B.y) / 2 + (B.x - A.x) * 0.12;
     return `<path d="M${A.x},${A.y} Q${mx},${my} ${B.x},${B.y}" stroke="#fff3bf" stroke-opacity=".55" stroke-width="2.5" stroke-dasharray="2 7" stroke-linecap="round" fill="none"/>`;
   }).join('');
+  const haps = happeningsAt();
   const pins = LOCATIONS.map((l) => {
+    const hap = haps.find((h) => h.place === l.id);
+    const folks = npcsAt(l.id).slice(0, 3);
     const locked = state.level < l.level;
     const sel = l.id === selected;
     const done = state.sets?.includes(l.id);
@@ -78,6 +83,8 @@ export function mapSVG(state, selected) {
       <circle r="19" fill="${locked ? '#5d6b6b' : '#fffaf0'}" stroke="#d9b45a" stroke-width="3"/>
       ${locked ? '<text y="7" text-anchor="middle" font-size="19">🔒</text>' : svgIcon(`places/${l.id}`, l.icon, 30, 'y="7" text-anchor="middle" font-size="19"')}
       ${done ? '<text x="15" y="-11" text-anchor="middle" font-size="12">🏅</text>' : ''}
+      ${hap && !locked ? `<g class="pin-hap"><circle cx="17" cy="12" r="9" fill="#0c3440" stroke="#f3d98c" stroke-width="1.5"/><text x="17" y="16" text-anchor="middle" font-size="11">${hap.icon}</text></g>` : ''}
+      ${folks.map((id, k) => `<text x="${-26 - k * 11}" y="${6 + k * 2}" text-anchor="middle" font-size="12" class="pin-npc">${NPCS[id].icon}</text>`).join('')}
       ${here ? '<circle cx="-15" cy="-14" r="7" fill="#d9635b" stroke="#fffaf0" stroke-width="2"/><text x="-15" y="-10.5" text-anchor="middle" font-size="9" fill="#fff">🦦</text>' : ''}
       <text y="35" text-anchor="middle" font-size="11.5" font-weight="800" fill="#fffaf0" stroke="#0c3440" stroke-width="3.5" paint-order="stroke" font-family="Nunito, system-ui, sans-serif">${l.name}${locked ? ` · Lv ${l.level}` : ''}</text>
     </g>`;

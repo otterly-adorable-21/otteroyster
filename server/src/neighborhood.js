@@ -26,6 +26,8 @@ export function createNeighborhood(db, store, social, social2 = null) {
       cozy: core.coziness(s),
       equipped: s.equipped,
       door: s.door,
+      species: s.species,
+      title: core.displayTitle(s),
       companion: s.companions?.active || null,
       home: !s.mission,
       sleeping: !!s.sleeping,
@@ -67,7 +69,7 @@ export function createNeighborhood(db, store, social, social2 = null) {
         status: 200,
         friend,
         code: social.codeOf(otherId),
-        otter: { name: s.name, level: s.level, stats: s.stats, equipped: s.equipped, sleeping: s.sleeping, mission: s.mission ? { id: s.mission.id } : null, den: s.den, persona: s.persona, created: s.created, sets: s.sets, collection: s.collection },
+        otter: { name: s.name, species: s.species, title: core.displayTitle(s), level: s.level, stats: s.stats, equipped: s.equipped, sleeping: s.sleeping, mission: s.mission ? { id: s.mission.id } : null, den: s.den, persona: s.persona, created: s.created, sets: s.sets, collection: s.collection },
       };
     },
 

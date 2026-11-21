@@ -56,6 +56,9 @@ export function openDb(path) {
       created INTEGER NOT NULL, claimed INTEGER NOT NULL DEFAULT 0
     );
     CREATE INDEX IF NOT EXISTS gifts_to ON gifts(to_id, claimed);
+    CREATE TABLE IF NOT EXISTS world_feed (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, at INTEGER NOT NULL, icon TEXT, text TEXT NOT NULL
+    );
   `);
   // Columns added after launch.
   const cols = db.prepare('PRAGMA table_info(players)').all().map((c) => c.name);

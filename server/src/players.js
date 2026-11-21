@@ -3,6 +3,29 @@
 import { randomBytes, randomUUID, createHash } from 'node:crypto';
 import * as core from '../../js/core.js';
 import { GAME_LIST } from '../../js/data.js';
+import { FINDS, RARITY } from '../../js/world.js';
+import { MYSTERY } from '../../js/lore.js';
+import { rankOf, legacyStars, LEGACY_LEVEL } from '../../js/legacy.js';
+
+// Big moments worth a line in the Pond Gazette (otter names only).
+export function notable(prev, next) {
+  if (!next?.name) return [];
+  const out = [];
+  const n = next.name;
+  for (const id of Object.keys(next.collection || {})) {
+    if (!prev?.collection?.[id] && FINDS[id]?.rarity === 'legendary') out.push(['💎', `${n} found a legendary ${FINDS[id].name}!`]);
+  }
+  for (const id of next.lore?.solved || []) {
+    if (!(prev?.lore?.solved || []).includes(id) && MYSTERY[id]) out.push([MYSTERY[id].icon, `${n} solved the mystery “${MYSTERY[id].name}”!`]);
+  }
+  if ((prev?.level || 0) < LEGACY_LEVEL && next.level >= LEGACY_LEVEL && prev?.name) out.push(['🦉', `${n} became a Wise Otter!`]);
+  if (next.level >= LEGACY_LEVEL && prev?.legacy) {
+    const a = rankOf(legacyStars(prev));
+    const b = rankOf(legacyStars(next));
+    if (a.name !== b.name) out.push([b.icon, `${n} became a ${b.name}!`]);
+  }
+  return out;
+}
 
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const CODE_TTL = 10 * 60 * 1000;
@@ -24,6 +47,10 @@ export function createStore(db) {
     byDiscord: db.prepare('SELECT * FROM players WHERE discord_id = ?'),
     insert: db.prepare('INSERT INTO players (id, discord_id, discord_name, state, version, created, updated) VALUES (?, ?, ?, ?, 1, ?, ?)'),
     save: db.prepare('UPDATE players SET state = ?, version = version + 1, updated = ? WHERE id = ?'),
+    feedAdd: db.prepare('INSERT INTO world_feed (at, icon, text) VALUES (?, ?, ?)'),
+    feedList: db.prepare('SELECT at, icon, text FROM world_feed ORDER BY id DESC LIMIT ?'),
+    feedPurge: db.prepare('DELETE FROM world_feed WHERE at < ?'),
+    activeCount: db.prepare('SELECT COUNT(*) AS n FROM players WHERE updated > ?'),
     setName: db.prepare('UPDATE players SET discord_name = ? WHERE id = ?'),
     tokenInsert: db.prepare('INSERT INTO tokens (hash, player_id, created) VALUES (?, ?, ?)'),
     tokenFind: db.prepare('SELECT player_id FROM tokens WHERE hash = ?'),
@@ -67,9 +94,11 @@ export function createStore(db) {
     mutate(id, fn) {
       const p = row(q.byId.get(id));
       if (!p) throw new Error('no such player');
+      const before = JSON.parse(JSON.stringify(p.state));
       const events = core.tick(p.state);
       const result = fn(p.state, events);
       core.checkAchievements(p.state);
+      store.announce(before, p.state);
       q.save.run(JSON.stringify(p.state), Date.now(), id);
       return { state: p.state, result, events, version: p.version + 1 };
     },
@@ -79,8 +108,20 @@ export function createStore(db) {
       const p = q.byId.get(id);
       if (!p) return { status: 404 };
       if (p.version !== version) return { status: 409, state: JSON.parse(p.state), version: p.version };
-      q.save.run(JSON.stringify(core.normalize(state)), Date.now(), id);
+      const next = core.normalize(state);
+      store.announce(core.normalize(JSON.parse(p.state)), next);
+      q.save.run(JSON.stringify(next), Date.now(), id);
       return { status: 200, version: p.version + 1 };
+    },
+
+    announce(prev, next) {
+      try {
+        for (const [icon, text] of notable(prev, next)) q.feedAdd.run(Date.now(), icon, text);
+      } catch (e) { console.warn('feed', e.message); }
+    },
+    world() {
+      q.feedPurge.run(Date.now() - 14 * 86400000);
+      return { feed: q.feedList.all(20), activeToday: q.activeCount.get(Date.now() - 86400000).n };
     },
 
     makeLinkCode(playerId) {

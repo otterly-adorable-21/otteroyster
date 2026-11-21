@@ -26,6 +26,8 @@ care button is pressed. Until a file is here, the built-in effects play instead.
 | `plant` | Planting a seed in the garden |
 | `water` | Watering the garden |
 | `harvest` | Harvesting the garden |
+| `investigate` | Finding a clue in a mystery |
+| `mystery-solved` | Solving a whole mystery |
 
 On tabs where the pond isn't showing (Den, Explore, Friends), the animation plays
 in a little pop-up in the middle of the screen instead.

@@ -354,6 +354,15 @@ test('garden and companion on Discord', async () => {
   assert.match(text(), /ompanion/);
 });
 
+test('world, lore and legacy on Discord', async () => {
+  await cmd(users.ana, 'world');
+  assert.match(text(), /Pond Gazette/);
+  await cmd(users.ana, 'lore');
+  assert.match(text(), /Lore Book/);
+  await cmd(users.ana, 'legacy');
+  assert.match(text(), /Legacy/);
+});
+
 test('museum on Discord', async () => {
   await cmd(users.ana, 'museum');
   assert.match(text(), /Pond Museum/);

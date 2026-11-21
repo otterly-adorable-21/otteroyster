@@ -16,7 +16,8 @@ const everywhere = (b) => b
 export const commands = [
   everywhere(new SlashCommandBuilder().setName('pet').setDescription('See your otter and feed, cuddle, bathe or nap')),
   everywhere(new SlashCommandBuilder().setName('adopt').setDescription('Adopt your very own otter')
-    .addStringOption((o) => o.setName('name').setDescription("Your otter's name").setRequired(true).setMaxLength(16))),
+    .addStringOption((o) => o.setName('name').setDescription("Your otter's name").setRequired(true).setMaxLength(16))
+    .addStringOption((o) => o.setName('kind').setDescription('Sea otter or river otter?').addChoices({ name: '🌊 Sea otter', value: 'sea' }, { name: '🏞️ River otter', value: 'river' }))),
   everywhere(new SlashCommandBuilder().setName('den').setDescription("Peek inside your otter's cozy den")),
   everywhere(new SlashCommandBuilder().setName('visit').setDescription("Visit a friend's den")
     .addUserOption((o) => o.setName('friend').setDescription('Whose den?').setRequired(true))),
@@ -41,6 +42,9 @@ export const commands = [
     .addStringOption((o) => o.setName('note').setDescription('A little note').setMaxLength(80))),
   everywhere(new SlashCommandBuilder().setName('garden').setDescription('Your garden: plant seeds, water and harvest')),
   everywhere(new SlashCommandBuilder().setName('companion').setDescription('Play with your pet companion')),
+  everywhere(new SlashCommandBuilder().setName('world').setDescription("What's happening around the pond today, and who's where")),
+  everywhere(new SlashCommandBuilder().setName('lore').setDescription('Your Lore Book: mysteries, the pond folk and their stories')),
+  everywhere(new SlashCommandBuilder().setName('legacy').setDescription('Lifelong goals for Wise Otters: Legend ranks and titles')),
   everywhere(new SlashCommandBuilder().setName('museum').setDescription('The community Pond Museum: exhibits, milestones and top donors')),
   everywhere(new SlashCommandBuilder().setName('event').setDescription("This season's event: quests, tokens and the limited shop")),
   everywhere(new SlashCommandBuilder().setName('daily').setDescription('Open your daily treasure chest')),

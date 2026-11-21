@@ -15,6 +15,8 @@ import { WEATHER } from './ambience.js';
 import { COMPANIONS } from './companions.js';
 import { CROPS } from './garden.js';
 import { DOOR_ITEMS } from './door.js';
+import { NPCS } from './lore.js';
+import { HAPPENINGS, CRITTERS } from './worldsim.js';
 
 let files = {};
 let loaded = false;
@@ -74,6 +76,12 @@ export const GROUPS = [
       { id: 'sleeping', name: 'Sleeping' },
       { id: 'dirty', name: 'Mud overlay', note: 'Drawn on top when the otter needs a bath. Leave empty for no mud on custom art' },
       ...STAGES.map((s) => ({ id: s.id, name: `${s.name} (default for this stage)`, note: `Optional. Also: ${s.id}-happy, ${s.id}-sad, ${s.id}-sleeping` })),
+      { id: 'river-base', name: 'River otter (default)', note: 'River otters use their own river-… files, same canvas' },
+      { id: 'river-happy', name: 'River otter: happy' },
+      { id: 'river-sad', name: 'River otter: sad' },
+      { id: 'river-sleeping', name: 'River otter: sleeping' },
+      { id: 'river-dirty', name: 'River otter: mud overlay' },
+      ...STAGES.map((s) => ({ id: `river-${s.id}`, name: `River otter: ${s.name}`, note: `Optional. Also: river-${s.id}-happy, river-${s.id}-sad, river-${s.id}-sleeping` })),
     ],
   },
   {
@@ -83,6 +91,18 @@ export const GROUPS = [
   {
     id: 'companions', size: '512 × 512', name: 'Pet companions', tip: 'Transparent, 512 × 512 px, the companion standing on the bottom edge, facing right. Optional sleeping pose: <id>-sleeping.',
     slots: Object.entries(COMPANIONS).flatMap(([id, c]) => [{ id, name: c.name, emoji: c.icon }, { id: `${id}-sleeping`, name: `${c.name} (sleeping)`, emoji: '💤', note: 'optional' }]),
+  },
+  {
+    id: 'npcs', size: '512 × 512', name: 'Pond folk (characters)', tip: 'Transparent portraits, 512 × 512 px, head and shoulders or full body. Shown in conversations, on the map and in the Lore Book.',
+    slots: Object.entries(NPCS).map(([id, n]) => ({ id, name: n.name, emoji: n.icon, note: n.species })),
+  },
+  {
+    id: 'happenings', size: '256 × 256', name: 'World happenings', tip: 'Icons for the things happening around the pond, 256 × 256 px.',
+    slots: Object.entries(HAPPENINGS).map(([id, h]) => ({ id, name: h.name, emoji: h.icon })),
+  },
+  {
+    id: 'critters', size: '128 × 128', name: 'Pond wildlife', tip: 'Little animals that wander across the pond scene, 128 × 128 px, transparent, facing right. Animated GIF/WebP works great.',
+    slots: Object.entries(CRITTERS).map(([id, e]) => ({ id, name: id[0].toUpperCase() + id.slice(1), emoji: e })),
   },
   {
     id: 'garden', name: 'Garden', tip: 'The garden outside the den.',

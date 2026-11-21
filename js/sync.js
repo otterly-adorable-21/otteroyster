@@ -145,6 +145,7 @@ export const sync = {
   lanePeek(code) { return this.api(`/api/lane/peek?code=${encodeURIComponent(code)}`); },
   lanePublic(on) { return this.api('/api/lane/public', { on }); },
   waterFriend(code) { return this.api('/api/garden/water', { code }); },
+  world() { return this.api('/api/world'); },
   signGuestbook(code, text) { return this.api('/api/guestbook/sign', { code, text }); },
   deleteGuestbook(id) { return this.api('/api/guestbook/delete', { id }); },
   sendMail(code, design, text) { return this.api('/api/mail/send', { code, design, text }); },

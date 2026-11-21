@@ -66,6 +66,8 @@ export function createSocial(db, store) {
       away: !!s.mission,
       sleeping: !!s.sleeping,
       equipped: s.equipped,
+      species: s.species,
+      title: core.displayTitle(s),
       trait: core.traitOf(s).trait,
       points: rel?.points || 0,
       friendship: friendLevel(rel?.points || 0).name,
@@ -159,7 +161,7 @@ export function createSocial(db, store) {
       return {
         status: 200,
         friend: card(otherId, rel),
-        otter: { name: state.name, level: state.level, stats: state.stats, equipped: state.equipped, persona: state.persona, created: state.created, sleeping: state.sleeping, mission: state.mission ? { id: state.mission.id } : null, den: state.den, collection: state.collection, sets: state.sets, best: state.best },
+        otter: { name: state.name, species: state.species, title: core.displayTitle(state), level: state.level, stats: state.stats, equipped: state.equipped, persona: state.persona, created: state.created, sleeping: state.sleeping, mission: state.mission ? { id: state.mission.id } : null, den: state.den, collection: state.collection, sets: state.sets, best: state.best },
         huggedToday: doneToday(me, otherId, 'hug'),
         garden: { dry: (state.garden?.plots || []).filter((p) => p && !p.wateredAt).length },
         door: state.door,

@@ -18,3 +18,12 @@ any spot left empty, the drawn version stays.
 | ⬜ | `young` | Young Otter (default for this stage) | 800 × 1016 | Optional. Also: young-happy, young-sad, young-sleeping |
 | ⬜ | `grown` | Grown Otter (default for this stage) | 800 × 1016 | Optional. Also: grown-happy, grown-sad, grown-sleeping |
 | ⬜ | `wise` | Wise Otter (default for this stage) | 800 × 1016 | Optional. Also: wise-happy, wise-sad, wise-sleeping |
+| ⬜ | `river-base` | River otter (default) | 800 × 1016 | River otters use their own river-… files, same canvas |
+| ⬜ | `river-happy` | River otter: happy | 800 × 1016 |  |
+| ⬜ | `river-sad` | River otter: sad | 800 × 1016 |  |
+| ⬜ | `river-sleeping` | River otter: sleeping | 800 × 1016 |  |
+| ⬜ | `river-dirty` | River otter: mud overlay | 800 × 1016 |  |
+| ⬜ | `river-pup` | River otter: Pup | 800 × 1016 | Optional. Also: river-pup-happy, river-pup-sad, river-pup-sleeping |
+| ⬜ | `river-young` | River otter: Young Otter | 800 × 1016 | Optional. Also: river-young-happy, river-young-sad, river-young-sleeping |
+| ⬜ | `river-grown` | River otter: Grown Otter | 800 × 1016 | Optional. Also: river-grown-happy, river-grown-sad, river-grown-sleeping |
+| ⬜ | `river-wise` | River otter: Wise Otter | 800 × 1016 | Optional. Also: river-wise-happy, river-wise-sad, river-wise-sleeping |

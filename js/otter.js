@@ -8,7 +8,7 @@ import { artUrl, firstArt, otterImage } from './art.js';
 
 export { mood };
 
-const C = {
+const SEA = {
   fur: '#7a5641',
   furLight: '#9a735a',
   furDark: '#4c3324',
@@ -19,8 +19,26 @@ const C = {
   nose: '#2e1f18',
   eye: '#2b1c14',
 };
+// River otters: darker, sleeker, cream only on the muzzle and throat.
+const RIVER = {
+  fur: '#5e4030',
+  furLight: '#7d5a44',
+  furDark: '#3b281d',
+  earIn: '#2a1c14',
+  cream: '#e9dcc4',
+  creamShade: '#d4c2a2',
+  belly: '#dccbab',
+  nose: '#22160f',
+  eye: '#1f140e',
+};
+export const SPECIES = {
+  sea: { name: 'Sea otter', icon: '🌊', desc: 'Floats on their back in the waves, holding a favorite oyster. Lucky at the Tide Pools and Pearl Reef.', home: ['tidepools', 'reef'] },
+  river: { name: 'River otter', icon: '🏞️', desc: 'Sleek and speedy, with a long tail for zooming through streams. Lucky at the Lily Pond and Willow Grove.', home: ['lilypond', 'willow'] },
+};
+const palette = (species) => (species === 'river' ? RIVER : SEA);
+let C = SEA;
 
-const DEFS = `<defs>
+const defs = () => `<defs>
   <radialGradient id="oo-fur" cx="45%" cy="35%" r="70%"><stop offset="0" stop-color="${C.furLight}"/><stop offset=".65" stop-color="${C.fur}"/><stop offset="1" stop-color="${C.furDark}"/></radialGradient>
   <radialGradient id="oo-cream" cx="50%" cy="30%" r="75%"><stop offset="0" stop-color="#fffaf0"/><stop offset=".7" stop-color="${C.cream}"/><stop offset="1" stop-color="${C.creamShade}"/></radialGradient>
   <radialGradient id="oo-pearl" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#ffffff"/><stop offset=".35" stop-color="#f4ecff"/><stop offset=".6" stop-color="#d4f4ef"/><stop offset=".85" stop-color="#ead6f7"/><stop offset="1" stop-color="#c6b8d6"/></radialGradient>
@@ -37,7 +55,8 @@ const layer = (id) => {
 // Uploaded otter art for this mood/stage, most specific first (see js/art.js).
 function otterArt(state, m) {
   const st = stageOf(state.level || 1).id;
-  const keys = state.sleeping ? [`otter/${st}-sleeping`, 'otter/sleeping'] : [`otter/${st}-${m}`, `otter/${m}`, `otter/${st}`, 'otter/base'];
+  const sp = state.species === 'river' ? 'otter/river-' : 'otter/';
+  const keys = state.sleeping ? [`${sp}${st}-sleeping`, `${sp}sleeping`] : [`${sp}${st}-${m}`, `${sp}${m}`, `${sp}${st}`, `${sp}base`];
   return firstArt(keys);
 }
 
@@ -79,6 +98,36 @@ function dirt(clean) {
 
 const sparkle = (x, y, r, fill = '#fff6d0') => `<path d="M${x},${y - r} C${x + r * 0.15},${y - r * 0.15} ${x + r * 0.15},${y - r * 0.15} ${x + r},${y} C${x + r * 0.15},${y + r * 0.15} ${x + r * 0.15},${y + r * 0.15} ${x},${y + r} C${x - r * 0.15},${y + r * 0.15} ${x - r * 0.15},${y + r * 0.15} ${x - r},${y} C${x - r * 0.15},${y - r * 0.15} ${x - r * 0.15},${y - r * 0.15} ${x},${y - r}Z" fill="${fill}"/>`;
 
+// River otter: sleeker body, long tapered tail, small ears, cream muzzle and
+// throat, holding a smooth river stone. Same frame as the sea otter, so clothes fit.
+function riverBody(state, m, asleep, blush) {
+  return `
+  <path d="M134,200 Q206,214 198,150 Q194,124 180,120 Q190,150 180,170 Q168,190 132,182Z" fill="${C.furDark}"/>
+  <ellipse cx="76" cy="214" rx="17" ry="9" fill="${C.furDark}"/>
+  <ellipse cx="124" cy="214" rx="17" ry="9" fill="${C.furDark}"/>
+  <ellipse cx="100" cy="162" rx="50" ry="57" fill="url(#oo-fur)"/>
+  <path d="M78,118 Q100,128 122,118 Q132,150 122,186 Q100,204 78,186 Q68,150 78,118Z" fill="url(#oo-cream)" opacity=".85"/>
+  <g class="o-stone"><ellipse cx="100" cy="150" rx="21" ry="13" fill="#8d99ae"/><ellipse cx="100" cy="146" rx="15" ry="7" fill="#a9b4c6"/><ellipse cx="93" cy="144" rx="5" ry="2.4" fill="#fff" opacity=".55"/></g>
+  <ellipse cx="78" cy="152" rx="10" ry="8.5" fill="${C.furDark}"/>
+  <ellipse cx="122" cy="152" rx="10" ry="8.5" fill="${C.furDark}"/>
+  <path d="M72,148 q3,-3 6,0 M78,147 q3,-3 6,0 M116,147 q3,-3 6,0 M122,148 q3,-3 6,0" stroke="#1a100b" stroke-width="1.2" fill="none" opacity=".6"/>
+  <circle cx="66" cy="56" r="9" fill="${C.furDark}"/><circle cx="67" cy="57" r="4" fill="${C.earIn}"/>
+  <circle cx="134" cy="56" r="9" fill="${C.furDark}"/><circle cx="133" cy="57" r="4" fill="${C.earIn}"/>
+  <ellipse cx="100" cy="84" rx="42" ry="40" fill="url(#oo-fur)"/>
+  <path d="M72,94 Q76,82 90,84 Q100,88 110,84 Q124,82 128,94 Q128,114 100,122 Q72,114 72,94Z" fill="url(#oo-cream)"/>
+  <path d="M86,48 q4,-5 8,-1 M104,46 q4,-5 8,0" stroke="${C.furLight}" stroke-width="2" fill="none" stroke-linecap="round" opacity=".8"/>
+  ${blush}
+  ${eyes(m, asleep)}
+  <path d="M88,86 Q100,80 112,86 Q113,94 100,97 Q87,94 88,86Z" fill="${C.nose}"/>
+  <ellipse cx="95" cy="85.5" rx="4" ry="2" fill="#fff" opacity=".3"/>
+  ${mouth(m, asleep)}
+  <g stroke="#fffaf0" stroke-width="1.1" stroke-linecap="round" opacity=".85" fill="none">
+    <path d="M82,98 Q64,93 46,92"/><path d="M82,102 Q62,103 44,107"/>
+    <path d="M118,98 Q136,93 154,92"/><path d="M118,102 Q138,103 156,107"/>
+  </g>
+  ${dirt(state.stats.clean)}`;
+}
+
 // The open oyster with its pearl, held against the belly.
 function oyster() {
   return `<g class="o-oyster">
@@ -98,11 +147,13 @@ export function otterSVG(state, { idPrefix = 'oo' } = {}) {
   const asleep = state.sleeping;
   const eq = state.equipped;
   const P = (x) => x.replace(/oo-/g, `${idPrefix}-`);
+  C = palette(state.species);
   const art = otterArt(state, m);
   const body = art
-    ? otterImage(artUrl(art)) + (state.stats.clean < 40 && artUrl('otter/dirty') ? otterImage(artUrl('otter/dirty')) : '')
+    ? otterImage(artUrl(art)) + (state.stats.clean < 40 && artUrl(dirtArt) ? otterImage(artUrl(dirtArt)) : '')
     : P(drawnBody(state, m, asleep));
-  return `${P(DEFS)}
+  const dirtArt = state.species === 'river' ? 'otter/river-dirty' : 'otter/dirty';
+  return `${P(defs())}
   <g class="o-back">${P(layer(eq.back))}</g>
   ${body}
   <g class="o-neck">${P(layer(eq.neck))}</g>
@@ -112,6 +163,7 @@ export function otterSVG(state, { idPrefix = 'oo' } = {}) {
 
 function drawnBody(state, m, asleep) {
   const blush = !asleep && m !== 'sad' ? '<ellipse cx="70" cy="91" rx="7" ry="4" fill="#f2a5a0" opacity=".45"/><ellipse cx="130" cy="91" rx="7" ry="4" fill="#f2a5a0" opacity=".45"/>' : '';
+  if (state.species === 'river') return riverBody(state, m, asleep, blush);
   return `
   <path d="M136,196 Q192,212 186,168 Q180,150 170,160 Q176,186 134,180Z" fill="${C.furDark}"/>
   <ellipse cx="74" cy="214" rx="19" ry="10" fill="${C.furDark}"/>

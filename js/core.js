@@ -9,6 +9,10 @@ import { dailyMood, exploreLuck, weatherAt } from './ambience.js';
 import { COMPANIONS, BOND_PERK, BOND_MAX, PLAY_COOLDOWN, TREAT_PRICE, BOND_DECAY_PER_DAY, bondLevel } from './companions.js';
 import { CROPS, PLOT_LEVELS, FRIEND_WATER_BONUS, plotStage } from './garden.js';
 import { DOOR_ITEMS, DOOR_COZY, defaultDoor } from './door.js';
+import { NPCS, NPC_PAGE_AT, NPC_MAX, MYSTERIES, MYSTERY } from './lore.js';
+import { happeningsAt, happeningLuck, npcWhere, merchantStock, MERCHANT_DISCOUNT, awayStories } from './worldsim.js';
+import { MASTERIES, MASTERY, TIERS, LEGACY_LEVEL, legacyStars, rankOf } from './legacy.js';
+import { timeOfDay, tideAt } from './ambience.js';
 import { ACHIEVEMENTS, ACH } from './achievements.js';
 import { STAGES, stageOf, stageAtLeast, TRICKS, STORIES, WISDOM, mdOf, isBirthday } from './growth.js';
 
@@ -51,6 +55,12 @@ export function defaultState(now = Date.now()) {
     pantry: {},
     door: defaultDoor(),
     doorItems: ['paint-moss'],
+    species: 'sea',
+    speciesSet: false,
+    lore: { npc: {}, mysteries: {}, solved: [], pages: [] },
+    legacy: { claimed: {}, title: null },
+    titles: [],
+    lastSeen: now,
     explored: {},
     sets: [],
     best: {},
@@ -116,6 +126,18 @@ export function normalize(saved) {
   s.door = { ...defaultDoor(), ...(saved.door || {}) };
   for (const k of Object.keys(s.door)) if (s.door[k] && !DOOR_ITEMS[s.door[k]]) s.door[k] = k === 'paint' ? 'paint-moss' : null;
   s.doorItems = [...new Set(['paint-moss', ...(Array.isArray(saved.doorItems) ? saved.doorItems.filter((id) => DOOR_ITEMS[id]) : [])])];
+  s.species = saved.species === 'river' ? 'river' : 'sea';
+  s.speciesSet = !!saved.speciesSet;
+  const lo = saved.lore || {};
+  s.lore = {
+    npc: Object.fromEntries(Object.entries(lo.npc || {}).filter(([id]) => NPCS[id])),
+    mysteries: Object.fromEntries(Object.entries(lo.mysteries || {}).filter(([id]) => MYSTERY[id])),
+    solved: Array.isArray(lo.solved) ? lo.solved.filter((id) => MYSTERY[id]) : [],
+    pages: Array.isArray(lo.pages) ? [...new Set(lo.pages)] : [],
+  };
+  s.legacy = { claimed: Object.fromEntries(Object.entries(saved.legacy?.claimed || {}).filter(([id]) => MASTERY[id])), title: saved.legacy?.title || null };
+  s.titles = Array.isArray(saved.titles) ? saved.titles : [];
+  s.lastSeen = saved.lastSeen || s.lastTick || Date.now();
   // v1 stored memory best as `null` when unplayed
   for (const k of Object.keys(s.best)) if (s.best[k] == null) delete s.best[k];
   s.version = SAVE_VERSION;
@@ -333,6 +355,7 @@ export function recallMission(s) {
 function finishMission(s, now) {
   const m = MISSIONS.find((x) => x.id === s.mission.id);
   s.mission = null;
+  count(s, 'missions');
   const pearls = Math.round(rand(m.pearls[0], m.pearls[1]) * (hasTrait(s, 'adventurous') ? 1.2 : 1));
   s.pearls += pearls;
   grow(s, 'adventurous', 2);
@@ -577,6 +600,11 @@ export function explore(s, locId, now = Date.now()) {
   stat(s, 'energy', -EXPLORE_ENERGY);
   stat(s, 'happiness', 3);
   s.explored[locId] = now;
+  count(s, 'explores');
+  addPage(s, `place:${locId}`);
+  const hap = happeningsAt(now).find((h) => h.place === locId);
+  if (hap?.happy) stat(s, 'happiness', hap.happy);
+  if (hap?.pearls) s.pearls += hap.pearls;
   trackQuest(s, 'explore', 1, now);
   grow(s, 'adventurous');
   const favPlace = s.persona.fav.place === locId;
@@ -598,7 +626,7 @@ export function explore(s, locId, now = Date.now()) {
     const ups = addXP(s, 2);
     return ok(`${loves}${s.name} poked around ${loc.name} and found ${p} loose pearls.`, { pearls: p, ups, find: null });
   }
-  const d = discover(s, locId, (hasTrait(s, 'adventurous') ? 1.3 : 1) * (favPlace ? 1.2 : 1) * exploreLuck(locId, now) * (dailyMood(s, now) === 'curious' ? 1.2 : 1) * (perk(s, 'frog') ? 1.15 : 1));
+  const d = discover(s, locId, (hasTrait(s, 'adventurous') ? 1.3 : 1) * (favPlace ? 1.2 : 1) * exploreLuck(locId, now) * (dailyMood(s, now) === 'curious' ? 1.2 : 1) * (perk(s, 'frog') ? 1.15 : 1) * happeningLuck(locId, now) * (homeWaters(s, locId) ? 1.15 : 1));
   const r = RARITY[d.find.rarity];
   const msg = loves + (d.isNew
     ? `${d.find.icon} New discovery! ${s.name} found a ${d.find.name} (${r.name})!`
@@ -999,3 +1027,194 @@ export function setDoor(s, id) {
   s.door[it.kind] = id;
   return ok(`🚪 ${it.name} is up!`);
 }
+
+// ---------- sea or river ----------
+const HOME = { sea: ['tidepools', 'reef'], river: ['lilypond', 'willow'] };
+export const homeWaters = (s, locId) => (HOME[s.species] || []).includes(locId);
+export function setSpecies(s, species) {
+  if (!['sea', 'river'].includes(species)) return no('Pick sea or river.');
+  if (s.speciesSet) return no('Your otter already knows who they are!');
+  s.species = species;
+  s.speciesSet = true;
+  return ok(species === 'river' ? `🏞️ ${s.name || 'Your otter'} is a river otter!` : `🌊 ${s.name || 'Your otter'} is a sea otter!`);
+}
+
+// ---------- lore: residents, favors, mysteries, the Lore Book ----------
+export function addPage(s, id) {
+  if (!s.lore || s.lore.pages.includes(id)) return false;
+  s.lore.pages.push(id);
+  return true;
+}
+const npcRec = (s, id) => (s.lore.npc[id] ||= { f: 0, talked: null, favor: null });
+export const npcFriendship = (s, id) => s.lore?.npc?.[id]?.f || 0;
+
+function befriend(s, id, n) {
+  const r = npcRec(s, id);
+  const before = r.f;
+  r.f = Math.min(NPC_MAX, r.f + n);
+  return NPC_PAGE_AT.map((at, k) => (before < at && r.f >= at && addPage(s, `npc:${id}:${k}`) ? NPCS[id].pages[k].title : null)).filter(Boolean);
+}
+
+export function talkTo(s, id, now = Date.now()) {
+  const n = NPCS[id];
+  if (!n) return no('Nobody by that name.');
+  if (!npcWhere(id, now)) return no(`${n.name} isn't around right now.`);
+  const r = npcRec(s, id);
+  const today = dayKey(now);
+  if (r.talked === today) return ok('', { again: true });
+  r.talked = today;
+  s.pearls += 3;
+  const pages = befriend(s, id, 1);
+  grow(s, 'social');
+  return ok(`${n.icon} You chatted with ${n.name}. +3 pearls${pages.length ? ` 📜 New Lore Book page: “${pages[0]}”` : ''}`, { pages });
+}
+
+const LOC_ORDER = ['lilypond', 'willow', 'tidepools', 'lighthouse', 'shipwreck', 'reef', 'trench'];
+// One small favor per resident per day.
+export function favorFor(s, id, now = Date.now()) {
+  const n = NPCS[id];
+  if (!n || id === 'whisper') return null;
+  const d = dayKey(now);
+  const h = [...`${id}:${d}`].reduce((a, ch) => (a * 31 + ch.charCodeAt(0)) >>> 0, 7);
+  const home = LOC[n.home] ? n.home : 'reef';
+  const kind = ['show', 'snack', 'visit'][h % 3];
+  if (kind === 'show') {
+    const f = LOC[home].finds[h % LOC[home].finds.length];
+    return { kind, find: f.id, text: `Could you show me a ${f.name}? I've always wanted to see one up close.`, done: (st) => (st.collection[f.id] || 0) > 0 };
+  }
+  if (kind === 'snack') {
+    const sn = SNACKS[1 + (h % (SNACKS.length - 1))];
+    return { kind, snack: sn.id, text: `I'm a bit peckish. Could you spare a ${sn.name.toLowerCase()}? (${sn.price} pearls, or one from your pantry)`, done: (st) => (st.pantry?.[sn.id] || 0) > 0 || st.pearls >= sn.price };
+  }
+  const place = LOC_ORDER[h % LOC_ORDER.length];
+  return { kind, place, text: `Have a look around ${LOC[place].name} today and tell me what you see.`, done: (st) => !!st.explored[place] && dayKey(st.explored[place]) === d };
+}
+
+export function doFavor(s, id, now = Date.now()) {
+  const f = favorFor(s, id, now);
+  if (!f) return no('Nothing needed today.');
+  const r = npcRec(s, id);
+  if (r.favor === dayKey(now)) return no(`You already helped ${NPCS[id].name} today. 💕`);
+  if (!f.done(s)) return no(f.kind === 'show' ? `You haven't found a ${FINDS[f.find].name} yet.` : f.kind === 'visit' ? `Explore ${LOC[f.place].name} first.` : 'Not enough pearls.');
+  if (f.kind === 'snack') {
+    if ((s.pantry?.[f.snack] || 0) > 0) { s.pantry[f.snack] -= 1; if (!s.pantry[f.snack]) delete s.pantry[f.snack]; } else s.pearls -= SNACKS.find((x) => x.id === f.snack).price;
+  }
+  r.favor = dayKey(now);
+  s.pearls += 20;
+  const pages = befriend(s, id, 2);
+  const ups = addXP(s, 6);
+  return ok(`${NPCS[id].icon} ${NPCS[id].name} is delighted! +20 pearls, and you're better friends.${pages.length ? ` 📜 New Lore Book page: “${pages[0]}”` : ''}`, { fx: [NPCS[id].icon, '💕'], ups, pages });
+}
+
+export const mysteryAvailable = (s, m) => s.level >= m.level && (m.after || []).every((id) => s.lore.solved.includes(id));
+// Active chapters: [{ mystery, k, chapter }]
+export function activeChapters(s) {
+  return MYSTERIES.filter((m) => mysteryAvailable(s, m) && !s.lore.solved.includes(m.id)).map((m) => {
+    const k = s.lore.mysteries[m.id] || 0;
+    return { mystery: m, k, chapter: m.chapters[k] };
+  });
+}
+
+// What's still missing for a chapter, as short reasons ([] = ready).
+export function chapterMissing(s, need, place, now = Date.now()) {
+  const miss = [];
+  if (need.place !== place) miss.push(`Go to ${LOC[need.place]?.name || 'the museum'}`);
+  if (need.phase && timeOfDay(new Date(now)) !== need.phase) miss.push(`Come back at ${need.phase}`);
+  if (need.weather && weatherAt(now) !== need.weather) miss.push(`Wait for ${need.weather} weather`);
+  if (need.tide && tideAt(now).state !== need.tide) miss.push(`Wait for ${need.tide} tide`);
+  if (need.find && !(s.collection[need.find] > 0)) miss.push(`Find a ${FINDS[need.find]?.name || need.find}`);
+  if (need.npc && npcFriendship(s, need.npc[0]) < need.npc[1]) miss.push(`Be friends with ${NPCS[need.npc[0]].name} (${npcFriendship(s, need.npc[0])}/${need.npc[1]} 💕)`);
+  if (need.harvest && (s.counters?.harvests || 0) < need.harvest) miss.push(`Harvest your garden ${need.harvest} times (${s.counters?.harvests || 0}/${need.harvest})`);
+  return miss;
+}
+
+export function investigate(s, mysteryId, place, now = Date.now()) {
+  const m = MYSTERY[mysteryId];
+  if (!m || !mysteryAvailable(s, m)) return no("That mystery isn't open yet.");
+  if (s.lore.solved.includes(m.id)) return no('Already solved!');
+  const k = s.lore.mysteries[m.id] || 0;
+  const ch = m.chapters[k];
+  const miss = chapterMissing(s, ch.need, place, now);
+  if (miss.length) return no(`🔍 Not yet: ${miss.join(' · ')}.`);
+  s.lore.mysteries[m.id] = k + 1;
+  addPage(s, `m:${m.id}:${k}`);
+  count(s, 'clues');
+  let ups = addXP(s, 10);
+  if (k + 1 < m.chapters.length) return ok(`🔍 ${ch.text}`, { clue: true, ups, mystery: m.id, chapter: k });
+  s.lore.solved.push(m.id);
+  s.pearls += m.reward.pearls;
+  ups += addXP(s, m.reward.xp);
+  if (m.reward.title && !s.titles.includes(m.reward.title)) s.titles.push(m.reward.title);
+  if (m.id === 'moon') s.collection.rainbowpearl = (s.collection.rainbowpearl || 0) + 1;
+  memory(s, m.icon, `${s.name} solved “${m.name}”!`, now);
+  log(s, `Solved the mystery “${m.name}”! +${m.reward.pearls} pearls`, now);
+  return ok(`🔍 ${ch.text}`, { solved: true, ups, mystery: m.id, chapter: k, fx: [m.icon, '🔍', '✨'] });
+}
+
+// ---------- the living world ----------
+const merchantPool = () => [
+  ...Object.entries(ITEMS).filter(([, it]) => it.price > 0 && !it.event).map(([id]) => `item:${id}`),
+  ...Object.entries(FURNITURE).filter(([, it]) => it.price > 0 && !it.event).map(([id]) => `furn:${id}`),
+  ...Object.entries(DOOR_ITEMS).filter(([, it]) => it.price > 0).map(([id]) => `door:${id}`),
+];
+export function merchantWares(now = Date.now()) {
+  return merchantStock(merchantPool(), now).map((key) => {
+    const [kind, id] = key.split(':');
+    const base = kind === 'item' ? ITEMS[id] : kind === 'furn' ? FURNITURE[id] : DOOR_ITEMS[id];
+    return { key, kind, id, name: base.name, icon: base.icon || (kind === 'furn' ? '🛋️' : '🚪'), price: Math.max(1, Math.round(base.price * MERCHANT_DISCOUNT)), full: base.price };
+  });
+}
+export function buyMerchant(s, key, now = Date.now()) {
+  const w = merchantWares(now).find((x) => x.key === key);
+  if (!w) return no("The captain doesn't have that today.");
+  if (w.kind === 'item' && s.owned.includes(w.id)) return no('You already have that.');
+  if (w.kind === 'door' && s.doorItems.includes(w.id)) return no('You already have that.');
+  if (s.pearls < w.price) return no('Not enough pearls.');
+  s.pearls -= w.price;
+  if (w.kind === 'item') s.owned.push(w.id);
+  else if (w.kind === 'furn') s.furniture[w.id] = (s.furniture[w.id] || 0) + 1;
+  else s.doorItems.push(w.id);
+  befriend(s, 'barnacle', 1);
+  return ok(`⛵ "Pleasure doing business!" You bought the ${w.name} for ${w.price} pearls.${w.kind === 'furn' ? " It's in your den storage." : ''}`, { fx: ['⛵', '✨'] });
+}
+
+// What your otter got up to while you were gone, with small rewards.
+export function welcomeBack(s, now = Date.now()) {
+  const stories = awayStories(s, s.lastSeen || now, now);
+  s.lastSeen = now;
+  const c = s.companions?.active && s.companions.owned[s.companions.active];
+  for (const st of stories) {
+    if (st.pearls) s.pearls += st.pearls;
+    if (st.happy) stat(s, 'happiness', st.happy);
+    if (st.bond && c) c.bond = Math.min(BOND_MAX, c.bond + st.bond);
+  }
+  return stories;
+}
+
+// ---------- legacy (after Wise) ----------
+export function claimLegacy(s, id) {
+  const m = MASTERY[id];
+  if (!m) return no('Unknown goal.');
+  if (s.level < LEGACY_LEVEL) return no(`Legacy goals unlock when ${s.name} is a Wise Otter (level ${LEGACY_LEVEL}).`);
+  const have = s.legacy.claimed[id] || 0;
+  const reached = m.goals.filter((g) => m.value(s) >= g).length;
+  if (have >= reached) return no(have >= m.goals.length ? 'All tiers done! 🦪' : `Keep going! Next: ${m.goals[have]} ${m.desc.toLowerCase()}.`);
+  const before = rankOf(legacyStars(s));
+  s.legacy.claimed[id] = have + 1;
+  const tier = TIERS[have];
+  s.pearls += tier.pearls;
+  const ups = addXP(s, 20);
+  const after = rankOf(legacyStars(s));
+  if (have + 1 >= 3 && !s.titles.includes(m.title)) s.titles.push(m.title);
+  const ranked = after.name !== before.name;
+  if (ranked) memory(s, after.icon, `${s.name} became a ${after.name}!`);
+  return ok(`${tier.icon} ${m.name} ${tier.name}! +${tier.pearls} pearls, +1 Legacy star${ranked ? `. ${after.icon} ${s.name} is now a ${after.name}!` : ''}`, { fx: [tier.icon, m.icon, '✨'], ups, ranked });
+}
+
+export const allTitles = (s) => [...new Set([...(s.titles || []), ...(s.level >= LEGACY_LEVEL ? [rankOf(legacyStars(s)).name] : [])])];
+export function setTitle(s, title) {
+  if (title && !allTitles(s).includes(title)) return no("You haven't earned that title yet.");
+  s.legacy.title = title || null;
+  return ok(title ? `🏷️ Now known as ${s.name} ${displayTitle(s)}!` : 'Title removed.');
+}
+export const displayTitle = (s) => (s.legacy?.title ? (/^(the |Friend )/.test(s.legacy.title) ? s.legacy.title : `the ${s.legacy.title}`) : '');

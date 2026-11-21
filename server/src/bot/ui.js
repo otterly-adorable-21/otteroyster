@@ -4,7 +4,7 @@ import { otterSVG } from '../../../js/otter.js';
 import { STAT_INFO, mood, coziness, COZY_MAX, personaInfo, stageOf } from '../../../js/core.js';
 import { denSVG } from '../../../js/den.js';
 import { companionSVG } from '../../../js/extras-draw.js';
-import { activeCompanion } from '../../../js/core.js';
+import { activeCompanion, displayTitle } from '../../../js/core.js';
 import { COMPANIONS, BOND_NAMES, bondLevel } from '../../../js/companions.js';
 
 export const COLOR = 0x1f8f95;
@@ -116,7 +116,7 @@ export function petAttachment(s) {
 
 // Embed + file for showing an otter. Pass {files, embeds} straight into a reply.
 export function petCard(s, { title, extra = '', footer } = {}) {
-  const e = embed(title ?? `${s.name} 🦦`, `**Level ${s.level}** ${stageOf(s.level).icon} ${stageOf(s.level).name}  ·  ${moodLine(s)}\n${statLines(s)}${extra ? `\n\n${extra}` : ''}`);
+  const e = embed(title ?? `${s.name} ${displayTitle(s)} 🦦`.replace('  ', ' '), `${s.species === 'river' ? '🏞️ River otter' : '🌊 Sea otter'} · **Level ${s.level}** ${stageOf(s.level).icon} ${stageOf(s.level).name}  ·  ${moodLine(s)}\n${statLines(s)}${extra ? `\n\n${extra}` : ''}`);
   e.addFields({ name: 'Pearls', value: `⚪ ${s.pearls}`, inline: true }, { name: 'XP', value: `${s.xp}/${40 + s.level * 30}`, inline: true });
   const pi = personaInfo(s);
   e.addFields(

@@ -15,6 +15,10 @@ import { heartsText, friendLevel } from '../../../js/social.js';
 import { eventEndsAt, nextEvent } from '../../../js/events.js';
 import { CROPS, plotStage, plotReadyAt } from '../../../js/garden.js';
 import { COMPANIONS, BOND_NAMES, BOND_PERK, bondLevel, TREAT_PRICE } from '../../../js/companions.js';
+import { NPCS, NPC_MAX, MYSTERIES, TOTAL_PAGES } from '../../../js/lore.js';
+import { happeningsAt, npcWhere, npcLine, merchantDocked } from '../../../js/worldsim.js';
+import { MASTERIES, TIERS, LEGACY_LEVEL, legacyStars, rankOf, nextRank } from '../../../js/legacy.js';
+import { weatherAt, WEATHER, tideAt, TIDE_NAMES } from '../../../js/ambience.js';
 
 const solo = Object.fromEntries(SOLO.map((g) => [g.id, g]));
 const duels = Object.fromEntries(DUELS.map((g) => [g.id, g]));
@@ -219,6 +223,8 @@ export function createBot({ store, social, museum, siteUrl }) {
         const { state, res } = load(user, (s) => {
           if (s.name) return false;
           s.name = name;
+          const kind = i.options.getString('kind');
+          if (kind) core.setSpecies(s, kind);
           core.log(s, `${user.username} adopted ${name} on Discord! 🦦`);
           return true;
         });
@@ -283,6 +289,40 @@ export function createBot({ store, social, museum, siteUrl }) {
         const r = social.gift(me.id, other.id, { kind: 'pearls', amount: i.options.getInteger('pearls'), note: i.options.getString('note') });
         if (r.error) return whisper(i, r.status === 403 ? `You need to be friends first! Try \`/friend add\` with <@${u.id}>.` : r.error);
         return i.reply({ content: `🎁 ${user.username} sent <@${u.id}> **${i.options.getInteger('pearls')} pearls**! Open it with \`/friend list\` or on the website.`, allowedMentions: { users: [u.id] } });
+      }
+      case 'world': {
+        const now = Date.now();
+        const w = WEATHER[weatherAt(now)];
+        const e = embed('🗞️ The Pond Gazette', `${w.icon} ${w.name} · ${TIDE_NAMES[tideAt(now).state]}\n\n${happeningsAt(now).map((h) => `${h.icon} **${h.name}** at ${LOC[h.place].name}\n${h.text}`).join('\n\n')}${merchantDocked(now) ? '\n\n⛵ **Captain Barnacle is in port** at Shipwreck Cove with bargains (buy on the website).' : ''}`, GOLD);
+        e.addFields({ name: "Who's where", value: Object.entries(NPCS).map(([id, n]) => `${n.icon} **${n.name}**: ${npcWhere(id, now) ? (LOC[npcWhere(id, now)]?.name || 'the museum') : '*resting*'}`).join('\n') });
+        const feed = store.world().feed.slice(0, 5);
+        if (feed.length) e.addFields({ name: 'Around the pond', value: feed.map((f) => `${f.icon || '📣'} ${f.text}`).join('\n') });
+        return i.reply({ embeds: [e], components: [row(linkBtn(`${siteUrl}/#missions`, 'Explore on the website'))] });
+      }
+      case 'lore': {
+        const { state } = load(user);
+        if (!state.name) return i.reply({ ...adoptPrompt(user.id), flags: EPHEMERAL });
+        const e = embed(`📜 ${state.name}'s Lore Book`, `**${state.lore.pages.length}/${TOTAL_PAGES}** pages. Talk to the pond folk, help with their favors and solve mysteries on the website.`);
+        e.addFields({ name: 'Mysteries', value: MYSTERIES.map((m) => {
+          const solved = state.lore.solved.includes(m.id);
+          const k = state.lore.mysteries[m.id] || 0;
+          const open = core.mysteryAvailable(state, m);
+          return `${m.icon} **${m.name}**: ${solved ? '✅ solved' : open ? `chapter ${k + 1}/${m.chapters.length}\n> 🔍 ${m.chapters[k].hint}` : '🔒 locked'}`;
+        }).join('\n') });
+        e.addFields({ name: 'The pond folk', value: Object.entries(NPCS).map(([id, n]) => `${n.icon} ${n.name} · 💕 ${core.npcFriendship(state, id)}/${NPC_MAX}${npcWhere(id) ? ` · *“${npcLine(id)}”*` : ''}`).join('\n').slice(0, 1024) });
+        return i.reply({ embeds: [e] });
+      }
+      case 'legacy': {
+        const { state } = load(user);
+        if (!state.name) return i.reply({ ...adoptPrompt(user.id), flags: EPHEMERAL });
+        const stars = legacyStars(state);
+        const rank = rankOf(stars);
+        const nx = nextRank(stars);
+        const locked = state.level < LEGACY_LEVEL;
+        const e = embed(`${locked ? '🦉' : rank.icon} ${state.name}'s Legacy`, locked ? `Legacy goals open when **${state.name}** is a Wise Otter (level ${LEGACY_LEVEL}). Progress already counts!` : `**${rank.name}** · ⭐ ${stars} Legacy stars${nx ? ` · next: ${nx.icon} ${nx.name} at ${nx.stars}` : ''}${core.displayTitle(state) ? `\n🏷️ ${state.name} ${core.displayTitle(state)}` : ''}`, GOLD);
+        e.addFields({ name: 'Masteries', value: MASTERIES.map((m) => { const have = state.legacy.claimed[m.id] || 0; return `${m.icon} **${m.name}** ${TIERS.map((t, k) => (k < have ? t.icon : '▫️')).join('')} · ${m.value(state)}${have < m.goals.length ? `/${m.goals[have]}` : ''}`; }).join('\n') });
+        e.setFooter({ text: 'Claim tiers and choose your title on the website (Otter tab).' });
+        return i.reply({ embeds: [e] });
       }
       case 'garden': {
         const { state } = load(user);
@@ -408,6 +448,7 @@ export function createBot({ store, social, museum, siteUrl }) {
           '`/friend` add and list friends · `/hug @friend` · `/gift @friend` pearls',
           '`/event` this season\'s event: quests, tokens and limited items',
           '`/garden` plant, water and harvest · `/companion` play with your pet companion · `/museum` the community museum',
+          '`/world` today\'s happenings and who\'s where · `/lore` your Lore Book · `/legacy` lifelong goals for Wise Otters',
           '',
           `**Solo games** \`/play\`: ${SOLO.map((g) => `${g.emoji} ${g.name}`).join(', ')}`,
           `**Challenges** \`/challenge @friend\`: ${DUELS.map((g) => `${g.emoji} ${g.name}`).join(', ')}`,

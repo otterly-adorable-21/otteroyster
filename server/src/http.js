@@ -184,6 +184,7 @@ export function startHttp({ store, social, social2, museum, lane, auth, port, si
         return send(res, status, rest);
       }
 
+      case 'GET /api/world': return send(res, 200, store.world());
       case 'POST /api/garden/water': {
         const p = authed(req);
         if (!p) return send(res, 401, { error: 'Not signed in' });

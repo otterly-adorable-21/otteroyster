@@ -2,15 +2,18 @@
 
 Drop a picture into the right folder with the right name and it replaces the
 drawn version on the website (and in Shelly's Discord pictures for the otter,
-clothes and den). **0 of 301** spots have art so far.
+clothes and den). **0 of 337** spots have art so far.
 
 See every spot with a live preview on the site's art checklist page: `/art.html`.
 
 | Folder | What goes there | Spots |
 | --- | --- | --- |
-| [`otter/`](otter/) | The otter | 0/9 |
+| [`otter/`](otter/) | The otter | 0/18 |
 | [`clothes/`](clothes/) | Clothes | 0/32 |
 | [`companions/`](companions/) | Pet companions | 0/16 |
+| [`npcs/`](npcs/) | Pond folk (characters) | 0/7 |
+| [`happenings/`](happenings/) | World happenings | 0/10 |
+| [`critters/`](critters/) | Pond wildlife | 0/10 |
 | [`garden/`](garden/) | Garden | 0/3 |
 | [`crops/`](crops/) | Garden crops | 0/35 |
 | [`door/`](door/) | Front door | 0/23 |
@@ -35,7 +38,7 @@ See every spot with a live preview on the site's art checklist page: `/art.html`
 | [`postcards/`](postcards/) | Shell Mail postcards | 0/4 |
 | [`icons/`](icons/) | Interface icons | 0/7 |
 
-Animations live in [`../animations/`](../animations/) (19 moments plus tricks and per-snack ones).
+Animations live in [`../animations/`](../animations/) (21 moments plus tricks and per-snack ones).
 
 **Tips**
 - Upload with the final file name. Renaming images on GitHub's website has emptied them before.
