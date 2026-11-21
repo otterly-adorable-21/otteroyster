@@ -25,16 +25,17 @@ export function startHttp({ store, social, social2, auth, port, siteRoot, allowe
   const registerLimit = limiter(20, 60_000);
   const apiLimit = limiter(240, 60_000);
 
+  // Any website may call the API: it uses Bearer tokens (never cookies), so a page
+  // can only act for a player whose token it already holds. This keeps the game
+  // working from otteroyster.online, GitHub Pages, or a preview address alike.
   function cors(req, res) {
-    const origin = req.headers.origin;
-    if (origin && (allowedOrigins.includes(origin) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin))) {
-      res.setHeader('Access-Control-Allow-Origin', origin);
-      res.setHeader('Vary', 'Origin');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS');
-      res.setHeader('Access-Control-Max-Age', '600');
-    }
+    if (!req.headers.origin) return;
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS');
+    res.setHeader('Access-Control-Max-Age', '600');
   }
+  void allowedOrigins;
 
   const send = (res, status, data) => {
     res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
