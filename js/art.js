@@ -16,7 +16,7 @@ import { COMPANIONS } from './companions.js';
 import { CROPS } from './garden.js';
 import { DOOR_ITEMS } from './door.js';
 import { NPCS } from './lore.js';
-import { HAPPENINGS, CRITTERS } from './worldsim.js';
+import { HAPPENINGS } from './worldsim.js';
 import { TRINKETS, BOOKS, FISH } from './treasures.js';
 import { COMP_ACCS } from './companions.js';
 
@@ -101,10 +101,6 @@ export const GROUPS = [
   {
     id: 'happenings', size: '256 × 256', name: 'World happenings', tip: 'Icons for the things happening around the pond, 256 × 256 px.',
     slots: Object.entries(HAPPENINGS).map(([id, h]) => ({ id, name: h.name, emoji: h.icon })),
-  },
-  {
-    id: 'critters', size: '128 × 128', name: 'Pond wildlife', tip: 'Little animals that wander across the pond scene, 128 × 128 px, transparent, facing right. Animated GIF/WebP works great.',
-    slots: Object.entries(CRITTERS).map(([id, e]) => ({ id, name: id[0].toUpperCase() + id.slice(1), emoji: e })),
   },
   {
     id: 'trinkets', size: '256 × 256', name: 'Trinkets', tip: 'Collectible trinkets, 256 × 256 px, transparent. They also appear inside the den display cases.',

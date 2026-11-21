@@ -1069,3 +1069,23 @@ details.lore-page summary { cursor: pointer; font-weight: 700; font-family: Nuni
 @keyframes swim { from { transform: translateX(0) scaleX(-1); } 49% { transform: translateX(min(80vw, 420px)) scaleX(-1); } 50% { transform: translateX(min(80vw, 420px)) scaleX(1); } to { transform: translateX(0) scaleX(1); } }
 .booth-preview svg, .booth-photo { width: 100%; height: auto; border-radius: 14px; display: block; margin: 8px 0; }
 svg.swatch-chip { display: block; }
+
+/* ---------- headers with buttons; tidy chip rows ---------- */
+.den-head { flex-wrap: wrap; }
+.den-head .row { flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.den-head .btn.on { background: var(--card); color: var(--ink); box-shadow: var(--gold-ring); }
+.chips { scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+.closet-slots { margin-top: 12px; }
+.segmented + .chips { margin-top: 12px; }
+.den-head { flex-wrap: nowrap; }
+.den-head .section-title { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.den-head .row { flex: none; flex-wrap: nowrap; gap: 4px; }
+.den-head .btn.small { padding: 6px 8px; font-size: .78rem; }
+@media (max-width: 520px) { .den-head .btn.small .lbl { display: none; } .den-head .btn.small { padding: 6px 10px; font-size: 1rem; } }
+.den-head .section-title { flex: 1; }
+.explore-head .row { width: auto; flex: none; }
+.explore-head .section-title { white-space: nowrap; }
+.explore-head .row { gap: 4px; }
+.explore-head .row .btn.small { padding: 6px 9px; }
+@media (max-width: 520px) { .explore-head .lbl { display: none; } }

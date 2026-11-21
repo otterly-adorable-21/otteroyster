@@ -105,7 +105,7 @@ Every command works in servers, in DMs with Shelly, and in any chat if the app i
 
 ## Art
 
-**636 picture spots** plus the brand art. Upload each file to the folder shown, named like the code (plus `.png`). PNG works everywhere; WebP/GIF only on the website. Until a spot has art, a drawn version shows. Live checklist with previews: `/art.html`.
+**626 picture spots** plus the brand art. Upload each file to the folder shown, named like the code (plus `.png`). PNG works everywhere; WebP/GIF only on the website. Until a spot has art, a drawn version shows. Live checklist with previews: `/art.html`.
 
 ### Brand art (`assets/`)
 | File | Size | Where |
@@ -142,11 +142,6 @@ Transparent portraits, 512 × 512 px, head and shoulders or full body. Shown in 
 Icons for the things happening around the pond, 256 × 256 px.
 
 - **256 × 256**: `whales` 🐋 Whale migration · `fireflies` ✨ Firefly swarm · `salmon` 🐟 Salmon run · `kingtide` 🌊 King tide · `storm` ⛈️ Treasure on the beach · `ducklings` 🐥 Duckling parade · `jellies` 🪼 Moon jelly bloom · `fog` 🌫️ Lighthouse fog · `dolphins` 🐬 Dolphin visit · `geese` 🪿 Geese heading south
-
-### Pond wildlife (`assets/art/critters/`) · 10
-Little animals that wander across the pond scene, 128 × 128 px, transparent, facing right. Animated GIF/WebP works great.
-
-- **128 × 128**: `firefly` ✨ Firefly · `moth` 🦋 Moth · `frog` 🐸 Frog · `bat` 🦇 Bat · `dragonfly` 🪰 Dragonfly · `butterfly` 🦋 Butterfly · `duck` 🦆 Duck · `snail` 🐌 Snail · `leaf` 🍃 Leaf · `duckling` 🐥 Duckling
 
 ### Trinkets (`assets/art/trinkets/`) · 33
 Collectible trinkets, 256 × 256 px, transparent. They also appear inside the den display cases.
