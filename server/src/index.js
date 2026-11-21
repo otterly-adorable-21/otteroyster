@@ -16,8 +16,18 @@ loadEnv();
 const here = dirname(fileURLToPath(import.meta.url));
 const env = process.env;
 
-const db = openDb(resolve(here, '..', env.DB_PATH || './data/otteroyster.db'));
-console.log(`💾 Database: ${resolve(here, '..', env.DB_PATH || './data/otteroyster.db')}`);
+// Keep the database on a persistent volume. On Railway, a mounted volume tells us
+// where it is, so use it even if DB_PATH points somewhere else; without a volume
+// every redeploy would start from an empty database (and sign everyone out).
+const volume = env.RAILWAY_VOLUME_MOUNT_PATH;
+let dbPath = resolve(here, '..', env.DB_PATH || './data/otteroyster.db');
+if (volume && !dbPath.startsWith(resolve(volume))) dbPath = resolve(volume, 'otteroyster.db');
+if (env.RAILWAY_ENVIRONMENT && !volume) {
+  console.warn('⚠️  ⚠️  No Railway volume is attached! Players, sign-ins and progress will be WIPED on every redeploy.');
+  console.warn('⚠️  Fix: in Railway, right-click the service → Attach volume, mount path /data. Then redeploy.');
+}
+const db = openDb(dbPath);
+console.log(`💾 Database: ${dbPath}${volume ? ` (on the Railway volume at ${volume})` : ''}`);
 const artCount = loadServerArt(resolve(here, '../..'));
 if (artCount) console.log(`🎨 Custom art: ${artCount} pictures for Discord images`);
 const store = createStore(db);
@@ -53,7 +63,7 @@ startHttp({
   port: Number(env.PORT || 8787),
   siteRoot: resolve(here, '..', '..'),
   allowedOrigins,
-  info: () => ({ invite, bot: !!bot?.isReady() }),
+  info: () => ({ storage: volume ? 'railway-volume' : env.RAILWAY_ENVIRONMENT ? 'TEMPORARY (attach a volume!)' : 'local disk', invite, bot: !!bot?.isReady() }),
 });
 
 if (env.DISCORD_TOKEN) {

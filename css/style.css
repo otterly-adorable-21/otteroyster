@@ -987,7 +987,7 @@ textarea.note-input { resize: vertical; font: inherit; }
 .species-banner { display: grid; gap: 4px; margin-bottom: 10px; }
 
 /* ---------- legacy ---------- */
-.legacy.teaser { opacity: .9; }
+.legacy.teaser .persona-icon { filter: saturate(.7); }
 .masteries { display: grid; gap: 8px; margin-top: 10px; }
 .mastery { display: flex; gap: 10px; align-items: center; }
 .mastery .m-icon { font-size: 1.5rem; width: 2rem; text-align: center; }
@@ -1034,3 +1034,8 @@ details.lore-page summary { cursor: pointer; font-weight: 700; font-family: Nuni
 @keyframes critter { from { transform: translateX(0) translateY(0); } 25% { transform: translateX(110px) translateY(-8px); } 50% { transform: translateX(220px) translateY(4px); } 75% { transform: translateX(330px) translateY(-6px); } to { transform: translateX(480px) translateY(0); } }
 @keyframes critter-float { from { transform: translate(0, 0); opacity: .2; } 30% { transform: translate(140px, -20px); opacity: 1; } 60% { transform: translate(260px, 10px); opacity: .4; } to { transform: translate(480px, -10px); opacity: .9; } }
 @media (prefers-reduced-motion: reduce) { .critter { display: none; } }
+
+/* ---------- spacing between stacked cards ---------- */
+#panel > .card + .card, #panel > .card + details.card, #panel > details.card + .card { margin-top: 12px; }
+#panel > .explore-head + .map-wrap { margin-top: 8px; }
+.relogin { display: grid; gap: 6px; margin-bottom: 12px; border: 2px solid #5865f2; }

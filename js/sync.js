@@ -4,6 +4,8 @@ import { API_BASE, API_CANDIDATES } from './config.js';
 
 const TOKEN_KEY = 'otteroyster.token';
 const VERSION_KEY = 'otteroyster.version';
+const DISCORD_KEY = 'otteroyster.discord';
+const RELOGIN_KEY = 'otteroyster.relogin';
 
 function ls(k, v) {
   try {
@@ -92,9 +94,15 @@ export const sync = {
   },
 
   unlink() {
+    // A Discord sign-in that stopped working (for example the server's data was
+    // reset) asks to sign in again instead of quietly forgetting it.
+    if (ls(TOKEN_KEY) && ls(DISCORD_KEY)) ls(RELOGIN_KEY, '1');
     ls(TOKEN_KEY, null);
     ls(VERSION_KEY, null);
   },
+  get needsRelogin() { return !this.linked && !!ls(RELOGIN_KEY); },
+  rememberDiscord(on) { ls(DISCORD_KEY, on ? '1' : null); if (on) ls(RELOGIN_KEY, null); },
+  dismissRelogin() { ls(RELOGIN_KEY, null); },
 
   // Create an online account for the otter on this device (no Discord needed).
   async register(state) {

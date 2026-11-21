@@ -145,6 +145,7 @@ async function finishDiscordLogin() {
 
   const finish = (st, version, msg) => {
     sync.useToken(newTok, version);
+    sync.rememberDiscord(true);
     linkedName = acct.discordName || linkedName;
     friendsData = null;
     adoptRemote(st, version, msg);
@@ -761,6 +762,8 @@ function panelHome() {
   const asleep = state.sleeping;
   const nm = esc(state.name || 'your otter');
   return `
+    ${sync.needsRelogin && sync.discordLoginUrl ? `<div class="card relogin"><b>🔑 Please sign in with Discord again</b><small class="muted">Your sign-in on this device expired. ${esc(state.name || 'Your otter')} is safe here and will be saved to your account when you sign back in.</small>
+      <div class="row left">${discordButton('Sign in with Discord')}<button class="link small" data-action="relogin-dismiss">Not now</button></div></div>` : ''}
     ${speciesBanner()}
     <h2 class="section-title">Take care of ${nm}</h2>
     <div class="actions">
@@ -2047,6 +2050,7 @@ document.addEventListener('click', async (e) => {
     }
     case 'journal': journalOpen = !journalOpen; renderPanel(); window.scrollTo({ top: 0 }); return null;
     case 'den-edit': denEdit = !denEdit; denSel = null; return renderPanel();
+    case 'relogin-dismiss': sync.dismissRelogin(); return renderPanel();
     case 'species': { const r = act(core.setSpecies(state, id)); lastOtter = ''; return r; }
     case 'legacy-claim': return act(core.claimLegacy(state, id));
     case 'lore-book': return openLoreBook();
