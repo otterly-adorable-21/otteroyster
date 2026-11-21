@@ -6,7 +6,7 @@ import { LOC, FINDS, RARITY, MISSION_LOC, EXPLORE_ENERGY, EXPLORE_COOLDOWN_MIN, 
 import { activeEvent, questsFor, EVENT, EVENT_FIND_CHANCE, TOKENS_PER_ACTIVITY } from './events.js';
 import { TRAITS, TRAIT_IDS, blankPersona, favoritesFor, traitOf, hasTrait } from './personality.js';
 import { dailyMood, exploreLuck, weatherAt } from './ambience.js';
-import { COMPANIONS, BOND_PERK, BOND_MAX, PLAY_COOLDOWN, TREAT_PRICE, BOND_DECAY_PER_DAY, bondLevel, COMP_COLORS, COMP_PATTERNS, COMP_ACCS, COMP_TRAIT_IDS } from './companions.js';
+import { COMPANIONS, BOND_PERK, BOND_MAX, PLAY_COOLDOWN, TREAT_PRICE, TREAT_COOLDOWN, BOND_DECAY_PER_DAY, bondLevel, COMP_COLORS, COMP_PATTERNS, COMP_ACCS, COMP_TRAIT_IDS } from './companions.js';
 import { CROPS, PLOT_LEVELS, FRIEND_WATER_BONUS, plotStage } from './garden.js';
 import { DOOR_ITEMS, DOOR_COZY, defaultDoor } from './door.js';
 import { NPCS, NPC_PAGE_AT, NPC_MAX, MYSTERIES, MYSTERY } from './lore.js';
@@ -1010,11 +1010,14 @@ export function playCompanion(s, now = Date.now()) {
   return ok(`${COMPANIONS[id].icon} ${s.name} and ${c.name} played together!${leveled && c.bond >= BOND_PERK && before < 2 ? ` You're bonded now: ${COMPANIONS[id].perk.toLowerCase()}!` : ''}`, { fx: [COMPANIONS[id].icon, '💕'], ups });
 }
 
-export function treatCompanion(s) {
+export function treatCompanion(s, now = Date.now()) {
   const id = s.companions.active;
   const c = id && s.companions.owned[id];
   if (!c) return no('Pick a companion first.');
   if (c.bond >= BOND_MAX) return no(`${c.name} couldn't be any happier!`);
+  const wait = (c.lastTreat || 0) + TREAT_COOLDOWN - now;
+  if (wait > 0) return no(`${c.name} is still full from the last treat. Try again in ${wait >= 3600000 ? `${Math.ceil(wait / 3600000)} h` : `${Math.ceil(wait / 60000)} min`}.`);
+  c.lastTreat = now;
   if (s.pearls < TREAT_PRICE) return no('Not enough pearls.');
   s.pearls -= TREAT_PRICE;
   c.bond = Math.min(BOND_MAX, c.bond + 15);

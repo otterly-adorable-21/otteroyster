@@ -6,7 +6,7 @@ import { sync } from './sync.js';
 import { detectArt, art } from './assets.js';
 import { playCare, setSleeping } from './animations.js';
 import { ic, artUrl, loadArtManifest } from './art.js';
-import { COMPANIONS, BOND_PERK, BOND_NAMES, bondLevel, TREAT_PRICE, PLAY_COOLDOWN, COMP_COLORS, COMP_PATTERNS, COMP_ACCS, COMP_TRAITS } from './companions.js';
+import { COMPANIONS, BOND_PERK, BOND_NAMES, bondLevel, TREAT_PRICE, TREAT_COOLDOWN, PLAY_COOLDOWN, COMP_COLORS, COMP_PATTERNS, COMP_ACCS, COMP_TRAITS } from './companions.js';
 import { TRINKETS, TRINKET_IDS, TRINKET_GROUPS, BOOKS, BOOK_IDS, FISH, FISH_IDS, FISHING_COOLDOWN } from './treasures.js';
 import { CROPS, PLOT_LEVELS, plotStage, plotReadyAt } from './garden.js';
 import { DOOR_ITEMS, DOOR_KINDS } from './door.js';
@@ -735,7 +735,7 @@ function companionCard() {
       ${COMP_TRAITS[c.trait] ? `<small class="muted">${COMP_TRAITS[c.trait].icon} ${COMP_TRAITS[c.trait].name}: ${esc(c.name)} ${COMP_TRAITS[c.trait].line}</small>` : ''}
       <div class="row left">
         <button class="btn small ${wait > 0 ? '' : 'primary'}" data-action="comp-play">${wait > 0 ? `🎾 Play in ${Math.ceil(wait / 60000)}m` : '🎾 Play'}</button>
-        <button class="btn small" data-action="comp-treat">🍪 Treat · <span class="pearl-icon"></span> ${TREAT_PRICE}</button>
+        ${(() => { const tw = (c.lastTreat || 0) + TREAT_COOLDOWN - Date.now(); return tw > 0 ? `<button class="btn small" disabled>🍪 Treat in ${tw >= 3600000 ? `${Math.ceil(tw / 3600000)}h` : `${Math.ceil(tw / 60000)}m`}</button>` : `<button class="btn small" data-action="comp-treat">🍪 Treat · <span class="pearl-icon"></span> ${TREAT_PRICE}</button>`; })()}
         <button class="btn small" data-action="comp-style" data-id="${c.id}">🎨 Style</button>
         <button class="btn small" data-action="comp-cove">🐾 ${owned.length > 1 ? 'Switch' : 'More'}</button>
       </div></div></div>`;

@@ -12,7 +12,7 @@ Made by `node tools/reference.mjs` from the game itself. Contents: [Website](#we
 ### Otter tab
 - **Care**: Cuddle, Bath, Nap / Wake, and 4 snacks (Kelp Chips, Clam, Fresh Fish, Oyster Cake); snacks from your pantry are free
 - **Stats**: Full, Happy, Energy, Clean, level, XP, pearls; save status chip
-- **Companion card**: play, treats, style (colors, patterns, accessories), switch companions, Companion Cove shop
+- **Companion card**: play (every 2 hours), treats (5 pearls, every 4 hours), style (colors, patterns, accessories), switch companions, Companion Cove shop
 - **Today**: daily gift, birthday party banner, seasonal event banner, today's mood, weather, 24-hour forecast, tides
 - **The living pond**: day/night, shared weather, tides, seasonal effects, thought bubbles, sleeping poses, your companion beside your otter
 - **Growing up**: Pup → Young (Lv 5) → Grown (Lv 10) → Wise (Lv 20), each with a free item; tell stories, learn 4 tricks, share wisdom; birthday (change once)

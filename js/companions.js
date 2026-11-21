@@ -6,6 +6,7 @@ export const BOND_PERK = 25;
 export const BOND_MAX = 100;
 export const PLAY_COOLDOWN = 2 * 3600000;
 export const TREAT_PRICE = 5;
+export const TREAT_COOLDOWN = 4 * 3600000; // one treat every 4 hours, so bonds grow over time
 export const BOND_DECAY_PER_DAY = 6; // only after a day without play
 
 export const COMPANIONS = {
