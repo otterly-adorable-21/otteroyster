@@ -6,11 +6,13 @@ import { openDb } from '../src/db.js';
 import { createStore } from '../src/players.js';
 import { createBot } from '../src/bot/index.js';
 import { createSocial } from '../src/social.js';
+import { createMuseum } from '../src/museum.js';
 
 const db = openDb(':memory:');
 const store = createStore(db);
 const social = createSocial(db, store);
-const { handle } = createBot({ store, social, siteUrl: 'https://otteroyster.online' });
+const museum = createMuseum(db, store);
+const { handle } = createBot({ store, social, museum, siteUrl: 'https://otteroyster.online' });
 
 const errors = [];
 const origError = console.error;
@@ -343,6 +345,11 @@ test('friends on Discord: add, accept, hug, gift, open', async () => {
   assert.match(text(), /You opened: 10 pearls/);
   await cmd(users.ana, 'visit', { friend: users.bo });
   assert.match(text(), /Friendship/);
+});
+
+test('museum on Discord', async () => {
+  await cmd(users.ana, 'museum');
+  assert.match(text(), /Pond Museum/);
 });
 
 test('seasonal event on Discord', async () => {

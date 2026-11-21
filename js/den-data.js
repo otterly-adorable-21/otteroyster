@@ -220,6 +220,13 @@ export const FURNITURE = {
       <path d="M35,18 Q34,8 40,4" stroke="#5a7a2a" stroke-width="5" stroke-linecap="round" fill="none"/>
       <path d="M18,34 L26,28 L28,38Z M52,34 L44,28 L42,38Z" fill="#ffe066"/><path d="M18,46 Q35,58 52,46 L46,48 L42,44 L38,49 L32,44 L28,49 L24,45Z" fill="#ffe066"/>`,
   },
+  museumcase: {
+    name: 'Museum Display Case', cat: 'decor', price: null, level: 1, cozy: 3, event: 'museum', vb: '0 0 60 80', w: 40,
+    svg: `<rect x="6" y="56" width="48" height="22" rx="3" fill="#8a6644"/><rect x="2" y="52" width="56" height="7" rx="2" fill="#a8865f"/>
+      <rect x="8" y="10" width="44" height="42" rx="4" fill="#d0ebff" fill-opacity=".45" stroke="#d9b45a" stroke-width="3"/>
+      <circle cx="30" cy="38" r="9" fill="url(#den-pearl)"/><rect x="22" y="47" width="16" height="5" rx="2" fill="#d9b45a"/>
+      <path d="M14,16 L22,16" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".8"/>`,
+  },
 };
 
 export const WALLPAPERS = {

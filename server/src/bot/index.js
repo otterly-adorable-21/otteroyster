@@ -20,7 +20,7 @@ const parties = Object.fromEntries(PARTY.map((g) => [g.id, g]));
 
 const asPlayer = (u) => ({ id: u.id, name: u.displayName || u.globalName || u.username, username: u.username });
 
-export function createBot({ store, social, siteUrl }) {
+export function createBot({ store, social, museum, siteUrl }) {
   // ---------- shared context for games ----------
   function makeCtx(user) {
     return {
@@ -241,6 +241,17 @@ export function createBot({ store, social, siteUrl }) {
         const r = social.gift(me.id, other.id, { kind: 'pearls', amount: i.options.getInteger('pearls'), note: i.options.getString('note') });
         if (r.error) return whisper(i, r.status === 403 ? `You need to be friends first! Try \`/friend add\` with <@${u.id}>.` : r.error);
         return i.reply({ content: `🎁 ${user.username} sent <@${u.id}> **${i.options.getInteger('pearls')} pearls**! Open it with \`/friend list\` or on the website.`, allowedMentions: { users: [u.id] } });
+      }
+      case 'museum': {
+        if (!museum) return whisper(i, 'The museum is closed right now.');
+        const me = store.forDiscord(user);
+        const m = museum.view(me.id);
+        const filled = Math.round(m.pct / 10);
+        const e = embed('🏛️ The Pond Museum', `${'🟨'.repeat(filled)}${'⬛'.repeat(10 - filled)} **${m.species}/${m.totalSpecies}** exhibits (${m.pct}%)\n${m.donations} donations from the community. Donate your spare discoveries on the website!`, GOLD);
+        e.addFields({ name: 'Community milestones', value: m.milestones.map((x) => `${x.reached ? '✅' : '🔒'} ${x.pct}%: ${x.pearls} pearls${x.item ? ' + display case' : ''}${x.claimed ? ' (claimed)' : ''}`).join('\n') });
+        if (m.patrons.length) e.addFields({ name: 'Top donors', value: m.patrons.slice(0, 5).map((x, k) => `${['🥇', '🥈', '🥉'][k] || '▫️'} ${x.name}: ${x.count}`).join('\n') });
+        if (m.you) e.setFooter({ text: `You've donated ${m.you.donations} · ${m.you.firsts} firsts` });
+        return i.reply({ embeds: [e], components: [row(linkBtn(siteUrl, 'Visit the museum'))] });
       }
       case 'event': {
         if (!load(user).state.name) return i.reply({ ...adoptPrompt(user.id), flags: EPHEMERAL });
@@ -514,9 +525,9 @@ export function createBot({ store, social, siteUrl }) {
   return { handle };
 }
 
-export async function startBot({ token, store, social, siteUrl, devGuildId, registerCommands = true }) {
+export async function startBot({ token, store, social, museum, siteUrl, devGuildId, registerCommands = true }) {
   const client = new Client({ intents: [GatewayIntentBits.Guilds] });
-  const { handle } = createBot({ store, social, siteUrl });
+  const { handle } = createBot({ store, social, museum, siteUrl });
   client.on(Events.InteractionCreate, handle);
   client.once(Events.ClientReady, async (c) => {
     console.log(`🦦 Discord bot logged in as ${c.user.tag}`);

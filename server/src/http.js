@@ -20,7 +20,7 @@ function limiter(max, windowMs) {
   };
 }
 
-export function startHttp({ store, social, social2, auth, port, siteRoot, allowedOrigins, info }) {
+export function startHttp({ store, social, social2, museum, lane, auth, port, siteRoot, allowedOrigins, info }) {
   const linkLimit = limiter(10, 60_000);
   const registerLimit = limiter(20, 60_000);
   const apiLimit = limiter(240, 60_000);
@@ -172,6 +172,39 @@ export function startHttp({ store, social, social2, auth, port, siteRoot, allowe
         const other = social.idByCode(url.searchParams.get('code'));
         const { status, ...rest } = social.visit(p.id, other);
         if (status === 200) rest.guestbook = social2.guestbook(other).map((g) => ({ ...g, mine: g.authorCode === social.codeOf(p.id) }));
+        return send(res, status, rest);
+      }
+
+      case 'GET /api/lane':
+      case 'GET /api/lane/peek': {
+        const p = authed(req);
+        if (!p) return send(res, 401, { error: 'Not signed in' });
+        const r = route === 'GET /api/lane' ? lane.lane(p.id) : lane.peek(p.id, social.idByCode(url.searchParams.get('code')));
+        const { status, ...rest } = r;
+        return send(res, status, rest);
+      }
+
+      case 'POST /api/lane/public': {
+        const p = authed(req);
+        if (!p) return send(res, 401, { error: 'Not signed in' });
+        const b = await body(req);
+        const { status, ...rest } = lane.setPublic(p.id, b.on);
+        return send(res, status, rest);
+      }
+
+      case 'GET /api/museum': {
+        const p = authed(req);
+        const { status, ...rest } = museum.view(p?.id || null);
+        return send(res, status, rest);
+      }
+
+      case 'POST /api/museum/donate':
+      case 'POST /api/museum/claim': {
+        const p = authed(req);
+        if (!p) return send(res, 401, { error: 'Not signed in' });
+        const b = await body(req);
+        const r = route.endsWith('donate') ? museum.donate(p.id, String(b.find || '')) : museum.claim(p.id, b.pct);
+        const { status, ...rest } = r;
         return send(res, status, rest);
       }
 

@@ -5,6 +5,8 @@ import { openDb } from '../src/db.js';
 import { createStore } from '../src/players.js';
 import { createSocial } from '../src/social.js';
 import { createSocial2 } from '../src/social2.js';
+import { createMuseum } from '../src/museum.js';
+import { createNeighborhood } from '../src/neighborhood.js';
 import { startHttp } from '../src/http.js';
 import * as core from '../../js/core.js';
 
@@ -12,7 +14,9 @@ const db = openDb(':memory:');
 const store = createStore(db);
 const social = createSocial(db, store);
 const social2 = createSocial2(db, store, social);
-const server = startHttp({ store, social, social2, port: 0, siteRoot: resolve(import.meta.dirname, '..', '..'), allowedOrigins: [], info: () => ({ invite: null }) });
+const museum = createMuseum(db, store);
+const lane = createNeighborhood(db, store, social);
+const server = startHttp({ store, social, social2, museum, lane, port: 0, siteRoot: resolve(import.meta.dirname, '..', '..'), allowedOrigins: [], info: () => ({ invite: null }) });
 await new Promise((r) => server.once('listening', r));
 const base = `http://localhost:${server.address().port}`;
 after(() => server.close());
@@ -274,6 +278,54 @@ test('social part 2: guestbook, mail, emotes, sitting, sleepovers, pen pals, cha
   // lower-is-better games compare the other way
   await call('/api/challenge/send', { method: 'POST', token: B.token, body: { code: A.code, game: 'memory', score: 12 } });
   assert.equal((await call('/api/challenge/answer', { method: 'POST', token: A.token, body: { game: 'memory', score: 10 } })).data.results[0].won, true);
+});
+
+test('museum: donate spares, first-donor credit, community milestones', async () => {
+  const reg = async (name, collection) => (await call('/api/register', { method: 'POST', body: { state: { ...core.defaultState(), name, collection } } })).data;
+  const A = await reg('Musa', { crab: 3, spiral: 1 });
+  const B = await reg('Nemo', { crab: 2 });
+  assert.equal((await call('/api/museum/donate', { method: 'POST', token: A.token, body: { find: 'spiral' } })).status, 400, 'only spares');
+  const d1 = await call('/api/museum/donate', { method: 'POST', token: A.token, body: { find: 'crab' } });
+  assert.equal(d1.status, 200);
+  assert.equal(d1.data.first, true);
+  assert.equal(d1.data.state.collection.crab, 2);
+  const d2 = await call('/api/museum/donate', { method: 'POST', token: B.token, body: { find: 'crab' } });
+  assert.equal(d2.data.first, false);
+  const v = (await call('/api/museum', { token: B.token })).data;
+  assert.equal(v.exhibits.crab.count, 2);
+  assert.equal(v.exhibits.crab.first.by, 'Musa');
+  assert.deepEqual(v.patrons.map((x) => x.name).sort(), ['Musa', 'Nemo']);
+  assert.equal(v.species, 1);
+  assert.equal((await call('/api/museum/claim', { method: 'POST', token: A.token, body: { pct: 10 } })).status, 400, 'not reached yet');
+  // fill 10% of the museum and claim
+  const ids = Object.keys((await import('../src/museum.js')).ALL_FINDS).slice(0, 5);
+  for (const id of ids) db.prepare('INSERT INTO museum (player_id, find_id, created) VALUES (?, ?, ?)').run('x', id, Date.now());
+  const c = await call('/api/museum/claim', { method: 'POST', token: A.token, body: { pct: 10 } });
+  assert.equal(c.status, 200);
+  assert.equal((await call('/api/museum/claim', { method: 'POST', token: A.token, body: { pct: 10 } })).status, 400, 'once each');
+  assert.equal((await call('/api/museum')).data.you, null, 'public view works signed out');
+});
+
+test('Otter Lane: friends and public neighbors, private dens stay private', async () => {
+  const reg = async (name) => (await call('/api/register', { method: 'POST', body: { state: { ...core.defaultState(), name } } })).data;
+  const L = await reg('Lane'); const F = await reg('Fren'); const N = await reg('Neigh'); const P = await reg('Priv');
+  await call('/api/friends/add', { method: 'POST', token: L.token, body: { code: F.code } });
+  await call('/api/friends/respond', { method: 'POST', token: F.token, body: { code: L.code, accept: true } });
+  await call('/api/lane/public', { method: 'POST', token: P.token, body: { on: false } });
+  const v = (await call('/api/lane', { token: L.token })).data;
+  assert.equal(v.you.name, 'Lane');
+  assert.deepEqual(v.friends.map((h) => h.name), ['Fren']);
+  const names = v.neighbors.map((h) => h.name);
+  assert.ok(v.neighbors.length > 0 && v.neighbors.length <= 12, 'shows a handful of neighbors');
+  assert.ok(!names.includes('Priv'), 'private dens are not on the lane');
+  assert.ok(!names.includes('Lane'), 'you are not your own neighbor');
+  assert.ok(!names.includes('Fren'), 'friends are not repeated as neighbors');
+  const peek = await call('/api/lane/peek?code=' + N.code, { token: L.token });
+  assert.equal(peek.status, 200);
+  assert.equal(peek.data.friend, false);
+  assert.ok(Array.isArray(peek.data.otter.den.items));
+  assert.equal((await call('/api/lane/peek?code=' + P.code, { token: L.token })).status, 403);
+  assert.ok(store.byToken(L.token).state.counters.visited.length >= 1, 'peeks count toward Good Neighbor');
 });
 
 // Runs last: it deliberately uses up the link rate limit.

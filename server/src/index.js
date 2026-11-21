@@ -6,6 +6,8 @@ import { openDb } from './db.js';
 import { createStore } from './players.js';
 import { createSocial } from './social.js';
 import { createSocial2 } from './social2.js';
+import { createMuseum } from './museum.js';
+import { createNeighborhood } from './neighborhood.js';
 import { startHttp } from './http.js';
 import { createAuth } from './auth.js';
 
@@ -18,6 +20,8 @@ console.log(`💾 Database: ${resolve(here, '..', env.DB_PATH || './data/otteroy
 const store = createStore(db);
 const social = createSocial(db, store);
 const social2 = createSocial2(db, store, social);
+const museum = createMuseum(db, store);
+const lane = createNeighborhood(db, store, social);
 const siteUrl = env.SITE_URL || 'https://otteroyster.online';
 const allowedOrigins = (env.ALLOWED_ORIGINS || 'https://otteroyster.online,https://www.otteroyster.online,https://otterly-adorable-21.github.io').split(',').map((s) => s.trim()).filter(Boolean);
 
@@ -40,6 +44,8 @@ startHttp({
   store,
   social,
   social2,
+  museum,
+  lane,
   auth,
   port: Number(env.PORT || 8787),
   siteRoot: resolve(here, '..', '..'),
@@ -50,7 +56,7 @@ startHttp({
 if (env.DISCORD_TOKEN) {
   const { startBot } = await import('./bot/index.js');
   try {
-    bot = await startBot({ token: env.DISCORD_TOKEN, store, social, siteUrl, devGuildId: env.DISCORD_DEV_GUILD_ID || null, registerCommands: env.REGISTER_COMMANDS !== 'false' });
+    bot = await startBot({ token: env.DISCORD_TOKEN, store, social, museum, siteUrl, devGuildId: env.DISCORD_DEV_GUILD_ID || null, registerCommands: env.REGISTER_COMMANDS !== 'false' });
   } catch (err) {
     console.error('❌ Discord login failed:', err.message);
   }

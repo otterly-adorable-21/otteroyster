@@ -90,5 +90,9 @@ export function mapSVG(state, selected) {
     ${scenery()}
     ${routes}
     ${pins}
+    ${[['museum', '🏛️', 'Pond Museum', 128, 214], ['lane', '🏘️', 'Otter Lane', 276, 198]].map(([id, icon, name, x, y]) => `<g class="map-pin building" data-place="${id}" transform="translate(${x} ${y})" tabindex="0" role="button" aria-label="${name}">
+      <circle r="28" fill="transparent"/><rect x="-18" y="-18" width="36" height="36" rx="10" fill="#fffaf0" stroke="#d9b45a" stroke-width="3"/>
+      <text y="7" text-anchor="middle" font-size="19">${icon}</text>
+      <text y="34" text-anchor="middle" font-size="11.5" font-weight="800" fill="#fff3bf" stroke="#0c3440" stroke-width="3.5" paint-order="stroke" font-family="Nunito, system-ui, sans-serif">${name}</text></g>`).join('')}
   </svg>`;
 }

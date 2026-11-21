@@ -892,3 +892,33 @@ textarea.note-input { resize: vertical; font: inherit; }
 .book-entry { display: flex; gap: 10px; align-items: flex-start; font-family: var(--display); font-size: 1.08rem; line-height: 1.3; }
 .book-entry small { font-family: 'Nunito', sans-serif; }
 .book-icon { font-size: 1.5rem; }
+
+/* ---------- museum ---------- */
+.map-pin.building rect { transition: stroke .15s; }
+.map-pin.building:hover rect { stroke: #f3d98c; }
+.museum-hero { margin-top: 8px; text-align: center; color: var(--ink); background: linear-gradient(180deg, #fffaf0, #f3ead6); border-radius: 22px; padding: 16px; box-shadow: var(--gold-ring), var(--shadow); display: grid; gap: 8px; }
+.museum-icon { font-size: 3rem; }
+.museum-hero p { margin: 0; color: var(--muted); }
+.milestones { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.milestone { display: grid; justify-items: center; gap: 2px; padding: 8px 2px; border-radius: 12px; background: rgba(255,250,240,.08); color: var(--aqua-light); box-shadow: inset 0 0 0 1px rgba(155,232,222,.2); text-align: center; font-size: .8rem; }
+.milestone.on { background: var(--card); color: var(--ink); box-shadow: 0 0 0 2px var(--gold); }
+.milestone .btn { padding: 4px 8px; font-size: .72rem; }
+.spares { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.spare { display: grid; justify-items: center; gap: 2px; text-align: center; }
+.new-tag { color: #d9480f; font-weight: 800; font-size: .7rem; }
+/* ---------- Otter Lane ---------- */
+.lane-note { margin-top: 4px; }
+.lane-wrap { overflow-x: auto; border-radius: 24px; box-shadow: 0 0 0 2px rgba(217, 180, 90, 0.7), 0 0 0 6px rgba(12, 52, 64, 0.9); background: linear-gradient(180deg, #9be8de 0%, #c5f6fa 40%, #a7c86a 40%, #7fa65a 100%); }
+.lane { position: relative; display: flex; gap: 8px; padding: 26px 16px 54px; width: max-content; min-width: 100%; }
+.lane-path { position: absolute; left: 0; right: 0; bottom: 14px; height: 30px; background: repeating-linear-gradient(90deg, #e8d6a8 0 40px, #dcc796 40px 44px); border-top: 3px solid #c9b07a; }
+.house { position: relative; width: 132px; flex: none; border: 0; background: none; padding: 0; cursor: pointer; transition: transform .15s; }
+.house:hover { transform: translateY(-4px); }
+.house > svg { width: 132px; height: 142px; display: block; }
+.porch-otter { position: absolute; right: -8px; bottom: 22px; width: 40px !important; height: 50px !important; }
+.house-sign { position: absolute; left: 50%; bottom: -30px; transform: translateX(-50%); white-space: nowrap; background: var(--card); color: var(--ink); font-size: .72rem; font-weight: 800; padding: 3px 8px; border-radius: 8px; box-shadow: var(--gold-ring); }
+.house-sign small { color: var(--muted); }
+.house.you .house-sign { background: #fff3bf; }
+.house-zzz { position: absolute; top: 14px; right: 18px; font-family: var(--display); font-style: italic; font-weight: 700; color: #fffaf0; text-shadow: 0 1px 3px rgba(0,0,0,.4); font-size: .85rem; }
+.walker { position: absolute; left: 24px; bottom: 30px; width: 44px; height: 56px; transition: left .7s ease-in-out; pointer-events: none; z-index: 2; animation: bob 1s ease-in-out infinite; }
+.lane-actions { margin-top: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.lane-actions .skip-check { color: var(--aqua-light); }

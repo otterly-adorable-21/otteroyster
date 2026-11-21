@@ -492,6 +492,12 @@ export function setFloor(s, id) {
   return ok(`🪵 ${f.name} floor!`);
 }
 
+// The adoption day itself isn't a birthday: celebrate from the first anniversary,
+// or from a birthday the player picked.
+export function celebratesBirthday(s, now = Date.now()) {
+  return isBirthday(s, now) && (s.birthdaySet || now - (s.created || now) > 300 * 86400000);
+}
+
 // ---------- exploring + collection ----------
 export const locUnlocked = (s, locId) => s.level >= (LOC[locId]?.level ?? 99);
 
@@ -742,8 +748,7 @@ export function checkGrowth(s, now = Date.now()) {
   const year = new Date(now).getUTCFullYear();
   // The adoption day itself isn't a party: celebrate from the first anniversary,
   // or from a birthday the player picked.
-  const oldEnough = s.birthdaySet || now - (s.created || now) > 300 * 86400000;
-  if (isBirthday(s, now) && oldEnough && !s.birthdaysClaimed.includes(year)) {
+  if (celebratesBirthday(s, now) && !s.birthdaysClaimed.includes(year)) {
     s.birthdaysClaimed.push(year);
     s.pearls += 100;
     stat(s, 'happiness', 30);

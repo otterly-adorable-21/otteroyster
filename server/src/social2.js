@@ -217,7 +217,7 @@ export function createSocial2(db, store, social) {
       for (const f of social.list(me).friends || []) {
         const fid = social.idByCode(f.code);
         const st = fid && store.get(fid)?.state;
-        if (st && core.isBirthday(st, now) && onceToday(me, fid, 'bday')) notify(me, fid, 'birthday', `🎂 It's ${st.name}'s birthday today! Send them a postcard or a gift.`);
+        if (st && core.celebratesBirthday(st, now) && onceToday(me, fid, 'bday')) notify(me, fid, 'birthday', `🎂 It's ${st.name}'s birthday today! Send them a postcard or a gift.`);
       }
       const notices = q.noticesFor.all(me).map((n) => ({ id: n.id, kind: n.kind, text: n.text, created: n.created }));
       q.noticesSeen.run(me);

@@ -737,6 +737,102 @@ function panelCloset() {
 }
 
 let mapSel = 'lilypond';
+let placeView = null; // null | 'museum' | 'lane'
+let museumData = null;
+let laneData = null;
+
+async function loadMuseum() {
+  if (!sync.online) return;
+  try { const r = await sync.museum(); if (r.ok) museumData = r; } catch { /* offline */ }
+  if (tab === 'missions' && placeView === 'museum') renderPanel();
+}
+async function loadLane() {
+  if (!sync.online || !sync.linked) return;
+  try { const r = await sync.lane(); if (r.ok) laneData = r; } catch { /* offline */ }
+  if (tab === 'missions' && placeView === 'lane') renderPanel();
+}
+
+const ALL_EXHIBITS = () => [...LOCATIONS.map((l) => ({ name: l.name, icon: l.icon, finds: l.finds })), { name: 'Limited Exhibits', icon: '🎉', finds: EVENTS.flatMap((e) => e.finds) }];
+
+function museumView() {
+  const back = '<button class="btn small" data-action="place-back">🗺️ Back to map</button>';
+  if (!sync.online) return `<div class="explore-head"><h2 class="section-title">Pond Museum</h2>${back}</div><div class="empty"><div class="empty-icon">🏛️</div><p>The museum is run by the whole community, so it needs the server. It isn't reachable right now.</p></div>`;
+  if (!museumData) { loadMuseum(); return `<div class="explore-head"><h2 class="section-title">Pond Museum</h2>${back}</div><div class="empty"><div class="empty-icon">🫧</div><p>Opening the doors…</p></div>`; }
+  const m = museumData;
+  const spares = Object.entries(state.collection || {}).filter(([id, n]) => n >= 2 && (FINDS[id] || EVENT_FINDS[id]));
+  const tile = (f) => {
+    const ex = m.exhibits[f.id];
+    return `<div class="find ${ex ? 'got' : ''}" style="--rar:${RARITY[f.rarity].color}" title="${ex ? `${f.name} · ${ex.count} donated` : 'Not in the museum yet'}">
+      <span class="find-icon">${ex ? f.icon : '❔'}</span><span class="find-name">${ex ? f.name : '???'}</span>
+      <span class="find-rar">${ex ? `${ex.first?.mine ? '⭐ you!' : `1st: ${esc(ex.first?.by || '?')}`}` : 'needed'}</span></div>`;
+  };
+  return `<div class="explore-head"><h2 class="section-title">Pond Museum</h2>${back}</div>
+    <div class="museum-hero"><div class="museum-icon">🏛️</div>
+      <p>Donate your <b>spare</b> discoveries so everyone can enjoy them. The first donor of each one is credited forever!</p>
+      <div class="bar big"><div style="width:${m.pct}%"></div></div>
+      <small><b>${m.species}/${m.totalSpecies}</b> exhibits (${m.pct}%) · ${m.donations} donations from the community${m.you ? ` · you: ${m.you.donations} donated, ${m.you.firsts} firsts` : ''}</small>
+    </div>
+    <h2 class="section-title">Community milestones <small>everyone gets these</small></h2>
+    <div class="milestones">${m.milestones.map((x) => `<div class="milestone ${x.reached ? 'on' : ''}"><b>${x.pct}%</b><small><span class="pearl-icon"></span> ${x.pearls}${x.item ? ' + display case' : ''}</small>
+      ${x.reached && sync.linked && !x.claimed ? `<button class="btn small primary" data-action="museum-claim" data-id="${x.pct}">Claim</button>` : x.claimed ? '<small>✓ claimed</small>' : '<small>🔒</small>'}</div>`).join('')}</div>
+    <h2 class="section-title">Your spares <small>+5 pearls each</small></h2>
+    ${!sync.linked ? '<p class="note">Sign in on the Friends tab to donate.</p>' : spares.length ? `<div class="spares">${spares.map(([id, n]) => { const f = FINDS[id] || EVENT_FINDS[id]; return `<div class="card spare"><span class="find-icon">${f.icon}</span><b>${f.name}</b><small class="muted">you have ${n}</small>${m.exhibits[id] ? '' : '<small class="new-tag">museum needs this!</small>'}<button class="btn small primary" data-action="museum-donate" data-id="${id}">Donate</button></div>`; }).join('')}</div>`
+    : '<p class="note">No spares yet. When you find something twice, you can donate the extra copy here.</p>'}
+    ${ALL_EXHIBITS().map((h) => `<div class="card journal-loc"><div class="journal-loc-head"><b>${h.icon} ${h.name}</b><span class="muted">${h.finds.filter((f) => m.exhibits[f.id]).length}/${h.finds.length}</span></div>
+      <div class="finds">${h.finds.map(tile).join('')}</div></div>`).join('')}
+    ${m.patrons.length ? `<h2 class="section-title">Top donors</h2><ol class="board card">${m.patrons.map((x) => `<li><span>${esc(x.name)}</span><b>${x.count}</b></li>`).join('')}</ol>` : ''}`;
+}
+
+function houseSVG(h, k, you = false) {
+  const lvl = h.mood === 'sad' ? 20 : 80;
+  const st = { ...core.defaultState(), stats: { hunger: lvl, happiness: 90, energy: 90, clean: 90 }, equipped: h.equipped || {}, sleeping: h.sleeping };
+  return `<button class="house ${you ? 'you' : ''} ${h.friend ? 'friend' : ''}" data-action="lane-house" data-code="${h.code}" data-you="${you ? 1 : ''}" data-x="${k}" aria-label="${esc(h.name)}'s den">
+    <svg viewBox="0 0 120 130" aria-hidden="true">
+      <ellipse cx="60" cy="118" rx="58" ry="12" fill="#3f6a2a" opacity=".5"/>
+      <path d="M6,118 Q6,30 60,26 Q114,30 114,118Z" fill="#6f9a3a"/><path d="M14,118 Q14,40 60,36 Q106,40 106,118Z" fill="#8a6644"/>
+      <path d="M38,118 V82 Q38,62 60,62 Q82,62 82,82 V118Z" fill="${h.color}" stroke="#5a3f2a" stroke-width="4"/>
+      <circle cx="74" cy="94" r="3" fill="#d9b45a"/>
+      ${[[24, 40], [60, 28], [96, 40]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="6" fill="#a7c86a"/>`).join('')}
+      ${h.cozy >= 15 ? '<text x="98" y="70" font-size="14">✨</text>' : ''}${h.birthday ? '<text x="8" y="70" font-size="14">🎈</text>' : ''}
+    </svg>
+    ${h.home && !h.sleeping ? `<svg class="porch-otter" viewBox="0 -24 200 254" aria-hidden="true">${otterSVG(st, { idPrefix: `ln${k}` })}</svg>` : ''}
+    ${h.sleeping ? '<span class="house-zzz">z z</span>' : !h.home ? '<span class="house-zzz">🧭 out</span>' : ''}
+    <span class="house-sign">${you ? '🏠 ' : h.friend ? '💗 ' : ''}${esc(h.name)} <small>${h.stage || ''} Lv ${h.level}</small></span>
+  </button>`;
+}
+
+function laneView() {
+  const back = '<button class="btn small" data-action="place-back">🗺️ Back to map</button>';
+  if (!sync.online || !sync.linked) return `<div class="explore-head"><h2 class="section-title">Otter Lane</h2>${back}</div><div class="empty"><div class="empty-icon">🏘️</div><p>Otter Lane is where everyone's dens are. Sign in on the Friends tab to take a stroll.</p></div>`;
+  if (!laneData) { loadLane(); return `<div class="explore-head"><h2 class="section-title">Otter Lane</h2>${back}</div><div class="empty"><div class="empty-icon">🫧</div><p>Walking over…</p></div>`; }
+  const houses = [laneData.you, ...laneData.friends, ...laneData.neighbors].filter(Boolean);
+  const pub = state.publicDen !== false;
+  return `<div class="explore-head"><h2 class="section-title">Otter Lane</h2>${back}</div>
+    <p class="note lane-note">Stroll past everyone's dens. Tap a house to walk over and peek inside. 💗 = friend</p>
+    <div class="lane-wrap"><div class="lane" style="--n:${houses.length}">
+      <div class="lane-path"></div>
+      ${houses.map((h, k) => houseSVG(h, k, k === 0)).join('')}
+      <svg class="walker" id="walker" viewBox="0 -24 200 254" aria-hidden="true">${otterSVG({ ...state, sleeping: false }, { idPrefix: 'walker' })}</svg>
+    </div></div>
+    <div class="row lane-actions"><button class="btn small" data-action="lane-refresh">🔄 New neighbors</button>
+      <label class="skip-check"><input type="checkbox" data-lane-public ${pub ? 'checked' : ''}> Show my den on Otter Lane</label></div>`;
+}
+
+async function peekHouse(code) {
+  showModal('<div class="result"><div class="result-icon">🚪</div><p>Knock knock…</p></div>', { wide: true });
+  const r = await sync.lanePeek(code);
+  if ($('#modal').hidden) return;
+  if (!r.ok) { $('#modal-card').innerHTML = `<div class="result"><p>${esc(r.error || 'Nobody answered.')}</p><button class="btn primary" data-close>OK</button></div>`; return; }
+  const o = r.otter;
+  const st = { ...core.defaultState(), ...o, mission: o.mission ? { ...o.mission, start: 0, endsAt: 0 } : null };
+  const pi = core.personaInfo(st);
+  $('#modal-card').innerHTML = `<div class="visit">
+    <div class="game-top"><h2>🏡 ${esc(o.name)}'s Den</h2><button class="icon-btn" data-close aria-label="Close">✕</button></div>
+    <div class="den-stage visit-den">${denSVG(st, { extraAttrs: 'class="den-svg" role="img"' }).replace(/den-otter-/g, 'peek-otter-')}</div>
+    <div class="visit-info"><div class="visit-persona">${stageOf(o.level).icon} Lv ${o.level} · ${pi.trait ? `${pi.trait.icon} ${pi.trait.name}` : '🌱 Still discovering'} · ✨ coziness ${core.coziness(st)}</div></div>
+    <div class="row">${r.friend ? `<button class="btn primary" data-action="fr-visit" data-code="${r.code}">Visit as a friend</button>` : `<button class="btn primary" data-action="lane-addfriend" data-code="${r.code}">💗 Add ${esc(o.name)} as a friend</button>`}</div>
+  </div>`;
+}
 let journalOpen = false;
 
 function missionCard(m) {
@@ -770,6 +866,8 @@ function panelMissions() {
       <button class="link" data-action="recall">Call ${esc(state.name)} home early (no rewards)</button></div>`;
   }
   const found = core.collectionCount(state);
+  if (placeView === 'museum') return `${head}${museumView()}`;
+  if (placeView === 'lane') return `${head}${laneView()}`;
   if (journalOpen) {
     return `${head}<div class="explore-head"><h2 class="section-title">Collection journal</h2>
       <button class="btn small" data-action="journal">🗺️ Back to map</button></div>
@@ -1381,6 +1479,8 @@ document.addEventListener('click', async (e) => {
     if (tabBtn.closest('.tabs')) window.scrollTo({ top: 0 });
     return;
   }
+  const place = e.target.closest('[data-place]');
+  if (place) { placeView = place.dataset.place; if (placeView === 'museum') loadMuseum(); else loadLane(); renderPanel(); window.scrollTo({ top: 0 }); return; }
   const pin = e.target.closest('[data-loc]');
   if (pin) { mapSel = pin.dataset.loc; renderPanel(); document.querySelector('.loc-card')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return; }
   const shopBtn = e.target.closest('[data-denshop]');
@@ -1429,6 +1529,37 @@ document.addEventListener('click', async (e) => {
       return null;
     }
     case 'save-panel': return showSavePanel();
+    case 'place-back': placeView = null; return renderPanel();
+    case 'museum-donate': {
+      await pushNow();
+      const r = await sync.museumDonate(id);
+      if (!r.ok) return toast(r.error || 'Could not donate right now.');
+      adoptRemote(r.state, r.version, r.first ? '🏛️ A first for the museum! Your name is on the exhibit. +5 pearls' : '🏛️ Donated! +5 pearls');
+      burst(['🏛️', '✨'], 6);
+      return loadMuseum();
+    }
+    case 'museum-claim': {
+      await pushNow();
+      const r = await sync.museumClaim(Number(id));
+      if (!r.ok) return toast(r.error || 'Could not claim right now.');
+      adoptRemote(r.state, r.version, '🏛️ Milestone reward claimed! Thank you, community!');
+      return loadMuseum();
+    }
+    case 'lane-refresh': laneData = null; return loadLane();
+    case 'lane-house': {
+      if (a.dataset.you) { tab = 'den'; renderPanel(); window.scrollTo({ top: 0 }); return null; }
+      const walker = $('#walker');
+      if (walker) walker.style.left = `${a.offsetLeft + a.offsetWidth / 2 - 22}px`;
+      a.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      setTimeout(() => peekHouse(a.dataset.code), 700);
+      return null;
+    }
+    case 'lane-addfriend': {
+      const r = await sync.addFriend(a.dataset.code);
+      toast(r.ok ? (r.accepted ? `🤝 You're friends with ${r.friend.name}!` : `📨 Friend request sent to ${r.friend.name}!`) : r.error || 'Could not add them right now.');
+      if (r.ok) { a.disabled = true; loadFriends(); }
+      return null;
+    }
     case 'adventure-book': return openAdventureBook();
     case 'story': { const r = act(core.tellStory(state)); if (r.ok) speak(r.msg.replace(/^📖 /, ''), 8000); return r; }
     case 'teach': { const r = act(core.teachTrick(state)); if (r.ok) playTrick(r.trick); return r; }
@@ -1670,6 +1801,14 @@ document.addEventListener('submit', (e) => {
 });
 
 document.addEventListener('change', (e) => {
+  if (e.target.matches('[data-lane-public]')) {
+    const on = e.target.checked;
+    pushNow().then(() => sync.lanePublic(on)).then((r) => {
+      if (!r.ok) { e.target.checked = !on; return toast(r.error || 'Could not change that right now.'); }
+      adoptRemote(r.state, r.version, on ? '🏘️ Your den is on Otter Lane.' : '🔒 Your den is hidden from Otter Lane (friends can still visit).');
+    });
+    return;
+  }
   if (e.target.matches('[data-restore]') && e.target.files?.[0]) restoreBackup(e.target.files[0]);
 });
 
