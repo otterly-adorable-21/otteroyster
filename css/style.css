@@ -573,3 +573,5 @@ body[data-view='den'] .stats { padding-top: 4px; }
 .swatch-chip { width: 44px; height: 30px; border-radius: 8px; box-shadow: inset 0 0 0 2px rgba(0,0,0,.12); }
 .swatch small { color: var(--muted); display: inline-flex; gap: 3px; align-items: center; }
 .tabs button { font-size: 0.66rem; }
+
+.err-detail { font-family: ui-monospace, monospace; font-size: 0.75rem !important; background: #f1ece0; padding: 6px 8px; border-radius: 8px; word-break: break-word; }

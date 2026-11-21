@@ -16,8 +16,24 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=4">
-  <script type="module" src="js/main.js?v=4"></script>
+  <script>
+    // Remove any service worker / cached pages left by an older site on this
+    // domain, then reload once so the current site shows.
+    (function () {
+      if (!('serviceWorker' in navigator)) return;
+      navigator.serviceWorker.getRegistrations().then(function (regs) {
+        if (!regs.length) return;
+        var jobs = regs.map(function (r) { return r.unregister(); });
+        if (window.caches) jobs.push(caches.keys().then(function (keys) { return Promise.all(keys.map(function (k) { return caches.delete(k); })); }));
+        Promise.all(jobs).then(function () {
+          try { if (sessionStorage.getItem('oo-sw-cleaned')) return; sessionStorage.setItem('oo-sw-cleaned', '1'); } catch (e) { return; }
+          location.reload();
+        });
+      }).catch(function () {});
+    })();
+  </script>
+  <link rel="stylesheet" href="css/style.css?v=5">
+  <script type="module" src="js/main.js?v=5"></script>
 </head>
 <body>
   <!-- Reusable drawings: water lily, lily pad, gold sparkle -->

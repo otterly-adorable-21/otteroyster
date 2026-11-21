@@ -108,8 +108,14 @@ async function playGame(id) {
     if (!gameOpen) return;
     gameCleanup = mod.start(root, (r) => endGame(g, r));
   } catch (err) {
-    console.error(err);
-    root.innerHTML = '<p class="hint">Sorry, this game failed to load.</p>';
+    console.error(`[arcade] ${id} failed to load`, err);
+    // Give the energy back: the player never got to play.
+    state.stats.energy = clamp(state.stats.energy + g.energy);
+    commit();
+    root.innerHTML = `<div class="result"><div class="result-icon">🫧</div><h2>This game didn't load</h2>
+      <p>Your energy was refunded. This is usually a connection hiccup or an old copy of the site stuck in your browser.</p>
+      <p class="err-detail">${esc(err?.message || String(err))}</p>
+      <div class="row"><button class="btn" data-action="hardreload">Refresh site</button><button class="btn primary" data-action="game" data-id="${id}">Try again</button></div></div>`;
   }
 }
 
@@ -623,6 +629,15 @@ document.addEventListener('click', async (e) => {
     case 'daily': return act(core.claimDaily(state));
     case 'buy': return act(core.buy(state, id));
     case 'wear': bounce(); return act({ ...core.toggleWear(state, id), msg: '' });
+    case 'hardreload': {
+      try {
+        const regs = await navigator.serviceWorker?.getRegistrations?.() || [];
+        await Promise.all(regs.map((r) => r.unregister()));
+        if (window.caches) await Promise.all((await caches.keys()).map((k) => caches.delete(k)));
+      } catch { /* ignore */ }
+      location.reload();
+      return null;
+    }
     case 'den-edit': denEdit = !denEdit; denSel = null; return renderPanel();
     case 'den-buy': {
       const r = act(core.buyFurniture(state, id));
