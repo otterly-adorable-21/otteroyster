@@ -472,7 +472,7 @@ function itemCard(id, mode) {
   } else {
     action = `<div class="buy-row">${tryBtn('item', id)}<button class="btn small primary" data-action="buy" data-id="${id}" ${state.pearls < it.price ? 'disabled' : ''}><span class="pearl-icon"></span> ${it.price}</button></div>`;
   }
-  return `<div class="card item ${worn ? 'worn' : ''}"><div class="item-art">${itemPreviewSVG(id)}</div><div class="item-name">${it.name}</div>${action}</div>`;
+  return `<div class="card item ${worn ? 'worn' : ''}"><div class="item-art">${itemPreviewSVG(id)}</div><div class="item-name">${it.name}</div>${it.birthday && mode === 'shop' ? '<small class="bday-tag">🎂 Birthday special</small>' : ''}${action}</div>`;
 }
 
 // ---------- try on + purchase confirmation ----------
@@ -868,7 +868,7 @@ function panelCloset() {
   if (closetView === 'shop') {
     const chips = `<div class="chips closet-slots">${SLOTS.map((sl) => `<button class="chip-btn" data-action="closet-slot" data-id="${sl.id}" aria-pressed="${closetSlot === sl.id}">${sl.name}</button>`).join('')}</div>`;
     return toggle + chips + SLOTS.filter((slot) => slot.id === closetSlot).map((slot) => {
-      const ids = Object.keys(ITEMS).filter((id) => ITEMS[id].slot === slot.id && ITEMS[id].price !== null && !ITEMS[id].event);
+      const ids = Object.keys(ITEMS).filter((id) => ITEMS[id].slot === slot.id && ITEMS[id].price !== null && !ITEMS[id].event && (!ITEMS[id].birthday || isBirthday(state) || state.owned.includes(id)));
       return `<h2 class="section-title">${slot.name}</h2><div class="grid">${ids.map((id) => itemCard(id, 'shop')).join('')}</div>`;
     }).join('') + `<p class="note">✨ Some rare items can only be found on missions. Tap 👀 to try something on.${skipConfirm() ? ' <button class="link" data-action="confirm-on">Ask before buying again</button>' : ''}</p>`;
   }

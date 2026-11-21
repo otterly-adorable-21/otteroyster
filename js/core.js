@@ -325,6 +325,7 @@ export function buy(s, id) {
   const it = ITEMS[id];
   if (!it || it.price == null) return no('That item is not for sale.');
   if (s.owned.includes(id)) return no(`You already own the ${it.name}.`);
+  if (it.birthday && !isBirthday(s)) return no(`The ${it.name} is only sold on ${s.name || 'your otter'}'s birthday. 🎂`);
   if (s.level < it.level) return no(`Reach level ${it.level} to buy this.`);
   if (s.pearls < it.price) return no('Not enough pearls.');
   s.pearls -= it.price;
@@ -1190,7 +1191,7 @@ export function investigate(s, mysteryId, place, now = Date.now()) {
 
 // ---------- the living world ----------
 const merchantPool = () => [
-  ...Object.entries(ITEMS).filter(([, it]) => it.price > 0 && !it.event).map(([id]) => `item:${id}`),
+  ...Object.entries(ITEMS).filter(([, it]) => it.price > 0 && !it.event && !it.birthday).map(([id]) => `item:${id}`),
   ...Object.entries(FURNITURE).filter(([, it]) => it.price > 0 && !it.event).map(([id]) => `furn:${id}`),
   ...Object.entries(DOOR_ITEMS).filter(([, it]) => it.price > 0).map(([id]) => `door:${id}`),
 ];

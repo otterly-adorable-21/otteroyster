@@ -48,7 +48,7 @@ export { MORE_SLOTS };
 // price: null => can only be found on missions.
 export const ITEMS = {
   partyhat: {
-    name: 'Party Hat', icon: '🎉', slot: 'hat', price: 30, level: 1,
+    name: 'Party Hat', icon: '🎉', slot: 'hat', price: 30, level: 1, birthday: true,
     svg: `<polygon points="80,44 120,44 100,-2" fill="#ff6fa8" stroke="#c2185b" stroke-width="2" stroke-linejoin="round"/>
       <path d="M86,30 L114,30 M93,15 L107,15" stroke="#ffe066" stroke-width="4" stroke-linecap="round"/>
       <circle cx="100" cy="-4" r="7" fill="#ffe066"/>`,
