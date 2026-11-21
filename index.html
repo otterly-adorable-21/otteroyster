@@ -3,36 +3,206 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Otter Oyster</title>
-  <meta name="description" content="Adopt a sea otter! Feed them, dress them up, send them on ocean missions and play minigames together.">
-  <meta name="theme-color" content="#0b7285">
-  <meta property="og:title" content="Otter Oyster">
-  <meta property="og:description" content="Adopt a sea otter and take care of them.">
+  <title>Otter &amp; Oyster</title>
+  <meta name="description" content="Adopt a sea otter! Care for them, dress them up, send them on adventures, play 10 minigames, and bring them along to Discord.">
+  <meta name="theme-color" content="#0b2f3a">
+  <meta property="og:title" content="Otter & Oyster">
+  <meta property="og:description" content="Adopt a sleepy little otter and explore the pond together.">
+  <meta property="og:image" content="https://otteroyster.online/assets/logo.png">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <script type="module" src="js/main.js"></script>
 </head>
 <body>
+  <!-- Reusable drawings: water lily, lily pad, gold sparkle -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <radialGradient id="g-pad" cx="45%" cy="40%" r="70%"><stop offset="0" stop-color="#a7c86a"/><stop offset=".7" stop-color="#6f9a3a"/><stop offset="1" stop-color="#3f6a2a"/></radialGradient>
+      <linearGradient id="g-petal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".7" stop-color="#fbf4e2"/><stop offset="1" stop-color="#e9e0f0"/></linearGradient>
+      <radialGradient id="g-heart" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#ffe27a"/><stop offset="1" stop-color="#e8a524"/></radialGradient>
+    </defs>
+    <symbol id="sym-sparkle" viewBox="-12 -12 24 24"><path d="M0,-12 C1.6,-2 2,-1.6 12,0 C2,1.6 1.6,2 0,12 C-1.6,2 -2,1.6 -12,0 C-2,-1.6 -1.6,-2 0,-12Z" fill="currentColor"/></symbol>
+    <symbol id="sym-pad" viewBox="-50 -50 100 100">
+      <path d="M0,0 L6,-49 A49,49 0 1,1 -6,-49 Z" fill="url(#g-pad)"/>
+      <g stroke="#3f6a2a" stroke-width="1.4" opacity=".45" fill="none"><path d="M0,0 L-34,-34 M0,0 L-48,4 M0,0 L-30,38 M0,0 L6,48 M0,0 L38,30 M0,0 L48,-6 M0,0 L32,-36"/></g>
+      <ellipse cx="-16" cy="-14" rx="16" ry="7" fill="#fff" opacity=".12" transform="rotate(-30)"/>
+    </symbol>
+    <symbol id="sym-lily" viewBox="-40 -40 80 56">
+      <g fill="url(#g-petal)" stroke="#e3d8c2" stroke-width=".8">
+        <path transform="rotate(-82)" d="M0,0 C-7,-9 -5,-27 0,-33 C5,-27 7,-9 0,0Z"/>
+        <path transform="rotate(82)" d="M0,0 C-7,-9 -5,-27 0,-33 C5,-27 7,-9 0,0Z"/>
+        <path transform="rotate(-58)" d="M0,0 C-7,-9 -5,-28 0,-35 C5,-28 7,-9 0,0Z"/>
+        <path transform="rotate(58)" d="M0,0 C-7,-9 -5,-28 0,-35 C5,-28 7,-9 0,0Z"/>
+        <path transform="rotate(-34)" d="M0,0 C-7,-9 -5,-29 0,-36 C5,-29 7,-9 0,0Z"/>
+        <path transform="rotate(34)" d="M0,0 C-7,-9 -5,-29 0,-36 C5,-29 7,-9 0,0Z"/>
+        <path transform="rotate(-12)" d="M0,0 C-7,-9 -5,-30 0,-37 C5,-30 7,-9 0,0Z"/>
+        <path transform="rotate(12)" d="M0,0 C-7,-9 -5,-30 0,-37 C5,-30 7,-9 0,0Z"/>
+        <path transform="translate(0 2) rotate(-40) scale(.72)" d="M0,0 C-7,-9 -5,-30 0,-37 C5,-30 7,-9 0,0Z"/>
+        <path transform="translate(0 2) rotate(40) scale(.72)" d="M0,0 C-7,-9 -5,-30 0,-37 C5,-30 7,-9 0,0Z"/>
+        <path transform="translate(0 2) rotate(-14) scale(.75)" d="M0,0 C-7,-9 -5,-30 0,-37 C5,-30 7,-9 0,0Z"/>
+        <path transform="translate(0 2) rotate(14) scale(.75)" d="M0,0 C-7,-9 -5,-30 0,-37 C5,-30 7,-9 0,0Z"/>
+      </g>
+      <ellipse cx="0" cy="-6" rx="9" ry="7" fill="url(#g-heart)"/>
+      <g fill="#c8801a"><circle cx="-4" cy="-9" r="1.1"/><circle cx="0" cy="-11" r="1.1"/><circle cx="4" cy="-9" r="1.1"/><circle cx="-2" cy="-5" r="1"/><circle cx="3" cy="-5" r="1"/></g>
+    </symbol>
+  </svg>
+
+  <div class="sky" aria-hidden="true">
+    <i class="spark" style="left:8%;top:6%;animation-delay:-1s"><svg><use href="#sym-sparkle"/></svg></i>
+    <i class="spark" style="left:88%;top:4%;animation-delay:-3s;width:18px;height:18px"><svg><use href="#sym-sparkle"/></svg></i>
+    <i class="spark" style="left:72%;top:20%;animation-delay:-2s;width:10px;height:10px"><svg><use href="#sym-sparkle"/></svg></i>
+    <i class="spark" style="left:16%;top:40%;animation-delay:-4s;width:10px;height:10px"><svg><use href="#sym-sparkle"/></svg></i>
+    <i class="spark" style="left:94%;top:55%;animation-delay:-0.5s"><svg><use href="#sym-sparkle"/></svg></i>
+    <i class="spark" style="left:4%;top:78%;animation-delay:-2.5s;width:12px;height:12px"><svg><use href="#sym-sparkle"/></svg></i>
+  </div>
+
   <div id="app">
+    <div class="brandbar">
+      <h1 class="wordmark">
+        <img src="assets/logo.png" alt="Otter &amp; Oyster" onerror="this.remove()">
+        <span class="wordmark-text"><svg class="spark-i" aria-hidden="true"><use href="#sym-sparkle"/></svg>Otter<span class="amp">&amp;</span>Oyster<svg class="spark-i" aria-hidden="true"><use href="#sym-sparkle"/></svg></span>
+      </h1>
+    </div>
+
     <header class="topbar">
       <div class="brand">
-        <img src="favicon.svg" alt="" class="logo" width="40" height="40">
+        <img src="favicon.svg" data-emblem alt="" class="logo" width="46" height="46">
         <div>
-          <h1 id="otter-name">Otter Oyster</h1>
+          <h2 id="otter-name">Otter Oyster</h2>
           <div class="level">Lv <span id="level">1</span><div class="xpbar" aria-hidden="true"><div id="xp-fill"></div></div></div>
         </div>
       </div>
-      <div class="pearl-count" title="Pearls"><span class="pearl-icon"></span><span id="pearls">0</span></div>
+      <div class="top-right"><span id="sync-dot" class="sync-dot" title="Synced with Discord" hidden>🔗</span><div class="pearl-count" title="Pearls"><span class="pearl-icon"></span><span id="pearls">0</span></div></div>
     </header>
 
-    <section class="scene" id="scene" aria-label="Your otter">
-      <div class="rays"></div>
-      <div class="kelp k1"></div><div class="kelp k2"></div><div class="kelp k3"></div>
-      <div class="bubbles"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-      <div class="sand"></div>
+    <section class="scene" id="scene" aria-label="Your otter's pond">
+      <div class="caustics"></div>
+      <svg class="pond-decor" viewBox="0 0 400 320" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs><filter id="f-glow" x="-200%" y="-200%" width="500%" height="500%"><feGaussianBlur stdDeviation="2.2"/></filter></defs>
+        <!-- willow fronds -->
+        <g class="willow">
+          <path d="M14,-10 Q28,70.0 18.2,140" stroke="#3f6a2a" stroke-width="1.6" fill="none" opacity=".8"/>
+          <ellipse cx="17.3" cy="11.2" rx="3.8" ry="10.3" transform="rotate(-36 17.3 11.2)" fill="#3f6a2a"/>
+          <ellipse cx="18.6" cy="21.6" rx="2.7" ry="7.7" transform="rotate(21 18.6 21.6)" fill="#3f6a2a"/>
+          <ellipse cx="19.8" cy="32.0" rx="1.7" ry="4.7" transform="rotate(-34 19.8 32.0)" fill="#3f6a2a"/>
+          <ellipse cx="20.7" cy="42.2" rx="1.5" ry="4.1" transform="rotate(23 20.7 42.2)" fill="#3f6a2a"/>
+          <ellipse cx="21.4" cy="52.4" rx="2.2" ry="6.3" transform="rotate(-31 21.4 52.4)" fill="#3f6a2a"/>
+          <ellipse cx="21.9" cy="62.5" rx="3.4" ry="9.5" transform="rotate(26 21.9 62.5)" fill="#3f6a2a"/>
+          <ellipse cx="22.2" cy="72.5" rx="3.8" ry="10.5" transform="rotate(-29 22.2 72.5)" fill="#3f6a2a"/>
+          <ellipse cx="22.2" cy="82.4" rx="3.2" ry="8.6" transform="rotate(28 22.2 82.4)" fill="#3f6a2a"/>
+          <ellipse cx="22.1" cy="92.2" rx="2.0" ry="5.4" transform="rotate(-27 22.1 92.2)" fill="#3f6a2a"/>
+          <ellipse cx="21.7" cy="102.0" rx="1.4" ry="3.9" transform="rotate(31 21.7 102.0)" fill="#3f6a2a"/>
+          <ellipse cx="21.2" cy="111.6" rx="2.0" ry="5.4" transform="rotate(-24 21.2 111.6)" fill="#3f6a2a"/>
+          <ellipse cx="20.4" cy="121.2" rx="3.2" ry="8.6" transform="rotate(33 20.4 121.2)" fill="#3f6a2a"/>
+          <ellipse cx="19.4" cy="130.6" rx="3.8" ry="10.5" transform="rotate(-21 19.4 130.6)" fill="#3f6a2a"/>
+          <ellipse cx="18.2" cy="140.0" rx="3.4" ry="9.5" transform="rotate(36 18.2 140.0)" fill="#3f6a2a"/>
+          <path d="M34,-10 Q44,52.5 37.0,105" stroke="#7fb046" stroke-width="1.6" fill="none" opacity=".8"/>
+          <ellipse cx="37.1" cy="12.4" rx="3.3" ry="9.3" transform="rotate(-34 37.1 12.4)" fill="#7fb046"/>
+          <ellipse cx="38.2" cy="23.3" rx="2.5" ry="7.0" transform="rotate(23 38.2 23.3)" fill="#7fb046"/>
+          <ellipse cx="39.0" cy="34.1" rx="1.5" ry="4.3" transform="rotate(-32 39.0 34.1)" fill="#7fb046"/>
+          <ellipse cx="39.6" cy="44.8" rx="1.4" ry="3.6" transform="rotate(26 39.6 44.8)" fill="#7fb046"/>
+          <ellipse cx="39.9" cy="55.2" rx="2.1" ry="5.7" transform="rotate(-29 39.9 55.2)" fill="#7fb046"/>
+          <ellipse cx="39.8" cy="65.5" rx="3.2" ry="8.6" transform="rotate(29 39.8 65.5)" fill="#7fb046"/>
+          <ellipse cx="39.6" cy="75.6" rx="3.4" ry="9.6" transform="rotate(-26 39.6 75.6)" fill="#7fb046"/>
+          <ellipse cx="39.0" cy="85.6" rx="2.8" ry="7.8" transform="rotate(32 39.0 85.6)" fill="#7fb046"/>
+          <ellipse cx="38.1" cy="95.4" rx="1.8" ry="4.9" transform="rotate(-22 38.1 95.4)" fill="#7fb046"/>
+          <ellipse cx="37.0" cy="105.0" rx="1.2" ry="3.5" transform="rotate(36 37.0 105.0)" fill="#7fb046"/>
+          <path d="M54,-10 Q60,37.5 55.8,75" stroke="#c4de7a" stroke-width="1.6" fill="none" opacity=".8"/>
+          <ellipse cx="56.4" cy="13.1" rx="3.0" ry="8.4" transform="rotate(-32 56.4 13.1)" fill="#c4de7a"/>
+          <ellipse cx="57.1" cy="24.2" rx="2.2" ry="6.3" transform="rotate(25 57.1 24.2)" fill="#c4de7a"/>
+          <ellipse cx="57.5" cy="35.0" rx="1.4" ry="3.8" transform="rotate(-29 57.5 35.0)" fill="#c4de7a"/>
+          <ellipse cx="57.5" cy="45.5" rx="1.2" ry="3.2" transform="rotate(29 57.5 45.5)" fill="#c4de7a"/>
+          <ellipse cx="57.3" cy="55.6" rx="1.8" ry="5.1" transform="rotate(-26 57.3 55.6)" fill="#c4de7a"/>
+          <ellipse cx="56.7" cy="65.5" rx="2.8" ry="7.7" transform="rotate(32 56.7 65.5)" fill="#c4de7a"/>
+          <ellipse cx="55.8" cy="75.0" rx="3.2" ry="8.6" transform="rotate(-22 55.8 75.0)" fill="#c4de7a"/>
+          <path d="M72,-10 Q76,26.0 73.2,52" stroke="#9cc95a" stroke-width="1.6" fill="none" opacity=".8"/>
+          <ellipse cx="74.1" cy="17.2" rx="2.7" ry="7.6" transform="rotate(-30 74.1 17.2)" fill="#9cc95a"/>
+          <ellipse cx="74.4" cy="29.6" rx="2.0" ry="5.7" transform="rotate(28 74.4 29.6)" fill="#9cc95a"/>
+          <ellipse cx="74.0" cy="41.2" rx="1.2" ry="3.4" transform="rotate(-25 74.0 41.2)" fill="#9cc95a"/>
+          <ellipse cx="73.2" cy="52.0" rx="1.0" ry="3.0" transform="rotate(34 73.2 52.0)" fill="#9cc95a"/>
+        </g>
+        <g class="willow w2">
+          <path d="M298,-10 Q306,45.0 300.4,90" stroke="#7fb046" stroke-width="1.6" fill="none" opacity=".8"/>
+          <ellipse cx="300.7" cy="11.6" rx="3.3" ry="9.3" transform="rotate(-34 300.7 11.6)" fill="#7fb046"/>
+          <ellipse cx="301.6" cy="22.1" rx="2.5" ry="7.0" transform="rotate(24 301.6 22.1)" fill="#7fb046"/>
+          <ellipse cx="302.2" cy="32.4" rx="1.5" ry="4.3" transform="rotate(-31 302.2 32.4)" fill="#7fb046"/>
+          <ellipse cx="302.6" cy="42.5" rx="1.4" ry="3.6" transform="rotate(27 302.6 42.5)" fill="#7fb046"/>
+          <ellipse cx="302.7" cy="52.4" rx="2.1" ry="5.7" transform="rotate(-28 302.7 52.4)" fill="#7fb046"/>
+          <ellipse cx="302.5" cy="62.1" rx="3.2" ry="8.6" transform="rotate(30 302.5 62.1)" fill="#7fb046"/>
+          <ellipse cx="302.1" cy="71.6" rx="3.4" ry="9.6" transform="rotate(-24 302.1 71.6)" fill="#7fb046"/>
+          <ellipse cx="301.4" cy="80.9" rx="2.8" ry="7.8" transform="rotate(33 301.4 80.9)" fill="#7fb046"/>
+          <ellipse cx="300.4" cy="90.0" rx="1.8" ry="4.9" transform="rotate(-21 300.4 90.0)" fill="#7fb046"/>
+          <path d="M322,-10 Q312,62.5 319.0,125" stroke="#3f6a2a" stroke-width="1.6" fill="none" opacity=".8"/>
+          <ellipse cx="319.3" cy="12.1" rx="3.8" ry="10.3" transform="rotate(-22 319.3 12.1)" fill="#3f6a2a"/>
+          <ellipse cx="318.3" cy="22.9" rx="2.7" ry="7.7" transform="rotate(33 318.3 22.9)" fill="#3f6a2a"/>
+          <ellipse cx="317.5" cy="33.7" rx="1.7" ry="4.7" transform="rotate(-24 317.5 33.7)" fill="#3f6a2a"/>
+          <ellipse cx="316.8" cy="44.3" rx="1.5" ry="4.1" transform="rotate(31 316.8 44.3)" fill="#3f6a2a"/>
+          <ellipse cx="316.4" cy="54.8" rx="2.2" ry="6.3" transform="rotate(-26 316.4 54.8)" fill="#3f6a2a"/>
+          <ellipse cx="316.2" cy="65.2" rx="3.4" ry="9.5" transform="rotate(29 316.2 65.2)" fill="#3f6a2a"/>
+          <ellipse cx="316.1" cy="75.4" rx="3.8" ry="10.5" transform="rotate(-28 316.1 75.4)" fill="#3f6a2a"/>
+          <ellipse cx="316.3" cy="85.6" rx="3.2" ry="8.6" transform="rotate(26 316.3 85.6)" fill="#3f6a2a"/>
+          <ellipse cx="316.7" cy="95.6" rx="2.0" ry="5.4" transform="rotate(-31 316.7 95.6)" fill="#3f6a2a"/>
+          <ellipse cx="317.2" cy="105.5" rx="1.4" ry="3.9" transform="rotate(24 317.2 105.5)" fill="#3f6a2a"/>
+          <ellipse cx="318.0" cy="115.3" rx="2.0" ry="5.4" transform="rotate(-33 318.0 115.3)" fill="#3f6a2a"/>
+          <ellipse cx="319.0" cy="125.0" rx="3.2" ry="8.6" transform="rotate(22 319.0 125.0)" fill="#3f6a2a"/>
+          <path d="M348,-10 Q354,50.0 349.8,100" stroke="#c4de7a" stroke-width="1.6" fill="none" opacity=".8"/>
+          <ellipse cx="349.8" cy="11.5" rx="3.0" ry="8.4" transform="rotate(-32 349.8 11.5)" fill="#c4de7a"/>
+          <ellipse cx="350.5" cy="22.0" rx="2.2" ry="6.3" transform="rotate(25 350.5 22.0)" fill="#c4de7a"/>
+          <ellipse cx="351.0" cy="32.3" rx="1.4" ry="3.8" transform="rotate(-30 351.0 32.3)" fill="#c4de7a"/>
+          <ellipse cx="351.3" cy="42.5" rx="1.2" ry="3.2" transform="rotate(27 351.3 42.5)" fill="#c4de7a"/>
+          <ellipse cx="351.5" cy="52.5" rx="1.8" ry="5.1" transform="rotate(-28 351.5 52.5)" fill="#c4de7a"/>
+          <ellipse cx="351.5" cy="62.3" rx="2.8" ry="7.7" transform="rotate(29 351.5 62.3)" fill="#c4de7a"/>
+          <ellipse cx="351.3" cy="72.0" rx="3.2" ry="8.6" transform="rotate(-26 351.3 72.0)" fill="#c4de7a"/>
+          <ellipse cx="351.0" cy="81.5" rx="2.5" ry="7.0" transform="rotate(31 351.0 81.5)" fill="#c4de7a"/>
+          <ellipse cx="350.5" cy="90.8" rx="1.7" ry="4.5" transform="rotate(-24 350.5 90.8)" fill="#c4de7a"/>
+          <ellipse cx="349.8" cy="100.0" rx="1.2" ry="3.1" transform="rotate(33 349.8 100.0)" fill="#c4de7a"/>
+          <path d="M374,-10 Q366,75.0 371.6,150" stroke="#6f9a3a" stroke-width="1.6" fill="none" opacity=".8"/>
+          <ellipse cx="372.2" cy="11.1" rx="3.8" ry="10.3" transform="rotate(-24 372.2 11.1)" fill="#6f9a3a"/>
+          <ellipse cx="371.5" cy="21.5" rx="2.7" ry="7.7" transform="rotate(32 371.5 21.5)" fill="#6f9a3a"/>
+          <ellipse cx="370.9" cy="31.9" rx="1.7" ry="4.7" transform="rotate(-25 370.9 31.9)" fill="#6f9a3a"/>
+          <ellipse cx="370.3" cy="42.1" rx="1.5" ry="4.1" transform="rotate(31 370.3 42.1)" fill="#6f9a3a"/>
+          <ellipse cx="369.9" cy="52.3" rx="2.2" ry="6.3" transform="rotate(-26 369.9 52.3)" fill="#6f9a3a"/>
+          <ellipse cx="369.6" cy="62.5" rx="3.4" ry="9.5" transform="rotate(29 369.6 62.5)" fill="#6f9a3a"/>
+          <ellipse cx="369.4" cy="72.5" rx="3.8" ry="10.5" transform="rotate(-27 369.4 72.5)" fill="#6f9a3a"/>
+          <ellipse cx="369.3" cy="82.5" rx="3.2" ry="8.6" transform="rotate(28 369.3 82.5)" fill="#6f9a3a"/>
+          <ellipse cx="369.3" cy="92.3" rx="2.0" ry="5.4" transform="rotate(-28 369.3 92.3)" fill="#6f9a3a"/>
+          <ellipse cx="369.4" cy="102.1" rx="1.4" ry="3.9" transform="rotate(27 369.4 102.1)" fill="#6f9a3a"/>
+          <ellipse cx="369.6" cy="111.9" rx="2.0" ry="5.4" transform="rotate(-30 369.6 111.9)" fill="#6f9a3a"/>
+          <ellipse cx="370.0" cy="121.5" rx="3.2" ry="8.6" transform="rotate(26 370.0 121.5)" fill="#6f9a3a"/>
+          <ellipse cx="370.4" cy="131.1" rx="3.8" ry="10.5" transform="rotate(-31 370.4 131.1)" fill="#6f9a3a"/>
+          <ellipse cx="371.0" cy="140.6" rx="3.4" ry="9.5" transform="rotate(24 371.0 140.6)" fill="#6f9a3a"/>
+          <ellipse cx="371.6" cy="150.0" rx="2.2" ry="6.2" transform="rotate(-32 371.6 150.0)" fill="#6f9a3a"/>
+          <path d="M392,-10 Q396,40.0 393.2,80" stroke="#9cc95a" stroke-width="1.6" fill="none" opacity=".8"/>
+          <ellipse cx="393.6" cy="14.4" rx="2.7" ry="7.6" transform="rotate(-31 393.6 14.4)" fill="#9cc95a"/>
+          <ellipse cx="394.0" cy="26.1" rx="2.0" ry="5.7" transform="rotate(26 394.0 26.1)" fill="#9cc95a"/>
+          <ellipse cx="394.3" cy="37.5" rx="1.2" ry="3.4" transform="rotate(-29 394.3 37.5)" fill="#9cc95a"/>
+          <ellipse cx="394.3" cy="48.6" rx="1.0" ry="3.0" transform="rotate(28 394.3 48.6)" fill="#9cc95a"/>
+          <ellipse cx="394.2" cy="59.4" rx="1.7" ry="4.6" transform="rotate(-27 394.2 59.4)" fill="#9cc95a"/>
+          <ellipse cx="393.8" cy="69.8" rx="2.4" ry="6.9" transform="rotate(31 393.8 69.8)" fill="#9cc95a"/>
+          <ellipse cx="393.2" cy="80.0" rx="2.7" ry="7.7" transform="rotate(-24 393.2 80.0)" fill="#9cc95a"/>
+        </g>
+        <!-- lily pads and lilies -->
+        <use href="#sym-pad" x="-22" y="226" width="110" height="110" transform="rotate(-12 33 281)"/>
+        <use href="#sym-pad" x="312" y="236" width="100" height="100" transform="rotate(40 362 286)"/>
+        <use href="#sym-pad" x="318" y="150" width="46" height="46" transform="rotate(-70 341 173)"/>
+        <use href="#sym-pad" x="40" y="150" width="38" height="38" transform="rotate(20 59 169)"/>
+        <use href="#sym-pad" x="250" y="276" width="44" height="44" transform="rotate(110 272 298)"/>
+        <use class="lily-float" href="#sym-lily" x="8" y="232" width="74" height="52"/>
+        <use class="lily-float l2" href="#sym-lily" x="330" y="246" width="62" height="44"/>
+        <use class="lily-float" href="#sym-lily" x="322" y="150" width="34" height="24"/>
+        <!-- fireflies -->
+        <g fill="#e6ff9c">
+          <circle class="firefly" cx="90" cy="60" r="3" filter="url(#f-glow)"/><circle class="firefly" cx="90" cy="60" r="1.2"/>
+          <circle class="firefly" cx="276" cy="44" r="3" filter="url(#f-glow)"/><circle class="firefly" cx="276" cy="44" r="1.2"/>
+          <circle class="firefly" cx="230" cy="110" r="2.6" filter="url(#f-glow)"/>
+          <circle class="firefly" cx="130" cy="120" r="2.4" filter="url(#f-glow)"/>
+          <circle class="firefly" cx="352" cy="200" r="2.6" filter="url(#f-glow)"/>
+        </g>
+      </svg>
       <button id="otter-wrap" aria-label="Cuddle your otter">
         <svg id="otter" viewBox="0 -20 200 250" role="img" aria-hidden="true"></svg>
       </button>
@@ -44,19 +214,36 @@
 
     <section class="stats" id="stats" aria-label="Otter needs"></section>
 
+    <div class="lily-divider" aria-hidden="true">
+      <img src="assets/lily-border.png" alt="" onerror="this.remove()">
+      <svg viewBox="0 0 300 60">
+        <g fill="none" stroke="#3cc7c0" stroke-width="2.4" stroke-linecap="round" opacity=".8">
+          <path d="M12,40 Q4,24 18,20 Q28,20 24,30"/><path d="M288,40 Q296,24 282,20 Q272,20 276,30"/>
+          <path d="M100,46 Q118,30 136,42"/><path d="M200,46 Q182,30 164,42"/>
+        </g>
+        <g fill="#9be8de" opacity=".85"><circle cx="40" cy="14" r="2.5"/><circle cx="262" cy="16" r="2"/><circle cx="150" cy="6" r="2.2"/><circle cx="118" cy="16" r="1.6"/><circle cx="186" cy="12" r="1.8"/></g>
+        <use href="#sym-pad" x="40" y="26" width="46" height="40" transform="rotate(-80 63 46)"/>
+        <use href="#sym-pad" x="214" y="26" width="46" height="40" transform="rotate(80 237 46)"/>
+        <use href="#sym-pad" x="122" y="28" width="56" height="40" transform="rotate(180 150 48)"/>
+        <use href="#sym-lily" x="38" y="16" width="50" height="35"/>
+        <use href="#sym-lily" x="212" y="16" width="50" height="35"/>
+        <use href="#sym-lily" x="116" y="6" width="68" height="48"/>
+      </svg>
+    </div>
+
     <main id="panel" class="panel"></main>
 
     <nav class="tabs" aria-label="Sections">
       <button data-tab="home"><span>🏠</span>Home</button>
-      <button data-tab="wardrobe"><span>👗</span>Wardrobe</button>
-      <button data-tab="shop"><span>🛍️</span>Shop</button>
+      <button data-tab="closet"><span>👗</span>Closet</button>
       <button data-tab="missions"><span>🧭</span>Missions</button>
-      <button data-tab="games"><span>🎮</span>Games</button>
+      <button data-tab="arcade"><span>🎮</span>Arcade</button>
+      <button data-tab="discord"><span>💬</span>Discord</button>
     </nav>
   </div>
 
   <div id="modal" class="modal" hidden><div class="modal-card" id="modal-card" role="dialog" aria-modal="true"></div></div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <noscript><p style="padding:2rem;text-align:center">Otter Oyster needs JavaScript to run.</p></noscript>
+  <noscript><p style="padding:2rem;text-align:center">Otter &amp; Oyster needs JavaScript to run.</p></noscript>
 </body>
 </html>

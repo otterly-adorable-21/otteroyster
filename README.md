@@ -1,49 +1,63 @@
-# 🦦 Otter Oyster
+# 🦦 Otter & Oyster
 
-A cozy virtual pet game for [otteroyster.online](https://otteroyster.online).
-Adopt a sea otter, keep them fed, clean and happy, dress them up, send them on
-real-time ocean missions, and play minigames to earn pearls.
+A cozy virtual-pet world for [otteroyster.online](https://otteroyster.online). Adopt a
+sleepy little otter, keep them happy, dress them up, send them on adventures, play
+minigames, and bring them along to Discord, where friends can play together.
 
-## Features
+## What's in it
 
-- **Care:** four needs (Full, Happy, Energy, Clean) that slowly drop in real time. Feed snacks, cuddle, give baths and put your otter down for naps.
-- **Wardrobe & Shop:** hats, eyewear, neckwear and extras, drawn as layered SVG on the otter.
-- **Missions:** timed adventures from 1 minute to 3 hours that keep running while the page is closed. They bring back pearls and sometimes rare items you can only get this way.
-- **Minigames:** *Oyster Dive* (catch oysters and pearls, dodge urchins) and *Shell Match* (memory pairs).
-- **Progress:** XP and levels unlock more items and missions, plus a daily pearl gift.
+- **Pet care:** four needs (Full, Happy, Energy, Clean) that drift down gently in real time. Snacks, cuddles, bubble baths and naps. Your otter's face changes with their mood.
+- **Closet & shop:** hats, eyewear, neckwear and extras layered onto your otter. Rare pieces only come from missions.
+- **Missions:** real-time expeditions (1 minute to 3 hours) that run while you're away and bring back pearls, stories and rare finds.
+- **Arcade, 10 games:**
+  - Arcade: Oyster Dive, Fish Frenzy, Bubble Hop
+  - Skill: Tide Fishing, Bubble Burst, Crab Catcher
+  - Puzzle: Shell Match, Pearl Pop (match-3), Shell Shuffle, Word Tide (word search)
+- **Discord bot:** the same otter follows you into Discord with 9 solo games, 3 friend challenges, 5 voice-chat party games, daily chests, missions and leaderboards. See [`server/README.md`](server/README.md).
 
-Progress is saved in the browser's `localStorage`, so it's per device.
+The website works on its own (progress saved in the browser). Linking Discord
+(`/link` in Discord, then enter the code on the site's Discord tab) makes one shared
+otter across both.
 
-## Running locally
+## Brand art
 
-It's plain HTML, CSS and JavaScript modules with no build step. Serve the folder with any static server:
-
-```bash
-python3 -m http.server 8000
-```
-
-Then open http://localhost:8000.
+Put the official artwork in [`assets/`](assets/README.md) (`logo.png`, `emblem.png`,
+`lily-border.png`, `pond.jpg`, `otter-float.jpg`). The site picks each file up
+automatically. Until they're there, matching drawn versions are shown.
 
 ## Project layout
 
 ```
-index.html          page shell
-css/style.css       all styles
-js/main.js          game loop, actions, UI rendering
-js/data.js          items, snacks, missions, games (add new content here)
-js/otter.js         SVG otter drawing + outfit layering
-js/state.js         save / load
-js/games/dive.js    Oyster Dive minigame (canvas)
-js/games/memory.js  Shell Match minigame
-CNAME               custom domain for GitHub Pages
+index.html            page shell, pond scene, lily/sparkle drawings
+css/style.css         night-pond theme + all game styles
+js/core.js            game rules (shared with the Discord bot!)
+js/data.js            items, snacks, missions, arcade catalog
+js/otter.js           the otter drawing + outfit layering
+js/main.js            website UI
+js/sync.js            talks to the server for Discord linking/sync
+js/assets.js          detects brand art in /assets
+js/games/*.js         one file per arcade game (kit.js = shared helpers)
+server/               API + Discord bot (Node 22)
+assets/               brand artwork
+CNAME                 custom domain for GitHub Pages
 ```
 
-## Deploying to otteroyster.online (GitHub Pages)
+### Adding a game
 
-1. Merge this into `main`.
-2. In the repo, go to **Settings → Pages**, choose **Deploy from a branch**, pick `main` / `/ (root)`.
-3. The `CNAME` file sets the custom domain to `otteroyster.online`.
-4. At your domain registrar, add DNS records:
-   - `A` records for `@` pointing to `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`
-   - a `CNAME` record for `www` pointing to `<your-github-username>.github.io`
-5. Once DNS works, tick **Enforce HTTPS** in the Pages settings.
+1. Create `js/games/mygame.js` exporting `start(root, onEnd)`. It returns a cleanup function and calls `onEnd({ pearls, best, summary })` once.
+2. Add it to `LOADERS` in `js/games/index.js` and to `GAME_LIST` in `js/data.js`.
+
+Rewards, energy, records and leaderboards come for free.
+
+## Running locally
+
+```bash
+cd server && npm install && npm start
+```
+
+Then open http://localhost:8787 (website + API). For the website alone, any static server works, e.g. `python3 -m http.server`.
+
+## Deploying
+
+- **Website** → GitHub Pages: Settings → Pages → deploy from `main` / root. `CNAME` sets otteroyster.online. At your registrar, add `A` records for `@` → `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`, and a `CNAME` for `www` → `<github-username>.github.io`. Then tick **Enforce HTTPS**.
+- **Server + bot** → any always-on Node host with a persistent disk, at `api.otteroyster.online`. Step-by-step instructions are in [`server/README.md`](server/README.md).

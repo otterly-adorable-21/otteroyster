@@ -4,14 +4,14 @@ const H = 480;
 const DURATION = 45;
 const OTTER_Y = H - 62;
 
-export function startDive(root, onEnd) {
+export function start(root, onEnd) {
   root.innerHTML = `
     <div class="game-hud">
       <span>🦪 <b data-score>0</b></span>
       <span data-lives>❤️❤️❤️</span>
       <span>⏱ <b data-time>${DURATION}</b></span>
     </div>
-    <canvas class="dive-canvas" aria-label="Oyster Dive game"></canvas>
+    <canvas class="game-canvas" style="aspect-ratio:3/4" aria-label="Oyster Dive game"></canvas>
     <p class="hint">Move with ← → / A D, or drag. Oysters +1, pearls +3, and dodge the urchins!</p>`;
 
   const cv = root.querySelector('canvas');

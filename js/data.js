@@ -192,9 +192,34 @@ export const MISSIONS = [
   },
 ];
 
-export const GAMES = [
-  { id: 'dive', name: 'Oyster Dive', icon: '🦪', energy: 10, desc: 'Catch falling oysters and pearls. Dodge the spiky urchins!' },
-  { id: 'memory', name: 'Shell Match', icon: '🐚', energy: 10, desc: 'Flip shells to find matching pairs in as few moves as you can.' },
+export const GAME_CATEGORIES = [
+  { id: 'arcade', name: 'Arcade', desc: 'Quick, fast and frantic' },
+  { id: 'skill', name: 'Skill & Reflex', desc: 'Timing and quick fingers' },
+  { id: 'puzzle', name: 'Puzzle & Brain', desc: 'Think it through' },
+];
+
+// Website arcade. maxPearls caps rewards per round; scoreLabel describes `best`.
+export const GAME_LIST = [
+  { id: 'dive', name: 'Oyster Dive', icon: '🦪', category: 'arcade', energy: 10, maxPearls: 80, scoreLabel: 'pts',
+    desc: 'Catch falling oysters and pearls. Dodge the spiky urchins!' },
+  { id: 'frenzy', name: 'Fish Frenzy', icon: '🐟', category: 'arcade', energy: 10, maxPearls: 80, scoreLabel: 'pts',
+    desc: 'Swim anywhere to gobble fish. Big fish are worth more. Avoid the jellyfish!' },
+  { id: 'hop', name: 'Bubble Hop', icon: '🫧', category: 'arcade', energy: 10, maxPearls: 80, scoreLabel: 'm',
+    desc: 'Bounce up and up on bubbles. How high can you climb?' },
+  { id: 'fishing', name: 'Tide Fishing', icon: '🎣', category: 'skill', energy: 8, maxPearls: 70, scoreLabel: 'pts',
+    desc: 'Wait for a bite, then reel in when the marker hits the sweet spot.' },
+  { id: 'bubbles', name: 'Bubble Burst', icon: '🔵', category: 'skill', energy: 8, maxPearls: 60, scoreLabel: 'pops',
+    desc: 'Pop as many bubbles as you can in 30 seconds. Golden ones are worth triple.' },
+  { id: 'crabs', name: 'Crab Catcher', icon: '🦀', category: 'skill', energy: 8, maxPearls: 60, scoreLabel: 'crabs',
+    desc: 'Crabs pop out of the sand. Catch them before they scuttle away. Not the pufferfish!' },
+  { id: 'memory', name: 'Shell Match', icon: '🐚', category: 'puzzle', energy: 6, maxPearls: 50, scoreLabel: 'moves', lowerIsBetter: true,
+    desc: 'Flip shells to find matching pairs in as few moves as you can.' },
+  { id: 'pop', name: 'Pearl Pop', icon: '💎', category: 'puzzle', energy: 8, maxPearls: 80, scoreLabel: 'pts',
+    desc: 'Swap neighbouring gems to line up three or more. 20 moves to score big.' },
+  { id: 'shuffle', name: 'Shell Shuffle', icon: '🥚', category: 'puzzle', energy: 6, maxPearls: 60, scoreLabel: 'rounds',
+    desc: 'Watch the pearl go under a shell, then follow it as the shells get shuffled.' },
+  { id: 'words', name: 'Word Tide', icon: '🔤', category: 'puzzle', energy: 6, maxPearls: 60, scoreLabel: 's', lowerIsBetter: true,
+    desc: 'Find all the hidden ocean words in the grid. Drag across letters to select.' },
 ];
 
 export const NAME_IDEAS = ['Pebble', 'Kelpie', 'Barnacle', 'Mochi', 'Clamsy', 'Biscuit', 'Waffles', 'Nori', 'Pippin', 'Marbles'];

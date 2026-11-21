@@ -9,7 +9,7 @@ function shuffle(a) {
   return a;
 }
 
-export function startMemory(root, onEnd) {
+export function start(root, onEnd) {
   const deck = shuffle([...FACES, ...FACES]);
   root.innerHTML = `
     <div class="game-hud">

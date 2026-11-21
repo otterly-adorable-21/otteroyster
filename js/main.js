@@ -1,16 +1,15 @@
-import { load, save, clear, defaultState } from './state.js';
-import { ITEMS, SLOTS, SNACKS, MISSIONS, GAMES, NAME_IDEAS } from './data.js';
-import { otterSVG, mood, itemPreviewSVG } from './otter.js';
-import { startDive } from './games/dive.js';
-import { startMemory } from './games/memory.js';
+import { ITEMS, SLOTS, SNACKS, MISSIONS, GAME_LIST, GAME_CATEGORIES, NAME_IDEAS } from './data.js';
+import * as core from './core.js';
+import { otterSVG, itemPreviewSVG } from './otter.js';
+import { LOADERS } from './games/index.js';
+import { sync } from './sync.js';
+import { detectArt } from './assets.js';
 
 // ---------- helpers ----------
 const $ = (s) => document.querySelector(s);
-const clamp = (v, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, v));
-const rand = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+const { clamp, rand } = core;
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const xpNeed = (lvl) => 40 + lvl * 30;
-const today = () => new Date().toISOString().slice(0, 10);
+const SAVE_KEY = 'otteroyster.save.v1';
 
 function fmtTime(ms) {
   const s = Math.max(0, Math.ceil(ms / 1000));
@@ -21,245 +20,110 @@ function fmtTime(ms) {
   return `${m}:${String(sec).padStart(2, '0')}`;
 }
 const fmtMinutes = (m) => (m >= 60 ? `${m / 60}h` : `${m} min`);
-
-// Stat decay per real-time minute.
-const RATES = { hunger: -0.15, happiness: -0.1, energy: -0.08, clean: -0.06 };
-const STATS = [
-  { id: 'hunger', label: 'Full', icon: '🐟' },
-  { id: 'happiness', label: 'Happy', icon: '💛' },
-  { id: 'energy', label: 'Energy', icon: '⚡' },
-  { id: 'clean', label: 'Clean', icon: '🫧' },
-];
 const NEEDS = { hunger: '🐟', energy: '💤', clean: '🛁', happiness: '🎾' };
 
-let state = load() || defaultState();
+function loadLocal() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    return raw ? core.normalize(JSON.parse(raw)) : null;
+  } catch {
+    return null;
+  }
+}
+function saveLocal() {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch { /* storage blocked */ }
+}
+
+let state = loadLocal() || core.defaultState();
 let tab = 'home';
+let closetView = 'wardrobe';
 let lastOtter = '';
 let gameCleanup = null;
+let gameOpen = false;
+let linkedName = '';
 
-// ---------- state changes ----------
-function stat(k, d) { state.stats[k] = clamp(state.stats[k] + d); }
-
-function log(msg) {
-  state.log.unshift({ t: Date.now(), msg });
-  state.log = state.log.slice(0, 25);
+// ---------- action plumbing ----------
+function act(res) {
+  if (!res.ok) { toast(res.msg); return res; }
+  if (res.msg) toast(res.msg);
+  if (res.fx) { burst(res.fx, 7); bounce(); }
+  if (res.ups) levelUp();
+  commit();
+  return res;
 }
 
-function addXP(n) {
-  state.xp += n;
-  while (state.xp >= xpNeed(state.level)) {
-    state.xp -= xpNeed(state.level);
-    state.level += 1;
-    log(`${state.name} reached level ${state.level}!`);
-    toast(`⭐ Level up! ${state.name} is now level ${state.level}`);
-    burst(['⭐', '✨', '🎉'], 10);
+function levelUp() {
+  toast(`⭐ Level up! ${state.name} is now level ${state.level}`);
+  burst(['⭐', '✨', '🎉'], 10);
+}
+
+function runTick() {
+  const events = core.tick(state);
+  let changed = false;
+  for (const e of events) {
+    if (e.type === 'woke') toast(`☀️ ${state.name} woke up!`);
+    changed = true;
   }
+  showReports();
+  return changed;
 }
 
-function busyReason() {
-  if (state.mission) return `${state.name} is away on a mission.`;
-  if (state.sleeping) return `${state.name} is sleeping. Shh!`;
-  return '';
-}
-
-function tick() {
-  const now = Date.now();
-  let mins = (now - state.lastTick) / 60000;
-  state.lastTick = now;
-  if (mins <= 0) return;
-  mins = Math.min(mins, 60 * 24 * 3);
-
-  if (state.mission) {
-    stat('hunger', RATES.hunger * 0.5 * mins);
-  } else if (state.sleeping) {
-    stat('energy', 2.5 * mins);
-    stat('hunger', RATES.hunger * 0.5 * mins);
-    stat('clean', RATES.clean * 0.5 * mins);
-    if (state.stats.energy >= 100) {
-      state.sleeping = false;
-      log(`${state.name} woke up refreshed.`);
-      toast(`☀️ ${state.name} woke up!`);
-    }
-  } else {
-    const lonely = state.stats.hunger < 25 || state.stats.clean < 25 ? 2 : 1;
-    stat('hunger', RATES.hunger * mins);
-    stat('energy', RATES.energy * mins);
-    stat('clean', RATES.clean * mins);
-    stat('happiness', RATES.happiness * lonely * mins);
-  }
-
-  if (state.mission && now >= state.mission.endsAt) finishMission();
-}
-
-// ---------- actions ----------
-function feed(id) {
-  const b = busyReason();
-  if (b) return toast(b);
-  const s = SNACKS.find((x) => x.id === id);
-  if (state.stats.hunger >= 98) return toast(`${state.name} is too full to eat!`);
-  if (state.pearls < s.price) return toast('Not enough pearls.');
-  state.pearls -= s.price;
-  stat('hunger', s.hunger);
-  stat('happiness', s.happiness);
-  addXP(2);
-  burst([s.icon, '😋'], 5);
-  bounce();
-  log(`${state.name} ate ${s.name.toLowerCase()}.`);
+function showReports() {
+  if (gameOpen || !$('#modal').hidden) return;
+  const reports = core.takeReports(state);
+  if (!reports.length) return;
   commit();
-}
-
-function pet() {
-  const b = busyReason();
-  if (b) return toast(b);
-  if (state.stats.energy < 5) return toast(`${state.name} is too tired to play.`);
-  stat('happiness', 8);
-  stat('energy', -3);
-  addXP(2);
-  burst(['💖', '💕', '✨'], 6);
-  bounce();
-  commit();
-}
-
-function bath() {
-  const b = busyReason();
-  if (b) return toast(b);
-  if (state.stats.clean >= 98) return toast(`${state.name} is already squeaky clean!`);
-  stat('clean', 45);
-  stat('happiness', 4);
-  addXP(2);
-  burst(['🫧', '🫧', '💧', '🫧'], 12);
-  bounce();
-  log(`${state.name} had a bubble bath.`);
-  commit();
-}
-
-function toggleSleep() {
-  if (state.mission) return toast(busyReason());
-  state.sleeping = !state.sleeping;
-  if (state.sleeping) log(`${state.name} curled up for a nap.`);
-  else toast(`${state.name} woke up.`);
-  commit();
-}
-
-function daily() {
-  if (state.lastDaily === today()) return toast('Come back tomorrow for another gift!');
-  state.lastDaily = today();
-  const p = rand(15, 30);
-  state.pearls += p;
-  log(`Collected a daily gift of ${p} pearls.`);
-  toast(`🎁 Daily gift: +${p} pearls!`);
-  burst(['🎁', '⚪', '✨'], 8);
-  commit();
-}
-
-function buy(id) {
-  const it = ITEMS[id];
-  if (state.owned.includes(id)) return;
-  if (state.level < it.level) return toast(`Reach level ${it.level} to buy this.`);
-  if (state.pearls < it.price) return toast('Not enough pearls.');
-  state.pearls -= it.price;
-  state.owned.push(id);
-  state.equipped[it.slot] = id;
-  addXP(5);
-  log(`Bought the ${it.name}.`);
-  toast(`🛍️ Bought ${it.name}! It's on now.`);
-  burst([it.icon, '✨'], 6);
-  commit();
-}
-
-function toggleWear(id) {
-  const it = ITEMS[id];
-  state.equipped[it.slot] = state.equipped[it.slot] === id ? null : id;
-  bounce();
-  commit();
-}
-
-function startMission(id) {
-  const m = MISSIONS.find((x) => x.id === id);
-  const b = busyReason();
-  if (b) return toast(b);
-  if (state.level < m.level) return toast(`Reach level ${m.level} to unlock this mission.`);
-  if (state.stats.energy < m.energy) return toast(`${state.name} needs ${m.energy} energy for this.`);
-  stat('energy', -m.energy);
-  stat('hunger', -m.energy / 3);
-  const now = Date.now();
-  state.mission = { id, start: now, endsAt: now + m.minutes * 60000 };
-  log(`${state.name} set off on ${m.name}.`);
-  toast(`${m.icon} ${state.name} is off on an adventure!`);
-  commit();
-}
-
-function finishMission() {
-  const m = MISSIONS.find((x) => x.id === state.mission.id);
-  state.mission = null;
-  const pearls = rand(m.pearls[0], m.pearls[1]);
-  state.pearls += pearls;
-  stat('happiness', 10);
-  let found = null;
-  for (const [id, chance] of m.loot) {
-    if (!state.owned.includes(id) && Math.random() < chance) { found = id; break; }
-  }
-  if (found) state.owned.push(found);
-  const story = m.stories[rand(0, m.stories.length - 1)];
-  log(`${state.name} returned from ${m.name} with ${pearls} pearls${found ? ` and a ${ITEMS[found].name}` : ''}.`);
-  addXP(m.xp);
-  save(state);
-  renderPanel();
+  const r = reports[reports.length - 1];
+  const m = MISSIONS.find((x) => x.id === r.id);
+  if (r.ups) levelUp();
   showModal(`
     <div class="result">
       <div class="result-icon">${m.icon}</div>
       <h2>${esc(state.name)} is back!</h2>
-      <p>${esc(state.name)} ${story}</p>
+      <p>${esc(state.name)} ${r.story}</p>
       <div class="rewards">
-        <span class="chip"><span class="pearl-icon"></span> +${pearls}</span>
-        <span class="chip">⭐ +${m.xp} XP</span>
+        <span class="chip"><span class="pearl-icon"></span> +${r.pearls}</span>
+        <span class="chip">⭐ +${r.xp} XP</span>
       </div>
-      ${found ? `<div class="loot"><div class="loot-art">${itemPreviewSVG(found)}</div><p>Found a rare item: <b>${ITEMS[found].name}</b>! Check the wardrobe.</p></div>` : ''}
+      ${r.found ? `<div class="loot"><div class="loot-art">${itemPreviewSVG(r.found)}</div><p>Found a rare item: <b>${ITEMS[r.found].name}</b>! Check your closet.</p></div>` : ''}
+      ${reports.length > 1 ? `<p class="muted">+${reports.length - 1} more mission report${reports.length > 2 ? 's' : ''} in the journal.</p>` : ''}
       <button class="btn primary" data-close>Yay!</button>
     </div>`);
 }
 
-function recallMission() {
-  if (!state.mission) return;
-  const m = MISSIONS.find((x) => x.id === state.mission.id);
-  state.mission = null;
-  log(`${state.name} came home early from ${m.name}.`);
-  toast(`${state.name} swam home early.`);
-  commit();
-}
-
 // ---------- minigames ----------
-function playGame(id) {
-  const g = GAMES.find((x) => x.id === id);
-  const b = busyReason();
-  if (b) return toast(b);
-  if (state.stats.energy < g.energy) return toast(`${state.name} is too tired. Try a nap first!`);
-  stat('energy', -g.energy);
+async function playGame(id) {
+  const g = GAME_LIST.find((x) => x.id === id);
+  const res = core.payForGame(state, id);
+  if (!res.ok) return toast(res.msg);
   commit();
-
+  gameOpen = true;
   showModal(`<div class="game-wrap"><div class="game-top"><h2>${g.icon} ${g.name}</h2>
-    <button class="icon-btn" data-quit aria-label="Quit game">✕</button></div><div class="game-root"></div></div>`, { wide: true });
+    <button class="icon-btn" data-quit aria-label="Quit game">✕</button></div><div class="game-root"><p class="hint">Loading…</p></div></div>`, { wide: true });
   const root = $('#modal .game-root');
-  const start = id === 'dive' ? startDive : startMemory;
-  gameCleanup = start(root, (res) => endGame(g, res));
+  try {
+    const mod = await LOADERS[id]();
+    if (!gameOpen) return;
+    gameCleanup = mod.start(root, (r) => endGame(g, r));
+  } catch (err) {
+    console.error(err);
+    root.innerHTML = '<p class="hint">Sorry, this game failed to load.</p>';
+  }
 }
 
-function endGame(g, res) {
+function endGame(g, r) {
   gameCleanup = null;
-  state.pearls += res.pearls;
-  stat('happiness', 12);
-  addXP(6);
-  let record = false;
-  if (g.id === 'dive' && res.best > state.best.dive) { state.best.dive = res.best; record = true; }
-  if (g.id === 'memory' && (state.best.memory === null || res.best < state.best.memory)) { state.best.memory = res.best; record = true; }
-  log(`${state.name} played ${g.name} and earned ${res.pearls} pearls.`);
+  gameOpen = false;
+  const res = core.rewardGame(state, g.id, r.pearls, r.best, !!g.lowerIsBetter);
+  if (res.ups) levelUp();
   commit();
+  sync.score(g.id, r.best);
   $('#modal-card').innerHTML = `
     <div class="result">
       <div class="result-icon">${g.icon}</div>
-      <h2>${record ? 'New record! 🏆' : 'Nice job!'}</h2>
-      <p>${res.summary}</p>
-      <div class="rewards"><span class="chip"><span class="pearl-icon"></span> +${res.pearls}</span><span class="chip">💛 +12</span></div>
+      <h2>${res.record ? 'New record! 🏆' : 'Nice job!'}</h2>
+      <p>${r.summary}</p>
+      <div class="rewards"><span class="chip"><span class="pearl-icon"></span> +${res.pearls}</span><span class="chip">💛 +10</span></div>
       <div class="row">
         <button class="btn" data-action="game" data-id="${g.id}">Play again</button>
         <button class="btn primary" data-close>Done</button>
@@ -269,19 +133,22 @@ function endGame(g, res) {
 
 function quitGame() {
   if (gameCleanup) { gameCleanup(); gameCleanup = null; }
+  gameOpen = false;
   closeModal();
 }
 
 // ---------- rendering ----------
 function renderHeader() {
-  $('#otter-name').textContent = state.name || 'Otter Oyster';
+  $('#otter-name').textContent = state.name || 'Otter & Oyster';
   $('#level').textContent = state.level;
-  $('#xp-fill').style.width = `${(state.xp / xpNeed(state.level)) * 100}%`;
+  $('#xp-fill').style.width = `${(state.xp / core.xpNeed(state.level)) * 100}%`;
   $('#pearls').textContent = state.pearls;
+  $('#sync-dot').hidden = !sync.linked;
+  $('#sync-dot').classList.toggle('off', !sync.online);
 }
 
 function renderStats() {
-  $('#stats').innerHTML = STATS.map((s) => {
+  $('#stats').innerHTML = core.STAT_INFO.map((s) => {
     const v = Math.round(state.stats[s.id]);
     const cls = v < 25 ? 'low' : v < 55 ? 'mid' : 'high';
     return `<div class="stat ${cls}" title="${s.label}: ${v}%">
@@ -295,8 +162,7 @@ function renderScene() {
   const away = !!state.mission;
   const scene = $('#scene');
   scene.classList.toggle('night', state.sleeping);
-  scene.classList.toggle('is-away', away);
-  scene.dataset.mood = mood(state);
+  scene.dataset.mood = core.mood(state);
   $('#otter-wrap').hidden = away;
   $('#away').hidden = !away;
   $('#zzz').hidden = !state.sleeping || away;
@@ -311,12 +177,8 @@ function renderScene() {
 
   const thought = $('#thought');
   const low = Object.entries(state.stats).filter(([, v]) => v < 35).sort((a, b) => a[1] - b[1])[0];
-  if (!away && !state.sleeping && low) {
-    thought.hidden = false;
-    thought.textContent = NEEDS[low[0]];
-  } else {
-    thought.hidden = true;
-  }
+  thought.hidden = !(!away && !state.sleeping && low);
+  if (!thought.hidden) thought.textContent = NEEDS[low[0]];
 }
 
 function itemCard(id, mode) {
@@ -327,7 +189,7 @@ function itemCard(id, mode) {
   if (mode === 'wardrobe') {
     action = `<button class="btn small ${worn ? 'primary' : ''}" data-action="wear" data-id="${id}">${worn ? 'Wearing ✓' : 'Wear'}</button>`;
   } else if (owned) {
-    action = `<button class="btn small" disabled>Owned</button>`;
+    action = '<button class="btn small" disabled>Owned</button>';
   } else if (state.level < it.level) {
     action = `<button class="btn small" disabled>🔒 Lv ${it.level}</button>`;
   } else {
@@ -337,7 +199,7 @@ function itemCard(id, mode) {
 }
 
 function panelHome() {
-  const claimed = state.lastDaily === today();
+  const claimed = state.lastDaily === core.dayKey();
   const asleep = state.sleeping;
   return `
     <h2 class="section-title">Snacks</h2>
@@ -362,31 +224,31 @@ function panelHome() {
     </div>`;
 }
 
-function panelWardrobe() {
-  const owned = state.owned;
-  if (!owned.length) {
-    return `<div class="empty"><div class="empty-icon">👗</div><p>The wardrobe is empty! Buy clothes in the <button class="link" data-tab="shop">shop</button> or find rare items on <button class="link" data-tab="missions">missions</button>.</p></div>`;
+function panelCloset() {
+  const toggle = `<div class="segmented">
+    <button data-closet="wardrobe" aria-pressed="${closetView === 'wardrobe'}">👗 My clothes</button>
+    <button data-closet="shop" aria-pressed="${closetView === 'shop'}">🛍️ Shop</button></div>`;
+  if (closetView === 'shop') {
+    return toggle + SLOTS.map((slot) => {
+      const ids = Object.keys(ITEMS).filter((id) => ITEMS[id].slot === slot.id && ITEMS[id].price !== null);
+      return `<h2 class="section-title">${slot.name}</h2><div class="grid">${ids.map((id) => itemCard(id, 'shop')).join('')}</div>`;
+    }).join('') + '<p class="note">✨ Some rare items can only be found on missions.</p>';
   }
-  return SLOTS.map((slot) => {
-    const ids = owned.filter((id) => ITEMS[id].slot === slot.id);
+  if (!state.owned.length) {
+    return `${toggle}<div class="empty"><div class="empty-icon">👗</div><p>No clothes yet! Buy some in the <button class="link" data-closet="shop">shop</button> or find rare items on <button class="link" data-tab="missions">missions</button>.</p></div>`;
+  }
+  return toggle + SLOTS.map((slot) => {
+    const ids = state.owned.filter((id) => ITEMS[id].slot === slot.id);
     if (!ids.length) return '';
     return `<h2 class="section-title">${slot.name}</h2><div class="grid">${ids.map((id) => itemCard(id, 'wardrobe')).join('')}</div>`;
-  }).join('') + `<div class="settings"><button class="link" data-action="undress">Take everything off</button></div>`;
-}
-
-function panelShop() {
-  return SLOTS.map((slot) => {
-    const ids = Object.keys(ITEMS).filter((id) => ITEMS[id].slot === slot.id && ITEMS[id].price !== null);
-    return `<h2 class="section-title">${slot.name}</h2><div class="grid">${ids.map((id) => itemCard(id, 'shop')).join('')}</div>`;
-  }).join('') + `<p class="note">✨ Some rare items can only be found on missions.</p>`;
+  }).join('') + '<div class="settings"><button class="link" data-action="undress">Take everything off</button></div>';
 }
 
 function panelMissions() {
   let head = '';
   if (state.mission) {
     const m = MISSIONS.find((x) => x.id === state.mission.id);
-    const total = state.mission.endsAt - state.mission.start;
-    const pct = clamp(((Date.now() - state.mission.start) / total) * 100);
+    const pct = clamp(((Date.now() - state.mission.start) / (state.mission.endsAt - state.mission.start)) * 100);
     head = `<div class="card mission-active">
       <div class="mission-head"><span class="mission-icon">${m.icon}</span><div><b>${m.name}</b><div class="muted">Returns in <span data-live="mission-left">${fmtTime(state.mission.endsAt - Date.now())}</span></div></div></div>
       <div class="bar big"><div data-live="mission-bar" style="width:${pct}%"></div></div>
@@ -404,20 +266,70 @@ function panelMissions() {
     </div>`;
   }).join('');
   return `${head}<h2 class="section-title">Missions</h2><div class="missions">${list}</div>
-    <p class="note">Missions run in real time, even when this page is closed.</p>`;
+    <p class="note">Missions run in real time, even when this page is closed. You can also start them from Discord with <code>/mission</code>.</p>`;
 }
 
-function panelGames() {
-  return `<h2 class="section-title">Minigames</h2><div class="games">${GAMES.map((g) => {
-    const best = g.id === 'dive' ? (state.best.dive ? `Best: ${state.best.dive} pts` : '') : state.best.memory ? `Best: ${state.best.memory} moves` : '';
-    return `<div class="card game">
-      <div class="game-icon">${g.icon}</div>
-      <div class="game-info"><b>${g.name}</b><p class="muted">${g.desc}</p><p class="muted">⚡ ${g.energy} energy ${best ? `· 🏆 ${best}` : ''}</p></div>
-      <button class="btn primary" data-action="game" data-id="${g.id}">Play</button></div>`;
-  }).join('')}</div><p class="note">Games earn pearls and make ${esc(state.name)} happy.</p>`;
+function bestLabel(g) {
+  const b = state.best[g.id];
+  return b == null ? '' : `🏆 ${b} ${g.scoreLabel}`;
 }
 
-const PANELS = { home: panelHome, wardrobe: panelWardrobe, shop: panelShop, missions: panelMissions, games: panelGames };
+function panelArcade() {
+  return GAME_CATEGORIES.map((cat) => `
+    <h2 class="section-title">${cat.name} <small>${cat.desc}</small></h2>
+    <div class="arcade">${GAME_LIST.filter((g) => g.category === cat.id).map((g) => `
+      <div class="card arcade-card">
+        <button class="arcade-play" data-action="game" data-id="${g.id}" aria-label="Play ${g.name}">
+          <span class="arcade-icon">${g.icon}</span>
+          <b>${g.name}</b>
+          <span class="muted">${g.desc}</span>
+        </button>
+        <div class="arcade-foot"><span class="muted">⚡ ${g.energy}${bestLabel(g) ? ` · ${bestLabel(g)}` : ''}</span>
+        ${sync.online ? `<button class="link small" data-action="board" data-id="${g.id}">Leaderboard</button>` : ''}</div>
+      </div>`).join('')}
+    </div>`).join('') + `<p class="note">Games cost a little energy, earn pearls and make ${esc(state.name || 'your otter')} happy.</p>`;
+}
+
+function panelDiscord() {
+  const cmds = `
+    <h2 class="section-title">Bot commands</h2>
+    <div class="card cmd-list">
+      <div><code>/pet</code> See your otter and feed, cuddle, bathe or nap</div>
+      <div><code>/daily</code> Daily treasure chest</div>
+      <div><code>/mission</code> Send your otter on an adventure</div>
+      <div><code>/play</code> Solo games: trivia, fishing, hangman, minesweeper and more</div>
+      <div><code>/challenge</code> Challenge a friend: Connect Four, Tic-Tac-Toe, Rock Paper Scissors</div>
+      <div><code>/party</code> Group games for voice chats: Impostor, Trivia Battle, Categories and more</div>
+      <div><code>/leaderboard</code> Top scores · <code>/profile</code> Show off your otter</div>
+    </div>`;
+  if (!sync.online) {
+    return `<div class="empty"><div class="empty-icon">📡</div><p>The OtterOyster server isn't reachable right now, so Discord linking is unavailable. Your otter is still saved on this device.</p>
+      <button class="btn" data-action="recheck">Try again</button></div>${cmds}`;
+  }
+  const invite = sync.info?.invite;
+  if (sync.linked) {
+    return `<div class="card linked">
+      <div class="linked-head"><span class="big-emoji">🔗</span><div><b>Linked to Discord</b>
+      <div class="muted">${linkedName ? `Discord: <b>${esc(linkedName)}</b> · ` : ''}${esc(state.name || 'Your otter')} is shared between this website and the bot.</div></div></div>
+      <div class="row"><button class="btn" data-action="syncnow">Sync now</button><button class="btn" data-action="unlink">Unlink</button></div>
+    </div>${invite ? `<p class="note"><a href="${esc(invite)}" target="_blank" rel="noopener">Add the bot to a server or your account</a></p>` : ''}${cmds}`;
+  }
+  return `<div class="card">
+    <img class="hero-art" src="assets/otter-float.jpg" alt="" onerror="this.remove()">
+    <h2 class="section-title flush">Bring ${esc(state.name || 'your otter')} to Discord 🦦</h2>
+    <ol class="steps">
+      <li>${invite ? `<a href="${esc(invite)}" target="_blank" rel="noopener">Add the OtterOyster bot</a>` : 'Add the OtterOyster bot'} to your Discord account or a server.</li>
+      <li>Type <code>/link</code> anywhere the bot is. It privately sends you a 6-letter code.</li>
+      <li>Enter the code here:</li>
+    </ol>
+    <form class="link-form" data-form="link">
+      <input name="code" maxlength="6" autocomplete="off" placeholder="ABC123" aria-label="Link code" required>
+      <button class="btn primary" type="submit">Link</button>
+    </form>
+  </div>${cmds}`;
+}
+
+const PANELS = { home: panelHome, closet: panelCloset, missions: panelMissions, arcade: panelArcade, discord: panelDiscord };
 
 function renderPanel() {
   $('#panel').innerHTML = PANELS[tab]();
@@ -430,10 +342,15 @@ function renderAll() {
   renderScene();
 }
 
-function commit() {
-  save(state);
+let pushTimer = 0;
+function commit({ push = true } = {}) {
+  saveLocal();
   renderAll();
   renderPanel();
+  if (push && sync.linked) {
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(pushNow, 700);
+  }
 }
 
 function updateLive() {
@@ -442,6 +359,34 @@ function updateLive() {
   const bar = document.querySelector('[data-live="mission-bar"]');
   if (left) left.textContent = fmtTime(state.mission.endsAt - Date.now());
   if (bar) bar.style.width = `${clamp(((Date.now() - state.mission.start) / (state.mission.endsAt - state.mission.start)) * 100)}%`;
+}
+
+// ---------- sync ----------
+async function pushNow() {
+  if (!sync.linked || !sync.online) return;
+  try {
+    const r = await sync.push(state);
+    if (r.conflict) adoptRemote(r.state, r.version, 'Updated with changes from Discord 🔄');
+  } catch { /* offline; will retry on next change */ }
+}
+
+async function pullNow(quiet = true) {
+  if (!sync.linked || gameOpen) return;
+  try {
+    const r = await sync.pull();
+    if (r?.discordName) linkedName = r.discordName;
+    if (r && r.version > sync.version) adoptRemote(r.state, r.version, quiet ? '' : 'Synced!');
+    else if (!quiet) toast('Already up to date ✓');
+  } catch { /* offline */ }
+}
+
+function adoptRemote(remote, version, msg) {
+  state = core.normalize(remote);
+  sync.version = version;
+  lastOtter = '';
+  runTick();
+  commit({ push: false });
+  if (msg) toast(msg);
 }
 
 // ---------- effects ----------
@@ -488,58 +433,111 @@ function showModal(html, { wide = false, locked = false } = {}) {
 
 function closeModal() {
   if (gameCleanup) { gameCleanup(); gameCleanup = null; }
+  gameOpen = false;
   $('#modal').hidden = true;
   $('#modal-card').innerHTML = '';
+  setTimeout(showReports, 300);
 }
 
 function askName(first) {
-  const idea = NAME_IDEAS[rand(0, NAME_IDEAS.length - 1)];
+  const idea = NAME_IDEAS[Math.floor(Math.random() * NAME_IDEAS.length)];
+  const preview = { ...core.defaultState(), stats: { hunger: 90, happiness: 90, energy: 90, clean: 90 } };
   showModal(`
     <form class="adopt" data-form="name">
-      <div class="adopt-otter"><svg viewBox="0 -20 200 250">${otterSVG({ ...defaultState(), stats: { hunger: 90, happiness: 90, energy: 90, clean: 90 } })}</svg></div>
+      ${first ? '<img class="adopt-logo" src="assets/logo.png" alt="Otter &amp; Oyster" onerror="this.remove()">' : ''}
+      <div class="adopt-otter"><svg viewBox="0 -20 200 250">${otterSVG(preview)}</svg></div>
       <h2>${first ? 'A baby otter washed up with an oyster!' : 'Rename your otter'}</h2>
       ${first ? '<p>Give your new friend a name. Feed them, dress them up, send them on adventures and play games together.</p>' : ''}
       <input name="name" maxlength="16" required autocomplete="off" placeholder="${idea}" value="${first ? '' : esc(state.name)}" aria-label="Otter name">
       <button class="btn primary" type="submit">${first ? 'Adopt 🦦' : 'Save'}</button>
+      ${first && sync.online ? '<button class="link" type="button" data-action="havediscord">Already have an otter on Discord?</button>' : ''}
     </form>`, { locked: first });
   setTimeout(() => $('#modal input')?.focus(), 50);
 }
 
+async function showLeaderboard(id) {
+  const g = GAME_LIST.find((x) => x.id === id);
+  showModal(`<div class="result"><div class="result-icon">${g.icon}</div><h2>${g.name}</h2><p>Loading top scores…</p></div>`);
+  let top = null;
+  try { top = await sync.leaderboard(id); } catch { /* offline */ }
+  if ($('#modal').hidden) return;
+  $('#modal-card').innerHTML = `<div class="result"><div class="result-icon">${g.icon}</div><h2>${g.name} leaderboard</h2>
+    ${top && top.length ? `<ol class="board">${top.map((r) => `<li><span>${esc(r.name)}</span><b>${r.score} ${g.scoreLabel}</b></li>`).join('')}</ol>`
+    : '<p>No scores yet. Link Discord and be the first!</p>'}
+    <button class="btn primary" data-close>Close</button></div>`;
+}
+
+async function doLink(code, keep) {
+  const r = await sync.link(code.trim().toUpperCase(), state.name ? state : null, keep);
+  if (r.status === 409 && r.conflict) {
+    showModal(`<div class="result"><div class="result-icon">🦦🦦</div><h2>Two otters!</h2>
+      <p>Your Discord account already has <b>${esc(r.server.name)}</b> (level ${r.server.level}). This website has <b>${esc(state.name)}</b> (level ${state.level}). Which one do you want to keep?</p>
+      <div class="row"><button class="btn" data-action="keep" data-keep="discord" data-code="${esc(code)}">Keep ${esc(r.server.name)}</button>
+      <button class="btn primary" data-action="keep" data-keep="web" data-code="${esc(code)}">Keep ${esc(state.name)}</button></div>
+      <p class="muted">The other otter will be released back to the sea.</p></div>`);
+    return;
+  }
+  if (!r.token) { toast(r.error || 'That code did not work. Try /link again.'); return; }
+  linkedName = r.discordName || '';
+  closeModal();
+  await sync.check();
+  adoptRemote(r.state, r.version, `🔗 Linked! ${r.state.name} can now visit Discord.`);
+}
+
 // ---------- events ----------
-document.addEventListener('click', (e) => {
+document.addEventListener('click', async (e) => {
   const tabBtn = e.target.closest('[data-tab]');
   if (tabBtn) {
     tab = tabBtn.dataset.tab;
     renderPanel();
-    if (tabBtn.closest('.tabs')) $('#panel').scrollTop = 0;
+    if (tabBtn.closest('.tabs')) window.scrollTo({ top: 0 });
     return;
   }
+  const closetBtn = e.target.closest('[data-closet]');
+  if (closetBtn) { closetView = closetBtn.dataset.closet; tab = 'closet'; return renderPanel(); }
   if (e.target.closest('[data-close]')) return closeModal();
   if (e.target.closest('[data-quit]')) return quitGame();
-  if (e.target.id === 'modal' && !$('#modal').dataset.locked && !gameCleanup) return closeModal();
+  if (e.target.id === 'modal' && !$('#modal').dataset.locked && !gameOpen) return closeModal();
 
   const a = e.target.closest('[data-action]');
   if (!a) return;
   const id = a.dataset.id;
   switch (a.dataset.action) {
-    case 'feed': return feed(id);
-    case 'pet': return pet();
-    case 'bath': return bath();
-    case 'sleep': return toggleSleep();
-    case 'daily': return daily();
-    case 'buy': return buy(id);
-    case 'wear': return toggleWear(id);
+    case 'feed': return act(core.feed(state, id));
+    case 'pet': return act(core.cuddle(state));
+    case 'bath': return act(core.bath(state));
+    case 'sleep': return act(core.toggleSleep(state));
+    case 'daily': return act(core.claimDaily(state));
+    case 'buy': return act(core.buy(state, id));
+    case 'wear': bounce(); return act({ ...core.toggleWear(state, id), msg: '' });
     case 'undress': Object.keys(state.equipped).forEach((k) => { state.equipped[k] = null; }); return commit();
-    case 'mission': return startMission(id);
-    case 'recall': return recallMission();
+    case 'mission': return act(core.startMission(state, id));
+    case 'recall': return act(core.recallMission(state));
     case 'game': closeModal(); return playGame(id);
+    case 'board': return showLeaderboard(id);
     case 'rename': return askName(false);
+    case 'recheck': await sync.check(); return renderAll() || renderPanel();
+    case 'syncnow': return pullNow(false);
+    case 'unlink':
+      if (confirm('Unlink from Discord? Your otter stays on this device, but changes will stop syncing.')) {
+        sync.unlink();
+        commit({ push: false });
+        toast('Unlinked from Discord.');
+      }
+      return;
+    case 'keep': return doLink(a.dataset.code, a.dataset.keep);
+    case 'havediscord':
+      closeModal();
+      tab = 'discord';
+      renderPanel();
+      toast('Run /link in Discord, then enter the code below.');
+      return;
     case 'reset':
-      if (confirm('Start over with a new otter? This erases all progress.')) {
-        clear();
-        state = defaultState();
+      if (confirm('Start over with a new otter? This erases all progress on this device.')) {
+        sync.unlink();
+        state = core.defaultState();
         lastOtter = '';
-        commit();
+        commit({ push: false });
         askName(true);
       }
       return;
@@ -548,42 +546,62 @@ document.addEventListener('click', (e) => {
 });
 
 document.addEventListener('submit', (e) => {
-  const form = e.target.closest('[data-form="name"]');
-  if (!form) return;
+  const form = e.target;
   e.preventDefault();
-  const first = !state.name;
-  const name = form.name.value.trim().slice(0, 16) || form.name.placeholder;
-  state.name = name;
-  if (first) log(`You adopted ${name}! 🦦`);
-  closeModal();
-  commit();
-  if (first) burst(['💖', '🦦', '✨'], 10);
+  if (form.dataset.form === 'name') {
+    const first = !state.name;
+    const name = form.name.value.trim().slice(0, 16) || form.name.placeholder;
+    state.name = name;
+    if (first) core.log(state, `You adopted ${name}! 🦦`);
+    closeModal();
+    commit();
+    if (first) burst(['💖', '🦦', '✨'], 10);
+  } else if (form.dataset.form === 'link') {
+    doLink(form.code.value);
+  }
 });
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !$('#modal').hidden && !$('#modal').dataset.locked) {
-    if (gameCleanup) quitGame();
+    if (gameOpen) quitGame();
     else closeModal();
   }
 });
 
-$('#otter-wrap').addEventListener('click', pet);
+$('#otter-wrap').addEventListener('click', () => act(core.cuddle(state)));
 
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) save(state);
-  else { tick(); commit(); }
+  if (document.hidden) { saveLocal(); return; }
+  runTick();
+  commit({ push: false });
+  pullNow();
 });
 
 // ---------- boot ----------
-tick();
-commit();
-if (!state.name) askName(true);
+detectArt();
+runTick();
+commit({ push: false });
+if (!state.name && !sync.linked) askName(true);
 
+sync.check().then(async (online) => {
+  if (!online) return renderAll();
+  if (sync.linked) await pullNow();
+  renderAll();
+  renderPanel();
+});
+
+let ticks = 0;
 setInterval(() => {
   const hadMission = !!state.mission;
-  tick();
+  runTick();
   renderAll();
   updateLive();
   if (hadMission && !state.mission) renderPanel();
+  ticks += 1;
+  if (ticks % 5 === 0) saveLocal();
+  if (sync.linked && ticks % 20 === 0) pullNow();
+  if (sync.linked && ticks % 60 === 0) pushNow();
 }, 1000);
-setInterval(() => save(state), 5000);
+
+// Small hook for automated tests and the curious.
+window.otteroyster = { get state() { return state; }, core, sync, rand };
