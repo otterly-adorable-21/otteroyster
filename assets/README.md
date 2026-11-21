@@ -1,17 +1,20 @@
 # Brand art
 
-Drop the Otter & Oyster artwork here with **exactly these file names**. The site
-detects each one automatically and uses it. Until a file exists, a matching drawn
-(SVG) version is shown instead, so nothing looks broken.
-
 | File | What it is | Where it shows up |
 | --- | --- | --- |
-| `logo.png` | The "Otter & Oyster" wordmark banner (otter floating in waves, lilies, shell) | Top of every page, adoption screen, link previews |
-| `emblem.png` | The round emblem (otter hugging the open oyster with the pearl, lily, gold ring) | Browser tab icon, home-screen icon, header badge, Discord bot avatar |
-| `lily-border.png` | The three water lilies border | Section dividers |
-| `pond.jpg` | The willow pond painting | Faded page background |
-| `otter-float.jpg` | The otter floating among lilies | Discord tab hero image |
+| `logo.png` | "Otter & Oyster" wordmark banner | Top of every page, adoption screen, link previews |
+| `emblem.png` | Round emblem (otter hugging the oyster) | Browser tab icon, phone home-screen icon, header badge. Also upload it as the Discord bot's avatar |
+| `lily-border.png` | Three water lilies border | Section dividers |
+| `pond.png` | Willow pond painting | Faded page background |
+| `otter-float.png` | Otter floating among lilies | Discord tab hero image |
 
-Tips: PNGs with transparent backgrounds look best for `logo.png`, `emblem.png` and
-`lily-border.png`. Keep each file under ~1 MB (resize to ~1200 px wide) so the
-site stays fast.
+These are the full-size originals. The site loads the small, fast copies in
+`web/`, which are made from these (about 1 MB total instead of 11 MB).
+
+## Replacing art
+
+Upload the new file with the same name. **Upload it with the final name instead
+of renaming it on GitHub afterwards.** Renaming images in GitHub's web editor
+emptied two of them once. Until the `web/` copy is regenerated, the site keeps
+showing the old optimized version, so ask Claude to "re-optimize the art" (or
+delete the matching file in `web/` and the site falls back to your original).

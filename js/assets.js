@@ -1,12 +1,14 @@
-// Detects which optional brand images exist in /assets and turns them on.
-// Each one adds a class to <html> (e.g. "has-logo") that CSS uses to swap
-// the drawn fallback for the real artwork.
+// Detects which brand images exist in /assets and turns them on.
+// Prefers the small web-optimized copies in assets/web/, and falls back to the
+// full-size originals, so newly uploaded art works even before it's optimized.
+// Each image found adds a class to <html> (e.g. "has-logo") that CSS uses to
+// swap the drawn fallback for the real artwork.
 const ART = {
-  logo: 'assets/logo.png',
-  emblem: 'assets/emblem.png',
-  lilies: 'assets/lily-border.png',
-  pond: 'assets/pond.jpg',
-  float: 'assets/otter-float.jpg',
+  logo: ['assets/web/logo.webp', 'assets/logo.png'],
+  emblem: ['assets/web/emblem.webp', 'assets/emblem.png'],
+  lilies: ['assets/web/lily-border.webp', 'assets/lily-border.png'],
+  pond: ['assets/web/pond.webp', 'assets/pond.png', 'assets/pond.jpg'],
+  float: ['assets/web/otter-float.webp', 'assets/otter-float.png', 'assets/otter-float.jpg'],
 };
 
 function probe(src) {
@@ -18,16 +20,23 @@ function probe(src) {
   });
 }
 
+async function first(list) {
+  for (const src of list) if (await probe(src)) return src;
+  return null;
+}
+
 export const art = {};
 
 export async function detectArt() {
-  await Promise.all(Object.entries(ART).map(async ([key, src]) => {
-    art[key] = (await probe(src)) ? src : null;
+  await Promise.all(Object.entries(ART).map(async ([key, list]) => {
+    art[key] = await first(list);
     document.documentElement.classList.toggle(`has-${key}`, !!art[key]);
   }));
-  if (art.emblem) {
-    document.querySelectorAll('link[rel~="icon"], link[rel="apple-touch-icon"]').forEach((l) => { l.href = art.emblem; l.type = 'image/png'; });
-    document.querySelectorAll('img[data-emblem]').forEach((img) => { img.src = art.emblem; });
-  }
+  const set = (sel, src) => { if (src) document.querySelectorAll(sel).forEach((el) => { if (el.getAttribute('src') !== src) el.src = src; }); };
+  set('img[data-art="logo"]', art.logo);
+  set('img[data-art="emblem"]', art.emblem);
+  set('img[data-art="lilies"]', art.lilies);
+  set('img[data-art="float"]', art.float);
+  if (art.pond) document.documentElement.style.setProperty('--pond-url', `url("${new URL(art.pond, location.href).href}")`);
   return art;
 }

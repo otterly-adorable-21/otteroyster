@@ -3,7 +3,7 @@ import * as core from './core.js';
 import { otterSVG, itemPreviewSVG } from './otter.js';
 import { LOADERS } from './games/index.js';
 import { sync } from './sync.js';
-import { detectArt } from './assets.js';
+import { detectArt, art } from './assets.js';
 
 // ---------- helpers ----------
 const $ = (s) => document.querySelector(s);
@@ -315,7 +315,7 @@ function panelDiscord() {
     </div>${invite ? `<p class="note"><a href="${esc(invite)}" target="_blank" rel="noopener">Add the bot to a server or your account</a></p>` : ''}${cmds}`;
   }
   return `<div class="card">
-    <img class="hero-art" src="assets/otter-float.jpg" alt="" onerror="this.remove()">
+    <img class="hero-art" src="${art.float || 'assets/web/otter-float.webp'}" alt="">
     <h2 class="section-title flush">Bring ${esc(state.name || 'your otter')} to Discord 🦦</h2>
     <ol class="steps">
       <li>${invite ? `<a href="${esc(invite)}" target="_blank" rel="noopener">Add the OtterOyster bot</a>` : 'Add the OtterOyster bot'} to your Discord account or a server.</li>
@@ -444,7 +444,7 @@ function askName(first) {
   const preview = { ...core.defaultState(), stats: { hunger: 90, happiness: 90, energy: 90, clean: 90 } };
   showModal(`
     <form class="adopt" data-form="name">
-      ${first ? '<img class="adopt-logo" src="assets/logo.png" alt="Otter &amp; Oyster" onerror="this.remove()">' : ''}
+      ${first ? `<img class="adopt-logo" src="${art.logo || 'assets/web/logo.webp'}" alt="Otter &amp; Oyster">` : ''}
       <div class="adopt-otter"><svg viewBox="0 -20 200 250">${otterSVG(preview)}</svg></div>
       <h2>${first ? 'A baby otter washed up with an oyster!' : 'Rename your otter'}</h2>
       ${first ? '<p>Give your new friend a name. Feed them, dress them up, send them on adventures and play games together.</p>' : ''}

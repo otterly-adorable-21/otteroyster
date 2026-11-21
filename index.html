@@ -8,14 +8,16 @@
   <meta name="theme-color" content="#0b2f3a">
   <meta property="og:title" content="Otter & Oyster">
   <meta property="og:description" content="Adopt a sleepy little otter and explore the pond together.">
-  <meta property="og:image" content="https://otteroyster.online/assets/logo.png">
-  <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="favicon.svg">
+  <meta property="og:image" content="https://otteroyster.online/assets/web/og.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="assets/web/icon-32.png" type="image/png" sizes="32x32">
+  <link rel="icon" href="assets/web/icon-192.png" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="assets/web/icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
-  <script type="module" src="js/main.js"></script>
+  <link rel="stylesheet" href="css/style.css?v=3">
+  <script type="module" src="js/main.js?v=3"></script>
 </head>
 <body>
   <!-- Reusable drawings: water lily, lily pad, gold sparkle -->
@@ -63,14 +65,14 @@
   <div id="app">
     <div class="brandbar">
       <h1 class="wordmark">
-        <img src="assets/logo.png" alt="Otter &amp; Oyster" onerror="this.remove()">
+        <img src="assets/web/logo.webp" data-art="logo" alt="Otter &amp; Oyster" width="1000" height="563">
         <span class="wordmark-text"><svg class="spark-i" aria-hidden="true"><use href="#sym-sparkle"/></svg>Otter<span class="amp">&amp;</span>Oyster<svg class="spark-i" aria-hidden="true"><use href="#sym-sparkle"/></svg></span>
       </h1>
     </div>
 
     <header class="topbar">
       <div class="brand">
-        <img src="favicon.svg" data-emblem alt="" class="logo" width="46" height="46">
+        <img src="assets/web/emblem.webp" data-art="emblem" alt="" class="logo" width="46" height="46" onerror="this.onerror=null;this.src='favicon.svg'">
         <div>
           <h2 id="otter-name">Otter Oyster</h2>
           <div class="level">Lv <span id="level">1</span><div class="xpbar" aria-hidden="true"><div id="xp-fill"></div></div></div>
@@ -215,7 +217,7 @@
     <section class="stats" id="stats" aria-label="Otter needs"></section>
 
     <div class="lily-divider" aria-hidden="true">
-      <img src="assets/lily-border.png" alt="" onerror="this.remove()">
+      <img src="assets/web/lily-border.webp" data-art="lilies" alt="">
       <svg viewBox="0 0 300 60">
         <g fill="none" stroke="#3cc7c0" stroke-width="2.4" stroke-linecap="round" opacity=".8">
           <path d="M12,40 Q4,24 18,20 Q28,20 24,30"/><path d="M288,40 Q296,24 282,20 Q272,20 276,30"/>

@@ -49,7 +49,7 @@ body {
 /* Optional painted pond backdrop (assets/pond.jpg), faded under everything */
 .has-pond body::before {
   content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-  background: linear-gradient(180deg, rgba(7, 31, 38, 0.55), rgba(7, 31, 38, 0.92) 70%), url('../assets/pond.jpg') center top / cover no-repeat;
+  background: linear-gradient(180deg, rgba(7, 31, 38, 0.55), rgba(7, 31, 38, 0.92) 70%), var(--pond-url, none) center top / cover no-repeat;
 }
 button { font: inherit; color: inherit; cursor: pointer; }
 button:disabled { cursor: not-allowed; }
@@ -76,7 +76,7 @@ a { color: inherit; }
 /* ---------- brand + top bar ---------- */
 .brandbar { display: flex; justify-content: center; padding: 14px 16px 0; }
 .wordmark { display: flex; align-items: center; justify-content: center; min-height: 64px; }
-.wordmark img { display: none; height: 92px; width: auto; filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.35)); }
+.wordmark img { display: none; height: 124px; width: auto; filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.35)); }
 .has-logo .wordmark img { display: block; }
 .has-logo .wordmark .wordmark-text { display: none; }
 .wordmark-text {
@@ -225,7 +225,7 @@ a { color: inherit; }
 .bar.big > div { background: linear-gradient(90deg, var(--aqua), var(--teal)); }
 
 /* ---------- lily divider ---------- */
-.lily-divider { display: flex; justify-content: center; margin: 18px 0 2px; height: 46px; }
+.lily-divider { display: flex; justify-content: center; margin: 18px 0 2px; height: 58px; }
 .lily-divider img { display: none; height: 100%; width: auto; max-width: 100%; }
 .has-lilies .lily-divider img { display: block; }
 .has-lilies .lily-divider svg { display: none; }
