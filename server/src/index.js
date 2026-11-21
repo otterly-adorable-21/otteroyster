@@ -33,7 +33,7 @@ startHttp({
 if (env.DISCORD_TOKEN) {
   const { startBot } = await import('./bot/index.js');
   try {
-    bot = await startBot({ token: env.DISCORD_TOKEN, store, social, siteUrl });
+    bot = await startBot({ token: env.DISCORD_TOKEN, store, social, siteUrl, devGuildId: env.DISCORD_DEV_GUILD_ID || null, registerCommands: env.REGISTER_COMMANDS !== 'false' });
   } catch (err) {
     console.error('❌ Discord login failed:', err.message);
   }

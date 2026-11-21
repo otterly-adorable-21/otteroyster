@@ -32,22 +32,45 @@ and cover the linking/sync API.
 
 1. Go to https://discord.com/developers/applications → **New Application** → name it "Otter & Oyster".
    Upload `assets/emblem.png` as the app icon.
-2. **Bot** tab → **Reset Token** → copy it into `server/.env` as `DISCORD_TOKEN`.
-   No privileged intents are needed.
-3. **General Information** → copy the **Application ID** into `.env` as `DISCORD_APP_ID`.
-4. **Installation** tab:
+2. **Installation** tab:
    - Tick both **Guild Install** and **User Install**. User Install lets people use the bot in any DM or group chat.
    - Guild Install scopes: `applications.commands`, `bot`. Permissions: *Send Messages, Embed Links, Attach Files, Use External Emojis*.
    - User Install scopes: `applications.commands`.
-5. Register the slash commands (run this again whenever commands change):
+3. **General Information** → copy the **Application ID**. It isn't secret.
+4. **Bot** tab → **Reset Token** → copy the token. **This one is secret** (see below).
+   No privileged intents are needed.
 
-   ```bash
-   cp .env.example .env   # then fill it in
-   npm run register
-   ```
+The bot registers its slash commands automatically every time it starts, so there's
+no separate setup step.
 
-   Tip: set `DISCORD_DEV_GUILD_ID` to your test server's ID while developing. Commands then appear instantly instead of after a few minutes.
-6. `npm start`. You should see `🦦 Discord bot logged in as …`.
+### Keeping the token secret
+
+The token is like a password for the bot. It never goes in the code, in GitHub or on
+the website. The code only *reads* it from an environment variable called
+`DISCORD_TOKEN`, and you put the value in one of two private places:
+
+- **On your host (normal setup):** paste it into the host's variables or secrets
+  screen (on Railway, the service's **Variables** tab). Hosts keep those values
+  private and hand them to the server when it starts.
+- **On your own computer (only for testing):** copy `.env.example` to `.env` and
+  paste it there. `.env` is listed in `.gitignore`, so git never commits it.
+
+If a token is ever exposed (pasted in a chat, a screenshot, a commit), go to the
+**Bot** tab and press **Reset Token**. The old one stops working immediately; put the
+new one in your host's variables.
+
+### Run it on your own computer (optional)
+
+```bash
+cd server
+cp .env.example .env   # then paste DISCORD_TOKEN and DISCORD_APP_ID into .env
+npm install
+npm start
+```
+
+You should see `🦦 Discord bot logged in as …` and `✅ Registered … slash commands`.
+Tip: set `DISCORD_DEV_GUILD_ID` to your test server's ID while developing. Commands
+then appear there instantly instead of after a few minutes.
 
 ## Host it
 
@@ -61,7 +84,7 @@ from GitHub. Railway is the easiest:
 3. **Variables** tab:
    - `SITE_URL` = `https://otteroyster.online`
    - `ALLOWED_ORIGINS` = `https://otteroyster.online,https://www.otteroyster.online`
-   - `DISCORD_TOKEN` and `DISCORD_APP_ID` (from the Discord steps above). Leave them out to run without the bot for now.
+   - `DISCORD_APP_ID` (the Application ID) and `DISCORD_TOKEN` (the secret token). Railway keeps variables private. Leave both out to run without the bot for now.
 4. **Settings → Networking → Custom domain:** enter `api.otteroyster.online`. Railway shows a `CNAME` record. Add it at your domain registrar.
 5. When the domain shows a green check, open https://api.otteroyster.online/api/info. It should say `"app":"otteroyster"`.
    The website's Friends tab then connects automatically.

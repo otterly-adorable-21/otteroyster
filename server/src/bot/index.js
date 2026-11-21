@@ -473,13 +473,25 @@ export function createBot({ store, social, siteUrl }) {
   return { handle };
 }
 
-export async function startBot({ token, store, social, siteUrl }) {
+export async function startBot({ token, store, social, siteUrl, devGuildId, registerCommands = true }) {
   const client = new Client({ intents: [GatewayIntentBits.Guilds] });
   const { handle } = createBot({ store, social, siteUrl });
   client.on(Events.InteractionCreate, handle);
-  client.once(Events.ClientReady, (c) => {
+  client.once(Events.ClientReady, async (c) => {
     console.log(`🦦 Discord bot logged in as ${c.user.tag}`);
     c.user.setActivity('with oysters 🦪 · /pet', { type: ActivityType.Playing });
+    // Keep Discord's slash commands in sync with the code on every start,
+    // so nobody has to run a separate registration step with the token.
+    if (registerCommands) {
+      try {
+        const { commands } = await import('./commands.js');
+        if (devGuildId) await c.application.commands.set(commands, devGuildId);
+        else await c.application.commands.set(commands);
+        console.log(`✅ Registered ${commands.length} slash commands${devGuildId ? ' in the test server' : ' (new ones can take a few minutes to appear)'}`);
+      } catch (err) {
+        console.error('⚠️ Could not register slash commands:', err.message);
+      }
+    }
   });
   await client.login(token);
   return client;
