@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Otter Oyster</title>
+  <meta name="description" content="Adopt a sea otter! Feed them, dress them up, send them on ocean missions and play minigames together.">
+  <meta name="theme-color" content="#0b7285">
+  <meta property="og:title" content="Otter Oyster">
+  <meta property="og:description" content="Adopt a sea otter and take care of them.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand">
+        <img src="favicon.svg" alt="" class="logo" width="40" height="40">
+        <div>
+          <h1 id="otter-name">Otter Oyster</h1>
+          <div class="level">Lv <span id="level">1</span><div class="xpbar" aria-hidden="true"><div id="xp-fill"></div></div></div>
+        </div>
+      </div>
+      <div class="pearl-count" title="Pearls"><span class="pearl-icon"></span><span id="pearls">0</span></div>
+    </header>
+
+    <section class="scene" id="scene" aria-label="Your otter">
+      <div class="rays"></div>
+      <div class="kelp k1"></div><div class="kelp k2"></div><div class="kelp k3"></div>
+      <div class="bubbles"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="sand"></div>
+      <button id="otter-wrap" aria-label="Cuddle your otter">
+        <svg id="otter" viewBox="0 -20 200 250" role="img" aria-hidden="true"></svg>
+      </button>
+      <div id="zzz" class="zzz" hidden><span>z</span><span>z</span><span>Z</span></div>
+      <div id="thought" class="thought" hidden></div>
+      <div id="away" class="away" hidden></div>
+      <div id="fx" aria-hidden="true"></div>
+    </section>
+
+    <section class="stats" id="stats" aria-label="Otter needs"></section>
+
+    <main id="panel" class="panel"></main>
+
+    <nav class="tabs" aria-label="Sections">
+      <button data-tab="home"><span>🏠</span>Home</button>
+      <button data-tab="wardrobe"><span>👗</span>Wardrobe</button>
+      <button data-tab="shop"><span>🛍️</span>Shop</button>
+      <button data-tab="missions"><span>🧭</span>Missions</button>
+      <button data-tab="games"><span>🎮</span>Games</button>
+    </nav>
+  </div>
+
+  <div id="modal" class="modal" hidden><div class="modal-card" id="modal-card" role="dialog" aria-modal="true"></div></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <noscript><p style="padding:2rem;text-align:center">Otter Oyster needs JavaScript to run.</p></noscript>
+</body>
+</html>
