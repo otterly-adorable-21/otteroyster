@@ -4,6 +4,8 @@ import { otterSVG, itemPreviewSVG } from './otter.js';
 import { LOADERS } from './games/index.js';
 import { sync } from './sync.js';
 import { detectArt, art } from './assets.js';
+import { FURNITURE, WALLPAPERS, FLOORS, DEN_CATS } from './den-data.js';
+import { denSVG, furniturePreviewSVG } from './den.js';
 
 // ---------- helpers ----------
 const $ = (s) => document.querySelector(s);
@@ -296,6 +298,7 @@ function panelDiscord() {
     <div class="card cmd-list">
       <div><code>/pet</code> See your otter and feed, cuddle, bathe or nap</div>
       <div><code>/daily</code> Daily treasure chest</div>
+      <div><code>/den</code> Show off your den · <code>/visit @friend</code> Peek inside a friend's den</div>
       <div><code>/mission</code> Send your otter on an adventure</div>
       <div><code>/play</code> Solo games: trivia, fishing, hangman, minesweeper and more</div>
       <div><code>/challenge</code> Challenge a friend: Connect Four, Tic-Tac-Toe, Rock Paper Scissors</div>
@@ -329,10 +332,118 @@ function panelDiscord() {
   </div>${cmds}`;
 }
 
-const PANELS = { home: panelHome, closet: panelCloset, missions: panelMissions, arcade: panelArcade, discord: panelDiscord };
+// ---------- the den ----------
+let denEdit = false;
+let denSel = null;
+let denShop = 'furniture';
+
+function denStageHTML() {
+  return denSVG(state, { editable: denEdit, selected: denEdit ? denSel : null, extraAttrs: 'class="den-svg" role="img" aria-label="Your otter\'s den"' });
+}
+
+function cozyLine() {
+  const c = core.coziness(state);
+  const pct = Math.round((c / 60) * 100);
+  return `<div class="cozy"><span>✨ Coziness <b>${c}</b>/${core.COZY_MAX}</span><div class="bar"><div style="width:${(c / core.COZY_MAX) * 100}%"></div></div>
+    <small>${c ? `Happiness drops ${pct}% slower and naps are ${pct}% more restful.` : 'Add furniture to make your den cozier!'}</small></div>`;
+}
+
+function panelDen() {
+  const sel = denSel && denSel !== 'otter' ? state.den.items.find((p) => p.uid === denSel) : null;
+  const storage = Object.keys(FURNITURE).filter((id) => core.inStorage(state, id) > 0);
+  const toolbar = denEdit
+    ? `<div class="den-toolbar">
+        ${sel ? `<span class="den-sel-name">${FURNITURE[sel.id].name}</span>
+          <button class="btn small" data-action="den-flip">↔️ Flip</button>
+          <button class="btn small" data-action="den-store">📦 Put away</button>`
+        : '<span class="den-sel-name muted">Drag things around · tap one to flip or put it away</span>'}
+        <button class="btn small primary" data-action="den-edit">✅ Done</button></div>`
+    : `<div class="den-toolbar"><span class="den-sel-name muted">${state.mission ? `${esc(state.name)} is out exploring.` : `Tap ${esc(state.name)} for a cuddle.`}</span>
+        <button class="btn small primary" data-action="den-edit">✏️ Decorate</button></div>`;
+
+  const shopTabs = [...DEN_CATS, { id: 'walls', name: 'Walls & floors', icon: '🎨' }];
+  let shop;
+  if (denShop === 'walls') {
+    const sw = (kind, id, it, owned, active) => `<button class="swatch ${active ? 'on' : ''}" data-action="den-${kind}" data-id="${id}" ${!owned && state.pearls < it.price ? 'disabled' : ''}>
+        <span class="swatch-chip" style="background:${it.swatch}"></span><b>${it.name}</b>
+        <small>${active ? 'In use ✓' : owned ? 'Owned' : `<span class="pearl-icon"></span> ${it.price}`}</small></button>`;
+    shop = `<h3 class="den-sub">Wallpaper</h3><div class="swatches">${Object.entries(WALLPAPERS).map(([id, it]) => sw('wall', id, it, state.wallpapers.includes(id), state.den.wallpaper === id)).join('')}</div>
+      <h3 class="den-sub">Floors</h3><div class="swatches">${Object.entries(FLOORS).map(([id, it]) => sw('floor', id, it, state.floors.includes(id), state.den.floor === id)).join('')}</div>`;
+  } else {
+    shop = `<div class="grid">${Object.entries(FURNITURE).filter(([, it]) => it.cat === denShop).map(([id, it]) => {
+      const owned = state.furniture[id] || 0;
+      const locked = state.level < it.level;
+      return `<div class="card item"><div class="item-art den-art">${furniturePreviewSVG(id)}</div><div class="item-name">${it.name}</div>
+        <small class="muted">✨ +${it.cozy}${owned ? ` · own ${owned}` : ''}</small>
+        ${locked ? `<button class="btn small" disabled>🔒 Lv ${it.level}</button>`
+    : `<button class="btn small primary" data-action="den-buy" data-id="${id}" ${state.pearls < it.price ? 'disabled' : ''}><span class="pearl-icon"></span> ${it.price}</button>`}</div>`;
+    }).join('')}</div>`;
+  }
+
+  return `
+    <h2 class="section-title">${esc(state.name || 'Your otter')}'s Den</h2>
+    <div class="den-stage ${denEdit ? 'editing' : ''}" id="den-stage">${denStageHTML()}</div>
+    ${toolbar}
+    ${cozyLine()}
+    ${storage.length ? `<h2 class="section-title">Storage <small>tap to put it back in the den</small></h2>
+      <div class="storage">${storage.map((id) => `<button class="store-item" data-action="den-place" data-id="${id}" title="${FURNITURE[id].name}">
+        <span class="den-art">${furniturePreviewSVG(id)}</span><b>×${core.inStorage(state, id)}</b></button>`).join('')}</div>` : ''}
+    <h2 class="section-title">Furniture shop</h2>
+    <div class="chips">${shopTabs.map((c) => `<button class="chip-btn" data-denshop="${c.id}" aria-pressed="${denShop === c.id}">${c.icon} ${c.name}</button>`).join('')}</div>
+    ${shop}`;
+}
+
+// Drag-and-drop inside the den SVG.
+let drag = null;
+function svgPoint(svg, e) {
+  const pt = svg.createSVGPoint();
+  pt.x = e.clientX;
+  pt.y = e.clientY;
+  return pt.matrixTransform(svg.getScreenCTM().inverse());
+}
+function redrawDen() {
+  const stage = $('#den-stage');
+  if (stage) stage.innerHTML = denStageHTML();
+}
+document.addEventListener('pointerdown', (e) => {
+  const stage = e.target.closest('#den-stage');
+  if (!stage) return;
+  const g = e.target.closest('.den-item');
+  if (!denEdit) {
+    if (g?.dataset.uid === 'otter') act(core.cuddle(state));
+    return;
+  }
+  if (!g || !g.classList.contains('editable')) { denSel = null; renderPanel(); return; }
+  e.preventDefault();
+  const uid = g.dataset.uid;
+  const svg = stage.querySelector('svg');
+  const p = svgPoint(svg, e);
+  const cur = uid === 'otter' ? (state.den.otter || { x: 196, y: 286 }) : state.den.items.find((q) => q.uid === uid);
+  drag = { uid, dx: cur.x - p.x, dy: cur.y - p.y, moved: false, raf: 0 };
+  if (denSel !== uid) { denSel = uid; renderPanel(); }
+  $('#den-stage').setPointerCapture?.(e.pointerId);
+});
+document.addEventListener('pointermove', (e) => {
+  if (!drag) return;
+  const svg = $('#den-stage svg');
+  if (!svg) return;
+  const p = svgPoint(svg, e);
+  core.moveItem(state, drag.uid, p.x + drag.dx, p.y + drag.dy);
+  drag.moved = true;
+  if (!drag.raf) drag.raf = requestAnimationFrame(() => { if (drag) drag.raf = 0; redrawDen(); });
+});
+document.addEventListener('pointerup', () => {
+  if (!drag) return;
+  const moved = drag.moved;
+  drag = null;
+  if (moved) commit();
+});
+
+const PANELS = { home: panelHome, den: panelDen, closet: panelCloset, missions: panelMissions, arcade: panelArcade, discord: panelDiscord };
 
 function renderPanel() {
   $('#panel').innerHTML = PANELS[tab]();
+  document.body.dataset.view = tab;
   document.querySelectorAll('.tabs button').forEach((b) => b.setAttribute('aria-current', b.dataset.tab === tab ? 'page' : 'false'));
 }
 
@@ -445,7 +556,7 @@ function askName(first) {
   showModal(`
     <form class="adopt" data-form="name">
       ${first ? `<img class="adopt-logo" src="${art.logo || 'assets/web/logo.webp'}" alt="Otter &amp; Oyster">` : ''}
-      <div class="adopt-otter"><svg viewBox="0 -20 200 250">${otterSVG(preview)}</svg></div>
+      <div class="adopt-otter"><svg viewBox="0 -20 200 250">${otterSVG(preview, { idPrefix: 'adopt-otter' })}</svg></div>
       <h2>${first ? 'A baby otter washed up with an oyster!' : 'Rename your otter'}</h2>
       ${first ? '<p>Give your new friend a name. Feed them, dress them up, send them on adventures and play games together.</p>' : ''}
       <input name="name" maxlength="16" required autocomplete="off" placeholder="${idea}" value="${first ? '' : esc(state.name)}" aria-label="Otter name">
@@ -493,6 +604,8 @@ document.addEventListener('click', async (e) => {
     if (tabBtn.closest('.tabs')) window.scrollTo({ top: 0 });
     return;
   }
+  const shopBtn = e.target.closest('[data-denshop]');
+  if (shopBtn) { denShop = shopBtn.dataset.denshop; return renderPanel(); }
   const closetBtn = e.target.closest('[data-closet]');
   if (closetBtn) { closetView = closetBtn.dataset.closet; tab = 'closet'; return renderPanel(); }
   if (e.target.closest('[data-close]')) return closeModal();
@@ -510,6 +623,22 @@ document.addEventListener('click', async (e) => {
     case 'daily': return act(core.claimDaily(state));
     case 'buy': return act(core.buy(state, id));
     case 'wear': bounce(); return act({ ...core.toggleWear(state, id), msg: '' });
+    case 'den-edit': denEdit = !denEdit; denSel = null; return renderPanel();
+    case 'den-buy': {
+      const r = act(core.buyFurniture(state, id));
+      if (r.ok) { denEdit = true; denSel = r.uid; renderPanel(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+      return r;
+    }
+    case 'den-place': {
+      const r = core.placeFurniture(state, id);
+      if (!r.ok) return toast(r.msg);
+      denEdit = true; denSel = r.uid; commit(); window.scrollTo({ top: 0, behavior: 'smooth' });
+      return r;
+    }
+    case 'den-flip': core.flipItem(state, denSel); return commit();
+    case 'den-store': { const r = core.storeItem(state, denSel); denSel = null; return act(r); }
+    case 'den-wall': return act(core.setWallpaper(state, id));
+    case 'den-floor': return act(core.setFloor(state, id));
     case 'undress': Object.keys(state.equipped).forEach((k) => { state.equipped[k] = null; }); return commit();
     case 'mission': return act(core.startMission(state, id));
     case 'recall': return act(core.recallMission(state));
@@ -579,6 +708,7 @@ document.addEventListener('visibilitychange', () => {
 
 // ---------- boot ----------
 detectArt();
+if (PANELS[location.hash.slice(1)]) tab = location.hash.slice(1);
 runTick();
 commit({ push: false });
 if (!state.name && !sync.linked) askName(true);

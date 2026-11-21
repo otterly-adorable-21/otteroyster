@@ -1,7 +1,8 @@
 // Discord UI helpers: embeds, buttons, the pet picture.
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, AttachmentBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { otterSVG } from '../../../js/otter.js';
-import { STAT_INFO, mood } from '../../../js/core.js';
+import { STAT_INFO, mood, coziness, COZY_MAX } from '../../../js/core.js';
+import { denSVG } from '../../../js/den.js';
 
 export const COLOR = 0x1f8f95;
 export const GOLD = 0xd9b45a;
@@ -116,5 +117,20 @@ export function petCard(s, { title, extra = '', footer } = {}) {
   if (footer) e.setFooter({ text: footer });
   const file = petAttachment(s);
   if (file) e.setImage('attachment://otter.png');
+  return { embeds: [e], files: file ? [file] : [], attachments: [] };
+}
+
+// Picture of an otter's den (same drawing as the website).
+export function denCard(s, { title } = {}) {
+  const c = coziness(s);
+  const e = embed(title ?? `🏡 ${s.name}'s Den`, `✨ Coziness **${c}/${COZY_MAX}** ${'★'.repeat(Math.round((c / COZY_MAX) * 5))}${'☆'.repeat(5 - Math.round((c / COZY_MAX) * 5))}\n🛋️ ${s.den.items.length} things placed${s.mission ? ' · the owner is out exploring' : s.sleeping ? ' · shh, napping' : ''}`);
+  let file = null;
+  if (Resvg) {
+    try {
+      const png = new Resvg(denSVG(s), { fitTo: { mode: 'width', value: 800 } }).render().asPng();
+      file = new AttachmentBuilder(png, { name: 'den.png' });
+      e.setImage('attachment://den.png');
+    } catch (err) { console.error('den render failed', err); }
+  }
   return { embeds: [e], files: file ? [file] : [], attachments: [] };
 }

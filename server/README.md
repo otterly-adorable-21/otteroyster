@@ -67,6 +67,8 @@ volume.
 | `/pet` | Your otter's picture and stats, with feed, cuddle, bath and nap buttons |
 | `/adopt name` | Adopt an otter on Discord |
 | `/link` | Get a one-time code to connect with the website |
+| `/den` | A picture of your decorated den and its coziness |
+| `/visit @friend` | Peek inside a friend's den |
 | `/daily` | Pick one of three treasure chests (once a day) |
 | `/mission` | Start, check or recall an expedition |
 | `/play` | Solo: Trivia, Emoji Mystery, Word Scramble, Raft Rescue (hangman), Number Hunt, Higher or Lower, Rock Paper Scissors, Urchin Sweeper (minesweeper), Fishing |

@@ -80,7 +80,7 @@ function oyster() {
   </g>`;
 }
 
-export function otterSVG(state) {
+export function otterSVG(state, { idPrefix = 'oo' } = {}) {
   const m = mood(state);
   const asleep = state.sleeping;
   const eq = state.equipped;
@@ -114,7 +114,7 @@ export function otterSVG(state) {
   ${dirt(state.stats.clean)}
   <g class="o-neck">${layer(eq.neck)}</g>
   <g class="o-eyes">${asleep ? '' : layer(eq.eyes)}</g>
-  <g class="o-hat">${layer(eq.hat)}</g>`;
+  <g class="o-hat">${layer(eq.hat)}</g>`.replace(/oo-/g, `${idPrefix}-`);
 }
 
 // A small standalone preview of a single item (for shop/wardrobe cards).

@@ -15,6 +15,9 @@ export const commands = [
   everywhere(new SlashCommandBuilder().setName('pet').setDescription('See your otter and feed, cuddle, bathe or nap')),
   everywhere(new SlashCommandBuilder().setName('adopt').setDescription('Adopt your very own otter')
     .addStringOption((o) => o.setName('name').setDescription("Your otter's name").setRequired(true).setMaxLength(16))),
+  everywhere(new SlashCommandBuilder().setName('den').setDescription("Peek inside your otter's cozy den")),
+  everywhere(new SlashCommandBuilder().setName('visit').setDescription("Visit a friend's den")
+    .addUserOption((o) => o.setName('friend').setDescription('Whose den?').setRequired(true))),
   everywhere(new SlashCommandBuilder().setName('daily').setDescription('Open your daily treasure chest')),
   everywhere(new SlashCommandBuilder().setName('mission').setDescription('Send your otter on an adventure, or check on them')),
   everywhere(new SlashCommandBuilder().setName('play').setDescription('Play a solo game for pearls')

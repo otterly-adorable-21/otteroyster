@@ -7,6 +7,7 @@ minigames, and bring them along to Discord, where friends can play together.
 ## What's in it
 
 - **Pet care:** four needs (Full, Happy, Energy, Clean) that drift down gently in real time. Snacks, cuddles, bubble baths and naps. Your otter's face changes with their mood.
+- **Otter's Den:** a cozy burrow you decorate. Buy furniture, plushies, rugs, wallpaper and floors, then drag everything into place. A cozier den makes happiness drop slower and naps more restful. Friends can `/visit` it from Discord.
 - **Closet & shop:** hats, eyewear, neckwear and extras layered onto your otter. Rare pieces only come from missions.
 - **Missions:** real-time expeditions (1 minute to 3 hours) that run while you're away and bring back pearls, stories and rare finds.
 - **Arcade, 10 games:**
@@ -33,6 +34,7 @@ css/style.css         night-pond theme + all game styles
 js/core.js            game rules (shared with the Discord bot!)
 js/data.js            items, snacks, missions, arcade catalog
 js/otter.js           the otter drawing + outfit layering
+js/den.js, den-data.js  the den drawing + furniture catalog (shared with the bot)
 js/main.js            website UI
 js/sync.js            talks to the server for Discord linking/sync
 js/assets.js          detects brand art in /assets

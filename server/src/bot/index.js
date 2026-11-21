@@ -2,7 +2,7 @@
 import { Client, GatewayIntentBits, Events, ActivityType } from 'discord.js';
 import * as core from '../../../js/core.js';
 import { ITEMS, SNACKS, MISSIONS, GAME_LIST } from '../../../js/data.js';
-import { embed, btn, row, select, linkBtn, textModal, petCard, ButtonStyle, GOLD, GREEN, COLOR } from './ui.js';
+import { embed, btn, row, select, linkBtn, textModal, petCard, denCard, ButtonStyle, GOLD, GREEN, COLOR } from './ui.js';
 import { createSession, getSession } from './sessions.js';
 import { SOLO } from './games/solo.js';
 import { DUELS, inviteMessage, handleInvite } from './games/duel.js';
@@ -138,6 +138,22 @@ export function createBot({ store, siteUrl }) {
         if (!res) return whisper(i, `You already have **${state.name}**! Use \`/pet\` to see them.`);
         return i.reply(petView(state, user.id, `🎉 Welcome to the family, **${state.name}**!`));
       }
+      case 'den': {
+        const { state } = load(user);
+        if (!state.name) return i.reply({ ...adoptPrompt(user.id), flags: EPHEMERAL });
+        const card = denCard(state);
+        card.components = [row(linkBtn(`${siteUrl}/#den`, 'Decorate on the website'))];
+        return i.reply(card);
+      }
+      case 'visit': {
+        const friend = i.options.getUser('friend');
+        const p = store.getByDiscord(friend.id);
+        if (!p?.state.name) return whisper(i, `${friend.username} hasn't adopted an otter yet. Invite them with \`/pet\`!`);
+        const { state } = store.mutate(p.id, () => null);
+        const card = denCard(state, { title: `🏡 Visiting ${state.name}'s Den` });
+        card.embeds[0].setFooter({ text: `${state.name} belongs to ${friend.displayName || friend.username}` });
+        return i.reply(card);
+      }
       case 'daily': {
         const { state } = load(user);
         if (!state.name) return i.reply({ ...adoptPrompt(user.id), flags: EPHEMERAL });
@@ -204,6 +220,7 @@ export function createBot({ store, siteUrl }) {
           '**Your otter** follows you everywhere. It is the same otter as on the website!',
           '`/pet` care for your otter · `/adopt` get one · `/link` connect the website',
           '`/daily` daily treasure chest · `/mission` send your otter exploring',
+          '`/den` show off your den · `/visit @friend` peek inside a friend\'s den',
           '',
           `**Solo games** \`/play\`: ${SOLO.map((g) => `${g.emoji} ${g.name}`).join(', ')}`,
           `**Challenges** \`/challenge @friend\`: ${DUELS.map((g) => `${g.emoji} ${g.name}`).join(', ')}`,

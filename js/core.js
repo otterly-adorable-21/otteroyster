@@ -1,6 +1,7 @@
 // Shared game rules. Pure logic with no DOM access, so both the website and
 // the Discord bot (server/) use exactly the same rules on the same save data.
 import { ITEMS, SNACKS, MISSIONS, GAME_LIST } from './data.js';
+import { FURNITURE, WALLPAPERS, FLOORS, STARTER_DEN, ZONES, zoneOf, clampPos } from './den-data.js';
 
 export const SAVE_VERSION = 2;
 
@@ -20,10 +21,21 @@ export function defaultState(now = Date.now()) {
     mission: null,
     reports: [],
     lastDaily: null,
+    den: starterDen(),
+    furniture: Object.fromEntries(STARTER_DEN.map((p) => [p.id, 1])),
+    wallpapers: ['moss'],
+    floors: ['earth'],
     best: {},
     plays: {},
     log: [],
   };
+}
+
+let uidCounter = 0;
+const newUid = () => `${Date.now().toString(36)}${(uidCounter++).toString(36)}${Math.floor(Math.random() * 1e4).toString(36)}`;
+
+function starterDen() {
+  return { wallpaper: 'moss', floor: 'earth', items: STARTER_DEN.map((p) => ({ uid: newUid(), id: p.id, x: p.x, y: p.y, flip: false })), otter: { x: 196, y: 286 } };
 }
 
 // Bring any older/partial save up to the current shape.
@@ -41,6 +53,15 @@ export function normalize(saved) {
     log: Array.isArray(saved.log) ? saved.log : [],
     owned: Array.isArray(saved.owned) ? saved.owned.filter((id) => ITEMS[id]) : [],
   };
+  if (!saved.den || !Array.isArray(saved.den.items)) {
+    s.den = starterDen();
+    s.furniture = { ...Object.fromEntries(STARTER_DEN.map((p) => [p.id, 1])), ...(saved.furniture || {}) };
+  } else {
+    s.den = { wallpaper: 'moss', floor: 'earth', otter: { x: 196, y: 286 }, ...saved.den, items: saved.den.items.filter((p) => FURNITURE[p.id]) };
+    s.furniture = { ...(saved.furniture || {}) };
+  }
+  s.wallpapers = Array.isArray(saved.wallpapers) ? saved.wallpapers : ['moss'];
+  s.floors = Array.isArray(saved.floors) ? saved.floors : ['earth'];
   // v1 stored memory best as `null` when unplayed
   for (const k of Object.keys(s.best)) if (s.best[k] == null) delete s.best[k];
   s.version = SAVE_VERSION;
@@ -110,7 +131,7 @@ export function tick(s, now = Date.now()) {
     if (s.mission) {
       stat(s, 'hunger', RATES.hunger * 0.5 * mins);
     } else if (s.sleeping) {
-      stat(s, 'energy', 2.5 * mins);
+      stat(s, 'energy', 2.5 * (1 + coziness(s) / 60) * mins);
       stat(s, 'hunger', RATES.hunger * 0.5 * mins);
       stat(s, 'clean', RATES.clean * 0.5 * mins);
       if (s.stats.energy >= 100) {
@@ -123,7 +144,7 @@ export function tick(s, now = Date.now()) {
       stat(s, 'hunger', RATES.hunger * mins);
       stat(s, 'energy', RATES.energy * mins);
       stat(s, 'clean', RATES.clean * mins);
-      stat(s, 'happiness', RATES.happiness * grumpy * mins);
+      stat(s, 'happiness', RATES.happiness * grumpy * (1 - coziness(s) / 60) * mins);
     }
   }
   if (s.mission && now >= s.mission.endsAt) {
@@ -306,4 +327,101 @@ export function grantPearls(s, n, reason) {
   s.pearls += p;
   if (reason) log(s, reason);
   return p;
+}
+
+// ---------- the den ----------
+export const COZY_MAX = 30;
+
+// Sum of cozy points of placed items (each kind counts at most twice), capped.
+export function coziness(s) {
+  const seen = {};
+  let total = 0;
+  for (const p of s.den?.items || []) {
+    const it = FURNITURE[p.id];
+    if (!it) continue;
+    seen[p.id] = (seen[p.id] || 0) + 1;
+    if (seen[p.id] <= 2) total += it.cozy;
+  }
+  return Math.min(COZY_MAX, total);
+}
+
+export function inStorage(s, id) {
+  const placed = s.den.items.filter((p) => p.id === id).length;
+  return Math.max(0, (s.furniture[id] || 0) - placed);
+}
+
+export function buyFurniture(s, id) {
+  const it = FURNITURE[id];
+  if (!it) return no('Unknown item.');
+  if (!s.name) return no(busy(s));
+  if (s.level < it.level) return no(`Reach level ${it.level} to buy this.`);
+  if (s.pearls < it.price) return no('Not enough pearls.');
+  s.pearls -= it.price;
+  s.furniture[id] = (s.furniture[id] || 0) + 1;
+  const placed = placeFurniture(s, id);
+  const ups = addXP(s, 4);
+  log(s, `Bought a ${it.name} for the den.`);
+  return ok(`🛋️ ${it.name} is in your den! Drag it wherever you like.`, { ups, uid: placed.uid });
+}
+
+export function placeFurniture(s, id) {
+  if (inStorage(s, id) <= 0) return no('None left in storage.');
+  if (s.den.items.length >= 40) return no('Your den is full! Put something away first.');
+  const z = ZONES[zoneOf(id)];
+  const jitter = (s.den.items.length % 5) * 14 - 28;
+  const pos = clampPos(id, 200 + jitter, zoneOf(id) === 'wall' ? 120 : (z.minY + z.maxY) / 2 + jitter / 2);
+  const uid = newUid();
+  s.den.items.push({ uid, id, ...pos, flip: false });
+  return ok('', { uid });
+}
+
+export function moveItem(s, uid, x, y) {
+  if (uid === 'otter') {
+    s.den.otter = clampPos('otter', x, y);
+    return ok('');
+  }
+  const p = s.den.items.find((q) => q.uid === uid);
+  if (!p) return no('That item is gone.');
+  Object.assign(p, clampPos(p.id, x, y));
+  return ok('');
+}
+
+export function flipItem(s, uid) {
+  const p = s.den.items.find((q) => q.uid === uid);
+  if (!p) return no('That item is gone.');
+  p.flip = !p.flip;
+  return ok('');
+}
+
+export function storeItem(s, uid) {
+  const i = s.den.items.findIndex((q) => q.uid === uid);
+  if (i < 0) return no('That item is gone.');
+  const [p] = s.den.items.splice(i, 1);
+  return ok(`Put the ${FURNITURE[p.id].name} in storage.`);
+}
+
+export function setWallpaper(s, id) {
+  const w = WALLPAPERS[id];
+  if (!w) return no('Unknown wallpaper.');
+  if (!s.wallpapers.includes(id)) {
+    if (s.pearls < w.price) return no('Not enough pearls.');
+    s.pearls -= w.price;
+    s.wallpapers.push(id);
+    log(s, `Put up ${w.name} wallpaper.`);
+  }
+  s.den.wallpaper = id;
+  return ok(`🖌️ ${w.name} wallpaper!`);
+}
+
+export function setFloor(s, id) {
+  const f = FLOORS[id];
+  if (!f) return no('Unknown floor.');
+  if (!s.floors.includes(id)) {
+    if (s.pearls < f.price) return no('Not enough pearls.');
+    s.pearls -= f.price;
+    s.floors.push(id);
+    log(s, `Laid down a ${f.name} floor.`);
+  }
+  s.den.floor = id;
+  return ok(`🪵 ${f.name} floor!`);
 }
