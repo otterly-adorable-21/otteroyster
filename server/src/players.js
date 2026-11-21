@@ -69,6 +69,7 @@ export function createStore(db) {
       if (!p) throw new Error('no such player');
       const events = core.tick(p.state);
       const result = fn(p.state, events);
+      core.checkAchievements(p.state);
       q.save.run(JSON.stringify(p.state), Date.now(), id);
       return { state: p.state, result, events, version: p.version + 1 };
     },

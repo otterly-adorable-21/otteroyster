@@ -564,6 +564,24 @@ function panelEvent() {
     <div class="settings"><button class="link" data-tab="home">← Back to ${esc(state.name)}</button></div>`;
 }
 
+let achOpen = false;
+function achievementsCard() {
+  if (!state.name) return '';
+  const got = core.ACHIEVEMENTS.filter((a) => state.achievements[a.id]);
+  const list = achOpen ? core.ACHIEVEMENTS : [...got.slice(-5), ...core.ACHIEVEMENTS.filter((a) => !state.achievements[a.id]).slice(0, Math.max(0, 6 - Math.min(5, got.length)))];
+  return `<h2 class="section-title">Achievements <small>${got.length}/${core.ACHIEVEMENTS.length}</small></h2>
+    <div class="card ach">
+      <div class="ach-grid">${list.map((a) => {
+        const done = !!state.achievements[a.id];
+        const [have, need] = core.achProgress(state, a);
+        return `<div class="badge ${done ? 'got' : ''}" title="${a.name}: ${a.desc}${done ? ' ✓' : ` (${have}/${need})`}">
+          <span class="badge-icon">${a.icon}</span><b>${a.name}</b><small>${done ? `✓ +${a.reward}` : `${have}/${need}`}</small>
+          ${done ? '' : `<div class="bar"><div style="width:${(have / need) * 100}%"></div></div>`}</div>`;
+      }).join('')}</div>
+      <button class="link center-link" data-action="ach-toggle">${achOpen ? 'Show less' : `See all ${core.ACHIEVEMENTS.length}`}</button>
+    </div>`;
+}
+
 function personaCard() {
   if (!state.name) return '';
   const pi = core.personaInfo(state);
@@ -622,6 +640,7 @@ function panelHome() {
       <button class="action ${claimed ? '' : 'glow'}" data-action="daily"><span>🎁</span>${claimed ? 'Gift claimed' : 'Daily gift'}</button>
     </div>
     ${personaCard()}
+    ${achievementsCard()}
     <h2 class="section-title">Journal</h2>
     <ul class="journal">
       ${state.log.slice(0, 6).map((l) => `<li><time>${new Date(l.t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</time>${esc(l.msg)}</li>`).join('') || '<li>Nothing yet. Say hi to your otter!</li>'}
@@ -1019,7 +1038,21 @@ function renderAll() {
 }
 
 let pushTimer = 0;
+function celebrateAchievements() {
+  if (!state.name) return;
+  if (timeOfDay() === 'night' && !state.counters.night) core.count(state, 'night');
+  core.checkAchievements(state);
+  const fresh = core.takeNewAchievements(state);
+  if (!fresh.length) return;
+  const a = core.ACH[fresh[fresh.length - 1]];
+  setTimeout(() => {
+    toast(`🏅 Achievement unlocked: ${a.name}! +${a.reward} pearls${fresh.length > 1 ? ` (and ${fresh.length - 1} more)` : ''}`);
+    burst([a.icon, '🏅', '✨'], 10);
+  }, 400);
+}
+
 function commit({ push = true } = {}) {
+  celebrateAchievements();
   saveLocal();
   renderAll();
   renderPanel();
@@ -1232,6 +1265,7 @@ document.addEventListener('click', async (e) => {
       return null;
     }
     case 'save-panel': return showSavePanel();
+    case 'ach-toggle': achOpen = !achOpen; return renderPanel();
     case 'save-now':
       saveLocal();
       await pushNow();

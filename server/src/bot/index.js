@@ -42,6 +42,7 @@ export function createBot({ store, social, siteUrl }) {
   // ---------- pet panel ----------
   function reportText(state, reports) {
     return reports.map((r) => {
+      if (r.achNote) return r.achNote;
       const m = MISSIONS.find((x) => x.id === r.id);
       return `${m.icon} **${state.name} is back from ${m.name}!** ${state.name} ${r.story} **+${r.pearls}** ⚪${r.found ? ` and found a **${ITEMS[r.found].name}** ${ITEMS[r.found].icon}!` : ''}${r.discovery && FINDS[r.discovery] ? ` Also brought back a ${FINDS[r.discovery].icon} **${FINDS[r.discovery].name}** for the journal!` : ''}`;
     }).join('\n');
@@ -54,6 +55,10 @@ export function createBot({ store, social, siteUrl }) {
       const res = fn(s);
       return { res, reports: core.takeReports(s) };
     });
+    // Achievements are checked inside mutate; announce (and clear) any new ones.
+    const fresh = store.mutate(p.id, (s) => core.takeNewAchievements(s)).result;
+    const achNote = fresh.map((id) => `🏅 **Achievement unlocked: ${core.ACH[id].name}!** +${core.ACH[id].reward} pearls`).join('\n');
+    if (achNote) result.reports.push({ achNote });
     return { player: p, state, res: result.res, reports: result.reports };
   }
 
@@ -317,7 +322,8 @@ export function createBot({ store, social, siteUrl }) {
           return meta ? `${meta.icon} ${v} ${meta.scoreLabel}` : null;
         }).filter(Boolean).join(' · ');
         const worn = Object.values(s.equipped).filter(Boolean).map((id) => ITEMS[id].icon).join(' ');
-        const extra = `👗 **${s.owned.length}** items${worn ? ` · wearing ${worn}` : ''}\n${best ? `🏆 ${best}` : ''}`;
+        const got = core.ACHIEVEMENTS.filter((a) => s.achievements?.[a.id]);
+        const extra = `👗 **${s.owned.length}** items${worn ? ` · wearing ${worn}` : ''}\n🏅 **${got.length}/${core.ACHIEVEMENTS.length}** achievements ${got.slice(-6).map((a) => a.icon).join('')}${best ? `\n🏆 ${best}` : ''}`;
         return i.reply(petCard(s, { title: `${target.displayName || target.username}'s otter: ${s.name}`, extra }));
       }
       case 'link': {

@@ -72,6 +72,12 @@ export function createSocial(db, store) {
     };
   }
 
+  // Keep each player's friend count in their save (for achievements).
+  const syncFriendCount = (id) => {
+    const n = q.friendCount.get(id, id).n;
+    store.mutate(id, (s) => { s.counters.friends = n; });
+  };
+
   const social = {
     codeOf,
     idByCode,
@@ -115,6 +121,7 @@ export function createSocial(db, store) {
       if (rel?.status === 'accepted') return err(400, "You're already friends!");
       if (rel && rel.requester !== me) {
         q.friendAccept.run(a, b);
+        syncFriendCount(me); syncFriendCount(otherId);
         return { status: 200, accepted: true, friend: card(otherId, relation(me, otherId)) };
       }
       if (rel) return err(400, 'Friend request already sent. Waiting for them to accept.');
@@ -126,7 +133,7 @@ export function createSocial(db, store) {
       const rel = otherId && relation(me, otherId);
       if (!rel || rel.status !== 'pending' || rel.requester === me) return err(404, 'No friend request from them.');
       const [a, b] = pair(me, otherId);
-      if (accept) q.friendAccept.run(a, b); else q.friendDelete.run(a, b);
+      if (accept) { q.friendAccept.run(a, b); syncFriendCount(me); syncFriendCount(otherId); } else q.friendDelete.run(a, b);
       return { status: 200, accepted: !!accept };
     },
 
@@ -142,7 +149,10 @@ export function createSocial(db, store) {
       if (!otherId || !areFriends(me, otherId)) return err(403, 'You can only visit friends.');
       if (onceToday(me, otherId, 'visit')) {
         addPoints(me, otherId, FRIEND_POINTS.visit);
-        store.mutate(me, (s) => core.grow(s, 'social'));
+        store.mutate(me, (s) => {
+          core.grow(s, 'social');
+          if (!s.counters.visited.includes(otherId)) s.counters.visited = [...s.counters.visited, otherId].slice(-100);
+        });
       }
       const { state } = store.mutate(otherId, () => null);
       const rel = relation(me, otherId);

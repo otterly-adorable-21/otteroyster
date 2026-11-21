@@ -6,6 +6,7 @@ import { LOC, FINDS, RARITY, MISSION_LOC, EXPLORE_ENERGY, EXPLORE_COOLDOWN_MIN, 
 import { activeEvent, questsFor, EVENT, EVENT_FIND_CHANCE, TOKENS_PER_ACTIVITY } from './events.js';
 import { TRAITS, TRAIT_IDS, blankPersona, favoritesFor, traitOf, hasTrait } from './personality.js';
 import { dailyMood, exploreLuck } from './ambience.js';
+import { ACHIEVEMENTS, ACH } from './achievements.js';
 
 export const SAVE_VERSION = 2;
 
@@ -30,6 +31,9 @@ export function defaultState(now = Date.now()) {
     wallpapers: ['moss'],
     floors: ['earth'],
     collection: {},
+    achievements: {},
+    counters: { care: 0, night: 0, friends: 0, visited: [] },
+    newAch: [],
     events: {},
     persona: blankPersona(now),
     explored: {},
@@ -76,6 +80,10 @@ export function normalize(saved) {
     fav: favoritesFor(s.created), // always derived from birth time, so every device agrees
   };
   s.events = { ...(saved.events || {}) };
+  s.achievements = { ...(saved.achievements || {}) };
+  s.counters = { care: 0, night: 0, friends: 0, visited: [], ...(saved.counters || {}) };
+  if (!Array.isArray(s.counters.visited)) s.counters.visited = [];
+  s.newAch = Array.isArray(saved.newAch) ? saved.newAch : [];
   s.explored = { ...(saved.explored || {}) };
   s.sets = Array.isArray(saved.sets) ? saved.sets : [];
   s.floors = Array.isArray(saved.floors) ? saved.floors : ['earth'];
@@ -185,6 +193,7 @@ export function feed(s, id) {
   stat(s, 'hunger', snack.hunger);
   stat(s, 'happiness', snack.happiness + (foodie ? 5 : 0) + (fav ? (foodie ? 20 : 10) : 0) + (dailyMood(s) === 'peckish' ? 5 : 0));
   grow(s, 'foodie');
+  count(s, 'care');
   const ups = addXP(s, 2);
   log(s, `${s.name} ate ${snack.name.toLowerCase()}.`);
   trackQuest(s, 'feed');
@@ -200,6 +209,7 @@ export function cuddle(s) {
   stat(s, 'energy', -3);
   const ups = addXP(s, 2);
   trackQuest(s, 'care');
+  count(s, 'care');
   return ok(`${s.name} squeaks happily! 💖`, { fx: ['💖', '💕', '✨'], ups });
 }
 
@@ -213,6 +223,7 @@ export function bath(s) {
   log(s, `${s.name} had a bubble bath.`);
   grow(s, 'tidy');
   trackQuest(s, 'care');
+  count(s, 'care');
   return ok(`${s.name} splashes around in the bubbles! 🫧`, { fx: ['🫧', '🫧', '💧'], ups });
 }
 
@@ -647,4 +658,43 @@ export function personaInfo(s) {
       game: GAME_LIST.find((x) => x.id === fav.game),
     },
   };
+}
+
+// ---------- achievements ----------
+export { ACHIEVEMENTS, ACH };
+
+export function count(s, key, n = 1) {
+  if (!s.counters) s.counters = { care: 0, night: 0, friends: 0, visited: [] };
+  s.counters[key] = (s.counters[key] || 0) + n;
+}
+
+export function achProgress(s, a) {
+  if (a.id === 'cozycorner') return [Math.min(coziness(s), 20), 20];
+  const [have, need] = a.progress(s);
+  return [Math.min(have, need), need];
+}
+
+// Unlock anything newly earned. Returns the new achievements (also queued in s.newAch for display).
+export function checkAchievements(s, now = Date.now()) {
+  if (!s.name) return [];
+  const fresh = [];
+  for (const a of ACHIEVEMENTS) {
+    if (s.achievements[a.id]) continue;
+    const [have, need] = achProgress(s, a);
+    if (have >= need) {
+      s.achievements[a.id] = now;
+      s.pearls += a.reward;
+      addXP(s, 10);
+      log(s, `🏅 Achievement unlocked: ${a.name}! +${a.reward} pearls`, now);
+      fresh.push(a.id);
+    }
+  }
+  if (fresh.length) s.newAch = [...(s.newAch || []), ...fresh].slice(-10);
+  return fresh;
+}
+
+export function takeNewAchievements(s) {
+  const r = (s.newAch || []).filter((id) => ACH[id]);
+  s.newAch = [];
+  return r;
 }
