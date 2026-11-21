@@ -113,7 +113,7 @@ export const sync = {
     return { status: r.status, ok: r.ok, ...r.data };
   },
   get token() { return ls(TOKEN_KEY); },
-  get discordLoginUrl() { return this.info?.discordLogin ? `${base}/auth/discord` : null; },
+  get discordLoginUrl() { return this.info?.discordLogin ? `${base}/auth/discord?return=${encodeURIComponent(location.origin + location.pathname)}` : null; },
 
   // Peek at an account by token without switching to it.
   async peek(token) {

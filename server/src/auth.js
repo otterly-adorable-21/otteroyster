@@ -8,36 +8,47 @@ import { randomBytes, createHash } from 'node:crypto';
 const STATE_TTL = 10 * 60 * 1000;
 const hash = (t) => createHash('sha256').update(t).digest('hex');
 
-export function createAuth({ store, db, clientId, clientSecret, publicUrl, siteUrl, fetchImpl = fetch }) {
+export function createAuth({ store, db, clientId, clientSecret, publicUrl, siteUrl, allowedOrigins = [], fetchImpl = fetch }) {
   const enabled = !!(clientId && clientSecret);
   const redirectUri = `${publicUrl.replace(/\/$/, '')}/auth/discord/callback`;
   const pending = new Map(); // state -> expires
-  setInterval(() => { const now = Date.now(); for (const [k, v] of pending) if (v < now) pending.delete(k); }, 60_000).unref();
+  setInterval(() => { const now = Date.now(); for (const [k, v] of pending) if (v.expires < now) pending.delete(k); }, 60_000).unref();
   const tokenInsert = db.prepare('INSERT INTO tokens (hash, player_id, created) VALUES (?, ?, ?)');
 
-  const back = (fragment) => `${siteUrl.replace(/\/$/, '')}/#${fragment}`;
+  const defaultBack = siteUrl.replace(/\/$/, '');
+  // Only send players back to addresses we trust (the site, or an allowed origin).
+  const safeReturn = (u) => {
+    try {
+      const url = new URL(u);
+      const ok = url.origin === new URL(defaultBack).origin || allowedOrigins.includes(url.origin) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(url.origin);
+      return ok ? `${url.origin}${url.pathname}` : null;
+    } catch { return null; }
+  };
+  const back = (fragment, to) => `${to || `${defaultBack}/`}#${fragment}`;
 
   return {
     enabled,
     redirectUri,
 
     // Step 1: send the player to Discord.
-    start() {
-      if (!enabled) return { status: 302, location: back('login-error=Discord+sign-in+is+not+set+up+yet') };
+    start(returnTo) {
+      const to = returnTo ? safeReturn(returnTo) : null;
+      if (!enabled) return { status: 302, location: back('login-error=Discord+sign-in+is+not+set+up+yet', to) };
       const state = randomBytes(16).toString('hex');
-      pending.set(state, Date.now() + STATE_TTL);
+      pending.set(state, { expires: Date.now() + STATE_TTL, to });
       const q = new URLSearchParams({ client_id: clientId, response_type: 'code', scope: 'identify', redirect_uri: redirectUri, state, prompt: 'none' });
       return { status: 302, location: `https://discord.com/oauth2/authorize?${q}` };
     },
 
     // Step 2: Discord sends them back here.
     async callback(params) {
-      const fail = (why) => ({ status: 302, location: back(`login-error=${encodeURIComponent(why)}`) });
+      const st = pending.get(params.get('state'));
+      const to = st?.to || null;
+      const fail = (why) => ({ status: 302, location: back(`login-error=${encodeURIComponent(why)}`, to) });
       if (!enabled) return fail('Discord sign-in is not set up yet');
-      if (params.get('error')) return fail('Sign-in was cancelled');
-      const state = params.get('state');
-      if (!state || !pending.has(state) || pending.get(state) < Date.now()) return fail('That sign-in link expired. Please try again');
-      pending.delete(state);
+      if (params.get('error')) { pending.delete(params.get('state')); return fail('Sign-in was cancelled'); }
+      if (!st || st.expires < Date.now()) return fail('That sign-in link expired. Please try again');
+      pending.delete(params.get('state'));
       const code = params.get('code');
       if (!code) return fail('Sign-in failed. Please try again');
       try {
@@ -54,7 +65,7 @@ export function createAuth({ store, db, clientId, clientSecret, publicUrl, siteU
         const player = store.forDiscord({ id: user.id, username: user.username });
         const token = randomBytes(32).toString('hex');
         tokenInsert.run(hash(token), player.id, Date.now());
-        return { status: 302, location: back(`login=${token}`) };
+        return { status: 302, location: back(`login=${token}`, to) };
       } catch (err) {
         console.error('[auth] Discord sign-in failed', err.message);
         return fail('Sign-in failed. Please try again');

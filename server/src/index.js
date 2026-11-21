@@ -26,6 +26,7 @@ const auth = createAuth({
   clientSecret: env.DISCORD_CLIENT_SECRET,
   publicUrl: env.PUBLIC_URL || siteUrl, // where this server is reachable (for the Discord redirect)
   siteUrl,
+  allowedOrigins,
 });
 if (auth.enabled) console.log(`🔑 Sign in with Discord is on. Redirect URL: ${auth.redirectUri}`);
 else console.log('ℹ️  Sign in with Discord is off (set DISCORD_APP_ID and DISCORD_CLIENT_SECRET to turn it on).');

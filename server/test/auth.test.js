@@ -24,7 +24,7 @@ const fakeFetch = async (url, opts = {}) => {
   throw new Error('unexpected ' + url);
 };
 
-const auth = createAuth({ store, db, clientId: 'app1', clientSecret: 'shh', publicUrl: 'https://otteroyster.online', siteUrl: 'https://otteroyster.online', fetchImpl: fakeFetch });
+const auth = createAuth({ store, db, clientId: 'app1', clientSecret: 'shh', publicUrl: 'https://otteroyster.online', siteUrl: 'https://otteroyster.online', allowedOrigins: ['https://otterly-adorable-21.github.io'], fetchImpl: fakeFetch });
 
 test('sign in with Discord: start -> callback -> token for that Discord account', async () => {
   const s = auth.start();
@@ -60,4 +60,12 @@ test('sign in with Discord is off without a client secret', () => {
   const off = createAuth({ store, db, clientId: 'app1', clientSecret: '', publicUrl: 'https://x', siteUrl: 'https://x' });
   assert.equal(off.enabled, false);
   assert.match(off.start().location, /login-error=/);
+});
+
+test('sign in with Discord returns players to the page they came from (only trusted ones)', async () => {
+  const st = (r) => new URL(r.location).searchParams.get('state');
+  const a = await auth.callback(new URLSearchParams({ code: 'good-code', state: st(auth.start('https://otterly-adorable-21.github.io/otteroyster/?x=1')) }));
+  assert.match(a.location, /^https:\/\/otterly-adorable-21\.github\.io\/otteroyster\/#login=[0-9a-f]{64}$/);
+  const b = await auth.callback(new URLSearchParams({ code: 'good-code', state: st(auth.start('https://evil.example/steal')) }));
+  assert.match(b.location, /^https:\/\/otteroyster\.online\/#login=/);
 });

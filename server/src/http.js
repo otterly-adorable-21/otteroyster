@@ -228,7 +228,7 @@ export function startHttp({ store, social, auth, port, siteRoot, allowedOrigins,
       if (url.pathname === '/auth/discord' || url.pathname === '/auth/discord/callback') {
         const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress;
         if (!apiLimit(ip)) { res.writeHead(429); return res.end('Slow down a little!'); }
-        const r = url.pathname === '/auth/discord' ? auth.start() : await auth.callback(url.searchParams);
+        const r = url.pathname === '/auth/discord' ? auth.start(url.searchParams.get('return')) : await auth.callback(url.searchParams);
         res.writeHead(r.status, { Location: r.location, 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' });
         return res.end();
       }
