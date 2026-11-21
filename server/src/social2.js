@@ -151,6 +151,7 @@ export function createSocial2(db, store, social) {
           s.stats.energy = core.clamp(s.stats.energy + 20);
           core.grow(s, 'social', 2);
           core.log(s, `🌙 Sleepover with ${nameOf(id === host ? me : host)}! Pillow forts, stories and stargazing.`);
+          core.memory(s, '🌙', `${s.name} had a sleepover with ${nameOf(id === host ? me : host)}. Pillow forts and stargazing!`);
         });
       }
       friendPoints(host, me, 5);
@@ -212,6 +213,12 @@ export function createSocial2(db, store, social) {
     // Everything social for the Friends tab, in one call. Marks notices as seen.
     inbox(me) {
       const now = Date.now();
+      // Friends celebrating today get a one-time notice.
+      for (const f of social.list(me).friends || []) {
+        const fid = social.idByCode(f.code);
+        const st = fid && store.get(fid)?.state;
+        if (st && core.isBirthday(st, now) && onceToday(me, fid, 'bday')) notify(me, fid, 'birthday', `🎂 It's ${st.name}'s birthday today! Send them a postcard or a gift.`);
+      }
       const notices = q.noticesFor.all(me).map((n) => ({ id: n.id, kind: n.kind, text: n.text, created: n.created }));
       q.noticesSeen.run(me);
       const mail = q.mailFor.all(me, now).map((m) => ({ id: m.id, from: nameOf(m.from_id), fromCode: social.codeOf(m.from_id), design: m.design, text: m.text, sent: m.sent, read: !!m.read }));

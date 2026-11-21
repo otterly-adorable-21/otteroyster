@@ -214,6 +214,36 @@ export const ITEMS = {
     svg: `<path d="M96,120 Q60,84 14,96 Q26,104 22,114 Q34,110 40,122 Q50,114 58,126 Q68,118 74,132 Q84,124 96,134Z" fill="#3b2a5a" stroke="#241838" stroke-width="2"/>
       <path d="M104,120 Q140,84 186,96 Q174,104 178,114 Q166,110 160,122 Q150,114 142,126 Q132,118 126,132 Q116,124 104,134Z" fill="#3b2a5a" stroke="#241838" stroke-width="2"/>`,
   },
+  // ----- growing up (unlocked by life stage) and birthdays -----
+  pupbib: {
+    name: 'Pup Bib', icon: '🍼', slot: 'neck', price: null, level: 1, growth: 'pup',
+    svg: `<path d="M72,116 Q100,128 128,116 Q130,150 100,156 Q70,150 72,116Z" fill="#fffaf0" stroke="#9be8de" stroke-width="3"/>
+      <circle cx="100" cy="138" r="5" fill="#ffa8a8"/><circle cx="92" cy="130" r="2.6" fill="#ffa8a8"/><circle cx="100" cy="127" r="2.6" fill="#ffa8a8"/><circle cx="108" cy="130" r="2.6" fill="#ffa8a8"/>`,
+  },
+  backpack: {
+    name: 'Explorer Backpack', icon: '🎒', slot: 'back', price: null, level: 1, growth: 'young', view: '100 90 90 110',
+    svg: `<rect x="128" y="104" width="50" height="66" rx="16" fill="#5c940d" stroke="#2b8a3e" stroke-width="3"/>
+      <rect x="136" y="132" width="34" height="26" rx="8" fill="#74b816" stroke="#2b8a3e" stroke-width="2"/><path d="M140,132 Q153,124 166,132" stroke="#2b8a3e" stroke-width="2" fill="none"/>
+      <circle cx="153" cy="145" r="3" fill="#fcc419"/>`,
+  },
+  sailorcap: {
+    name: 'Sailor Cap', icon: '⛵', slot: 'hat', price: null, level: 1, growth: 'grown',
+    svg: `<path d="M62,48 Q64,18 100,16 Q136,18 138,48Z" fill="#fffaf0" stroke="#adb5bd" stroke-width="2"/>
+      <rect x="60" y="40" width="80" height="12" rx="5" fill="#1c3f7a"/>
+      <path d="M100,16 Q96,8 100,4 Q104,8 100,16" fill="#1c3f7a"/><circle cx="120" cy="46" r="3" fill="#fcc419"/>`,
+  },
+  wisespecs: {
+    name: 'Wise Spectacles', icon: '👓', slot: 'eyes', price: null, level: 1, growth: 'wise',
+    svg: `<circle cx="83" cy="76" r="12" fill="#e7f5ff" fill-opacity=".25" stroke="#c9a227" stroke-width="2.5"/>
+      <circle cx="117" cy="76" r="12" fill="#e7f5ff" fill-opacity=".25" stroke="#c9a227" stroke-width="2.5"/>
+      <path d="M95,74 Q100,70 105,74 M71,74 L58,70 M129,74 L142,70" stroke="#c9a227" stroke-width="2.5" fill="none"/>`,
+  },
+  birthdayhat: {
+    name: 'Birthday Party Hat', icon: '🎂', slot: 'hat', price: null, level: 1, growth: 'birthday',
+    svg: `<polygon points="78,46 122,46 100,-6" fill="#74c0fc" stroke="#1c7ed6" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="92" cy="30" r="3" fill="#ffd43b"/><circle cx="106" cy="16" r="3" fill="#ff8787"/><circle cx="104" cy="36" r="3" fill="#b197fc"/>
+      <circle cx="100" cy="-8" r="7" fill="#ffd43b"/><path d="M78,46 Q100,54 122,46" stroke="#1c7ed6" stroke-width="4" fill="none"/>`,
+  },
 };
 
 export const SNACKS = [

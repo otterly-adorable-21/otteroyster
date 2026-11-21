@@ -5,6 +5,7 @@ import { LOADERS } from './games/index.js';
 import { sync } from './sync.js';
 import { detectArt, art } from './assets.js';
 import { playCare, setSleeping } from './animations.js';
+import { STAGES, stageOf, nextStage, TRICKS, isBirthday, nextBirthday, birthdayLabel } from './growth.js';
 import { FURNITURE, WALLPAPERS, FLOORS, DEN_CATS } from './den-data.js';
 import { denSVG, furniturePreviewSVG } from './den.js';
 import { LOCATIONS, LOC, RARITY, FINDS, TOTAL_FINDS, EXPLORE_ENERGY, SET_REWARD } from './world.js';
@@ -383,6 +384,8 @@ function renderScene() {
   if (!thought.hidden) thought.textContent = NEEDS[low[0]];
   renderAmbience(scene, away);
   setSleeping(state.sleeping && !away);
+  $('#otter-wrap').style.setProperty('--grow', state.name ? stageOf(state.level).scale : 1);
+  scene.classList.toggle('party', !!isPartyDay());
 }
 
 // ---------- the living pond ----------
@@ -653,6 +656,7 @@ function panelHome() {
     </div>
     <h2 class="section-title">Today</h2>
     <button class="daily-btn ${claimed ? 'done' : 'glow'}" data-action="daily" ${claimed ? 'disabled' : ''}><span>🎁</span>${claimed ? "Today's gift claimed. Come back tomorrow!" : 'Open your daily gift'}</button>
+    ${isPartyDay() ? `<div class="card bday-banner">🎂 <b>Happy birthday, ${esc(state.name)}!</b> Party in the den, a party hat in the closet, and +100 pearls. 🎉</div>` : ''}
     ${eventBanner()}
     ${todayCard()}
     <h2 class="section-title">About ${nm}</h2>
@@ -669,7 +673,48 @@ function panelHome() {
     </div>`;
 }
 
-function growthCard() { return ''; }
+const isPartyDay = () => state.name && isBirthday(state) && state.birthdaysClaimed?.includes(new Date().getUTCFullYear());
+
+function growthCard() {
+  if (!state.name) return '';
+  const st = stageOf(state.level);
+  const nx = nextStage(state.level);
+  const prevLvl = st.level;
+  const pct = nx ? Math.min(100, ((state.level - prevLvl) / (nx.level - prevLvl)) * 100) : 100;
+  const young = state.level >= 5;
+  const grown = state.level >= 10;
+  const wise = state.level >= 20;
+  const bAt = nextBirthday(state);
+  const bDays = bAt ? Math.round((bAt - Date.now()) / 86400000) : null;
+  return `<div class="card growth">
+    <div class="persona-head"><span class="persona-icon">${st.icon}</span>
+      <div><b>${esc(state.name)} is ${/^[AEIOU]/.test(st.name) ? 'an' : 'a'} ${st.name}</b>
+      <div class="muted">${nx ? `Level ${state.level}. At level ${nx.level}, ${esc(state.name)} becomes ${/^[AEIOU]/.test(nx.name) ? 'an' : 'a'} ${nx.name}: ${nx.unlock.toLowerCase()}.` : 'Fully grown, and still loves to play!'}</div>
+      ${nx ? `<div class="bar"><div style="width:${pct}%"></div></div>` : ''}</div></div>
+    <div class="stages">${STAGES.map((x) => `<span class="stage ${state.level >= x.level ? 'on' : ''}" title="${x.name}: ${x.unlock} (level ${x.level})">${x.icon}<small>${x.name}</small></span>`).join('')}</div>
+    <div class="together">
+      <button class="btn small" data-action="story" ${young ? '' : 'disabled'}>📖 Tell a story${young ? '' : ' · Lv 5'}</button>
+      <button class="btn small" data-action="teach" ${grown ? '' : 'disabled'}>🎓 Teach a trick${grown ? '' : ' · Lv 10'}</button>
+      <button class="btn small" data-action="wisdom" ${wise ? '' : 'disabled'}>🦉 Share wisdom${wise ? '' : ' · Lv 20'}</button>
+    </div>
+    ${state.tricks.length ? `<div class="tricks"><small class="muted">Tricks:</small>${state.tricks.map((id) => { const t = TRICKS.find((x) => x.id === id); return `<button class="btn small" data-action="trick" data-id="${id}">${t.icon} ${t.name}</button>`; }).join('')}</div>` : ''}
+    <div class="bday-line">🎂 Birthday: <b>${birthdayLabel(state.birthday)}</b>${bDays === 0 || isBirthday(state) ? ' · <b>today!</b>' : bDays != null ? ` · in ${bDays} day${bDays === 1 ? '' : 's'}` : ''}
+      ${state.birthdaySet ? '' : '<button class="link small" data-action="bday-set">change</button>'}</div>
+  </div>`;
+}
+
+function openAdventureBook() {
+  const mem = [...(state.memories || [])].reverse();
+  const groups = {};
+  for (const m of mem) {
+    const k = new Date(m.t).toLocaleDateString([], { month: 'long', year: 'numeric' });
+    (groups[k] = groups[k] || []).push(m);
+  }
+  showModal(`<div class="book"><div class="game-top"><h2>📔 ${esc(state.name)}'s adventure book</h2><button class="icon-btn" data-close aria-label="Close">✕</button></div>
+    ${mem.length ? Object.entries(groups).map(([month, list]) => `<h3 class="book-month">${month}</h3>${list.map((m) => `<div class="book-entry"><span class="book-icon">${m.icon}</span><div><div>${esc(m.text)}</div><small class="muted">${new Date(m.t).toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' })}</small></div></div>`).join('')}`).join('')
+    : `<p class="muted center">The first pages are still blank. Go on an adventure, make a rare find or earn a badge, and it'll be written here forever.</p>`}
+  </div>`, { wide: true });
+}
 
 function panelCloset() {
   const toggle = `<div class="segmented">
@@ -1030,7 +1075,7 @@ let denShop = 'furniture';
 
 function denStageHTML() {
   const guests = (socialData?.sleepovers || []).filter((x) => x.hosting && x.status === 'accepted').map((x) => ({ name: x.name, equipped: x.equipped }));
-  return denSVG(state, { editable: denEdit, selected: denEdit ? denSel : null, guests, extraAttrs: 'class="den-svg" role="img" aria-label="Your otter\'s den"' });
+  return denSVG(state, { editable: denEdit, selected: denEdit ? denSel : null, guests, party: !!isPartyDay(), extraAttrs: 'class="den-svg" role="img" aria-label="Your otter\'s den"' });
 }
 
 function cozyLine() {
@@ -1239,7 +1284,7 @@ function burst(icons, n) {
 
 function animateOtter(cls, ms) {
   const w = $('#otter-wrap');
-  w.classList.remove('bathing', 'cuddling');
+  w.classList.remove('bathing', 'cuddling', ...TRICKS.map((t) => `trick-${t.id}`));
   void w.offsetWidth;
   w.classList.add(cls);
   setTimeout(() => w.classList.remove(cls), ms);
@@ -1384,6 +1429,17 @@ document.addEventListener('click', async (e) => {
       return null;
     }
     case 'save-panel': return showSavePanel();
+    case 'adventure-book': return openAdventureBook();
+    case 'story': { const r = act(core.tellStory(state)); if (r.ok) speak(r.msg.replace(/^📖 /, ''), 8000); return r; }
+    case 'teach': { const r = act(core.teachTrick(state)); if (r.ok) playTrick(r.trick); return r; }
+    case 'trick': { const r = core.performTrick(state, id); if (!r.ok) return toast(r.msg); commit(); if (tab !== 'home') { tab = 'home'; renderPanel(); } window.scrollTo({ top: 0, behavior: 'smooth' }); return playTrick(id); }
+    case 'wisdom': { const r = act(core.shareWisdom(state)); if (r.ok) speak(r.msg.replace(/^🦉 [^:]+: /, ''), 9000); return r; }
+    case 'bday-set':
+      showModal(`<form class="pc-form" data-form="bday"><h2>🎂 When is ${esc(state.name)}'s birthday?</h2>
+        <p class="muted center">You can change it once. On the day: a party, a hat and presents!</p>
+        <input type="date" name="d" required class="note-input" aria-label="Birthday">
+        <div class="row"><button class="btn" type="button" data-close>Cancel</button><button class="btn primary" type="submit">Save</button></div></form>`);
+      return null;
     case 'mailbox': return openMailbox();
     case 'mail-open': {
       const m = socialData?.mail.find((x) => String(x.id) === String(id));
@@ -1569,6 +1625,11 @@ document.addEventListener('submit', (e) => {
     if (first) burst(['💖', '🦦', '✨'], 10);
   } else if (form.dataset.form === 'link') {
     doLink(form.code.value);
+  } else if (form.dataset.form === 'bday') {
+    const v = form.d.value; // YYYY-MM-DD
+    const r = core.setBirthday(state, v.slice(5));
+    closeModal();
+    if (r.ok) { act(r); } else toast(r.msg);
   } else if (form.dataset.form === 'postcard') {
     const btnEl = form.querySelector('[type=submit]');
     btnEl.disabled = true;
@@ -1618,6 +1679,11 @@ document.addEventListener('keydown', (e) => {
     else closeModal();
   }
 });
+
+async function playTrick(id) {
+  if (!(await playCare(`trick-${id}`))) animateOtter(`trick-${id}`, 1800);
+  burst([TRICKS.find((t) => t.id === id)?.icon || '⭐', '✨'], 6);
+}
 
 async function careCuddle() {
   const r = act(core.cuddle(state));

@@ -125,10 +125,24 @@ export function denSVG(state, opts = {}) {
     ${layer('wall').map((p) => itemSVG(p, { selected: opts.selected === p.uid, editable: opts.editable })).join('')}
     ${layer('rug').map((p) => itemSVG(p, { selected: opts.selected === p.uid, editable: opts.editable })).join('')}
     ${floorThings.map((t) => t.html).join('')}
+    ${opts.party ? partyDecor() : ''}
     <rect width="${DEN_W}" height="${DEN_H}" fill="url(#den-light)" pointer-events="none"/>
     ${state.sleeping ? `<rect width="${DEN_W}" height="${DEN_H}" fill="#071f26" opacity=".35" pointer-events="none"/>` : ''}
     ${burrowFrame()}
   </svg>`;
+}
+
+// Birthday party: bunting across the wall and a cake with candles.
+function partyDecor() {
+  const colors = ['#ff8787', '#ffd43b', '#74c0fc', '#b197fc', '#69db7c'];
+  const flags = Array.from({ length: 11 }, (_, k) => {
+    const x = 60 + k * 28;
+    const y = 30 + 18 * Math.sin((k / 10) * Math.PI);
+    return `<path d="M${x - 10},${y} L${x + 10},${y} L${x},${y + 18}Z" fill="${colors[k % colors.length]}"/>`;
+  }).join('');
+  return `<g pointer-events="none"><path d="M50,28 Q200,64 350,28" stroke="#a8865f" stroke-width="2" fill="none"/>${flags}
+    <g transform="translate(132 300)"><rect x="-26" y="-34" width="52" height="26" rx="5" fill="#fff0f6" stroke="#f783ac" stroke-width="2"/>
+    <rect x="-26" y="-22" width="52" height="5" fill="#f783ac"/>${[-14, 0, 14].map((x) => `<rect x="${x - 2}" y="-48" width="4" height="14" fill="#74c0fc"/><ellipse cx="${x}" cy="-51" rx="3" ry="5" fill="#ffd43b"/>`).join('')}</g></g>`;
 }
 
 // Small preview of one catalog item for shop cards.

@@ -862,3 +862,33 @@ textarea.note-input { resize: vertical; font: inherit; }
 .event-banner, .today { margin-top: 10px; }
 .persona, .ach { margin-top: 10px; }
 .block-link { display: block; margin: 10px auto 0; }
+
+/* ---------- growing up ---------- */
+#otter-wrap { scale: var(--grow, 1); transform-origin: 50% 100%; transition: scale 1.5s ease; }
+.growth { display: grid; gap: 10px; margin-top: 10px; }
+.growth .bar { margin-top: 6px; background: #e8efe9; }
+.growth .bar > div { background: linear-gradient(90deg, var(--pad), var(--pad-light)); }
+.stages { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; }
+.stage { display: grid; font-size: 1.4rem; padding: 6px 2px; border-radius: 12px; background: #eef3ef; filter: grayscale(1); opacity: .55; }
+.stage small { font-size: .62rem; font-weight: 800; color: var(--muted); }
+.stage.on { filter: none; opacity: 1; background: #fff9db; box-shadow: inset 0 0 0 2px var(--gold); }
+.together, .tricks { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.bday-line { font-size: .9rem; }
+.bday-banner { margin-bottom: 10px; text-align: center; background: linear-gradient(120deg, #fff0f6, #fff9db); box-shadow: 0 0 0 2px #f783ac, var(--shadow); }
+.scene.party::after { content: '🎉 🎈 🎂 🎈 🎉'; position: absolute; top: 40px; left: 0; right: 0; text-align: center; font-size: 22px; letter-spacing: 10px; animation: bob 2.4s ease-in-out infinite; pointer-events: none; }
+/* tricks (built-in; your own files in assets/animations/trick-<id> win) */
+#otter-wrap.trick-rollover #otter { animation: tr-roll 1.6s ease-in-out; }
+@keyframes tr-roll { 40% { transform: translateX(-30px) rotate(-200deg); } 100% { transform: translateX(0) rotate(-360deg); } }
+#otter-wrap.trick-juggle #otter { animation: em-hop .3s ease-in-out 5; }
+@keyframes em-hop { 50% { transform: translateY(-10px); } }
+#otter-wrap.trick-handstand #otter { animation: tr-hand 1.8s ease-in-out; }
+@keyframes tr-hand { 30%, 70% { transform: rotate(180deg) translateY(30px); } }
+#otter-wrap.trick-twirl #otter { animation: tr-twirl 1.4s ease-in-out; }
+@keyframes tr-twirl { 50% { transform: scaleX(-1) translateY(-8px); } }
+/* adventure book */
+.book { display: grid; gap: 8px; background: linear-gradient(90deg, #f3ead6 0 6px, #fffaf0 6px); padding: 4px 4px 4px 14px; border-radius: 14px; }
+.book h2 { font-size: 1.4rem; color: var(--deep); }
+.book-month { font-family: var(--display); font-size: 1.2rem; color: #8a6644; margin: 10px 0 2px; border-bottom: 1px dashed #d8c3a3; }
+.book-entry { display: flex; gap: 10px; align-items: flex-start; font-family: var(--display); font-size: 1.08rem; line-height: 1.3; }
+.book-entry small { font-family: 'Nunito', sans-serif; }
+.book-icon { font-size: 1.5rem; }

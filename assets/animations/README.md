@@ -13,6 +13,7 @@ care button is pressed. Until a file is here, the built-in effects play instead.
 | `sleeping` | Loops for as long as the otter is asleep |
 | `wake` | Waking up |
 | `gift` | Opening the daily gift |
+| `trick-rollover`, `trick-juggle`, `trick-handstand`, `trick-twirl` | Performing a trick (Grown Otters learn these) |
 
 Add the extension that matches your file, e.g. `bath.webp`.
 

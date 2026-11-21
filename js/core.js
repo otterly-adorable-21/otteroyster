@@ -7,6 +7,7 @@ import { activeEvent, questsFor, EVENT, EVENT_FIND_CHANCE, TOKENS_PER_ACTIVITY }
 import { TRAITS, TRAIT_IDS, blankPersona, favoritesFor, traitOf, hasTrait } from './personality.js';
 import { dailyMood, exploreLuck } from './ambience.js';
 import { ACHIEVEMENTS, ACH } from './achievements.js';
+import { STAGES, stageOf, stageAtLeast, TRICKS, STORIES, WISDOM, mdOf, isBirthday } from './growth.js';
 
 export const SAVE_VERSION = 2;
 
@@ -31,6 +32,12 @@ export function defaultState(now = Date.now()) {
     wallpapers: ['moss'],
     floors: ['earth'],
     collection: {},
+    birthday: mdOf(now),
+    birthdaySet: false,
+    birthdaysClaimed: [],
+    tricks: [],
+    growthItems: [],
+    memories: [],
     achievements: {},
     counters: { care: 0, night: 0, friends: 0, visited: [] },
     newAch: [],
@@ -81,6 +88,11 @@ export function normalize(saved) {
   };
   s.events = { ...(saved.events || {}) };
   s.achievements = { ...(saved.achievements || {}) };
+  s.birthday = /^\d\d-\d\d$/.test(saved.birthday || '') ? saved.birthday : mdOf(s.created);
+  s.birthdaysClaimed = Array.isArray(saved.birthdaysClaimed) ? saved.birthdaysClaimed : [];
+  s.tricks = Array.isArray(saved.tricks) ? saved.tricks : [];
+  s.growthItems = Array.isArray(saved.growthItems) ? saved.growthItems : [];
+  s.memories = Array.isArray(saved.memories) ? saved.memories : [];
   s.counters = { care: 0, night: 0, friends: 0, visited: [], ...(saved.counters || {}) };
   if (!Array.isArray(s.counters.visited)) s.counters.visited = [];
   s.newAch = Array.isArray(saved.newAch) ? saved.newAch : [];
@@ -315,6 +327,7 @@ function finishMission(s, now) {
     ups += d.ups;
   }
   trackQuest(s, 'mission', 1, now);
+  memory(s, m.icon, `${s.name} ${story}`, now);
   const report = { id: m.id, t: now, pearls, found, story, xp: m.xp, ups, discovery };
   s.reports.push(report);
   s.reports = s.reports.slice(-5);
@@ -503,6 +516,7 @@ function discover(s, locId, luck = 1) {
   if (isNew) {
     ups += addXP(s, find.rarity === 'legendary' ? 20 : find.rarity === 'rare' ? 10 : 4);
     log(s, `Discovered a ${find.name} at ${LOC[locId].name}!`);
+    if (find.rarity === 'rare' || find.rarity === 'legendary') memory(s, find.icon, `${s.name} discovered a ${find.rarity} ${find.name} at ${LOC[locId].name}!`);
     const all = LOC[locId].finds.every((f) => s.collection[f.id]);
     if (all && !s.sets.includes(locId)) {
       s.sets.push(locId);
@@ -510,6 +524,7 @@ function discover(s, locId, luck = 1) {
       ups += addXP(s, SET_REWARD.xp);
       setDone = true;
       log(s, `Completed the ${LOC[locId].name} collection! 🏅`);
+      memory(s, '🏅', `${s.name} completed the ${LOC[locId].name} collection!`);
     }
   }
   return { find, isNew, setDone, ups };
@@ -677,6 +692,7 @@ export function achProgress(s, a) {
 // Unlock anything newly earned. Returns the new achievements (also queued in s.newAch for display).
 export function checkAchievements(s, now = Date.now()) {
   if (!s.name) return [];
+  checkGrowth(s, now);
   const fresh = [];
   for (const a of ACHIEVEMENTS) {
     if (s.achievements[a.id]) continue;
@@ -686,6 +702,7 @@ export function checkAchievements(s, now = Date.now()) {
       s.pearls += a.reward;
       addXP(s, 10);
       log(s, `🏅 Achievement unlocked: ${a.name}! +${a.reward} pearls`, now);
+      memory(s, a.icon, `Earned the “${a.name}” badge: ${a.desc.toLowerCase()}.`, now);
       fresh.push(a.id);
     }
   }
@@ -697,4 +714,102 @@ export function takeNewAchievements(s) {
   const r = (s.newAch || []).filter((id) => ACH[id]);
   s.newAch = [];
   return r;
+}
+
+// ---------- growing up ----------
+export { STAGES, stageOf, TRICKS, isBirthday };
+
+// Moments worth keeping forever (the adventure book).
+export function memory(s, icon, text, now = Date.now()) {
+  if (!s.memories) s.memories = [];
+  s.memories.push({ t: now, icon, text });
+  if (s.memories.length > 300) s.memories = s.memories.slice(-300);
+}
+
+// Give stage items as the otter grows, and throw the birthday party.
+export function checkGrowth(s, now = Date.now()) {
+  if (!s.name) return;
+  for (const st of STAGES) {
+    if (s.level >= st.level && !s.growthItems.includes(st.id)) {
+      s.growthItems.push(st.id);
+      if (ITEMS[st.item] && !s.owned.includes(st.item)) s.owned.push(st.item);
+      if (st.id !== 'pup') {
+        log(s, `${st.icon} ${s.name} grew into a ${st.name}! New: ${st.unlock.toLowerCase()}.`, now);
+        memory(s, st.icon, `${s.name} grew into a ${st.name}!`, now);
+      }
+    }
+  }
+  const year = new Date(now).getUTCFullYear();
+  // The adoption day itself isn't a party: celebrate from the first anniversary,
+  // or from a birthday the player picked.
+  const oldEnough = s.birthdaySet || now - (s.created || now) > 300 * 86400000;
+  if (isBirthday(s, now) && oldEnough && !s.birthdaysClaimed.includes(year)) {
+    s.birthdaysClaimed.push(year);
+    s.pearls += 100;
+    stat(s, 'happiness', 30);
+    if (!s.owned.includes('birthdayhat')) s.owned.push('birthdayhat');
+    const age = s.birthdaysClaimed.length;
+    log(s, `🎂 Happy birthday, ${s.name}! +100 pearls and a party hat.`, now);
+    memory(s, '🎂', `${s.name}'s ${age === 1 ? 'first' : age === 2 ? 'second' : age === 3 ? 'third' : `${age}th`} birthday party! 🎉`, now);
+  }
+}
+
+export function setBirthday(s, md) {
+  const m = /^(\d\d)-(\d\d)$/.exec(md || '');
+  const d = m && new Date(Date.UTC(2024, Number(m[1]) - 1, Number(m[2]))); // leap year, so Feb 29 is allowed
+  if (!d || d.getUTCMonth() + 1 !== Number(m[1]) || d.getUTCDate() !== Number(m[2])) return no('Pick a real date.');
+  if (s.birthdaySet) return no('The birthday can only be changed once.');
+  s.birthday = md;
+  s.birthdaySet = true;
+  return ok(`🎂 Birthday saved!`);
+}
+
+export function tellStory(s, now = Date.now()) {
+  const b = busy(s);
+  if (b) return no(b);
+  if (!stageAtLeast(s.level, 'young')) return no(`Story time unlocks when ${s.name} is a Young Otter (level 5).`);
+  if (now - (s.lastStory || 0) < 2 * 3600000) return no(`${s.name} is still thinking about the last story. Try again later!`);
+  s.lastStory = now;
+  stat(s, 'happiness', 8);
+  stat(s, 'energy', 4);
+  const fav = s.persona?.fav || {};
+  const story = STORIES[rand(0, STORIES.length - 1)](s.name, { place: LOC[fav.place]?.name || 'the pond', snack: SNACKS.find((x) => x.id === fav.snack)?.name.toLowerCase() || 'snacks' });
+  const ups = addXP(s, 3);
+  return ok(`📖 ${story}`, { ups, fx: ['📖', '💤', '✨'] });
+}
+
+export function teachTrick(s, now = Date.now()) {
+  const b = busy(s);
+  if (b) return no(b);
+  if (!stageAtLeast(s.level, 'grown')) return no(`Tricks unlock when ${s.name} is a Grown Otter (level 10).`);
+  const next = TRICKS.find((t) => !s.tricks.includes(t.id));
+  if (!next) return no(`${s.name} knows every trick already. Show them off!`);
+  if (s.lastLesson === dayKey(now)) return no(`${s.name} is practicing today's trick. One lesson a day!`);
+  s.lastLesson = dayKey(now);
+  s.tricks.push(next.id);
+  stat(s, 'energy', -5);
+  const ups = addXP(s, 8);
+  log(s, `${next.icon} ${s.name} learned a new trick: ${next.name}!`, now);
+  memory(s, next.icon, `${s.name} learned to ${next.name.toLowerCase()}!`, now);
+  return ok(`${next.icon} ${s.name} learned to ${next.name.toLowerCase()}!`, { ups, trick: next.id, fx: [next.icon, '⭐'] });
+}
+
+export function performTrick(s, id, now = Date.now()) {
+  const b = busy(s);
+  if (b) return no(b);
+  const t = TRICKS.find((x) => x.id === id);
+  if (!t || !s.tricks.includes(id)) return no("They haven't learned that one yet.");
+  if (now - (s.lastTrick || 0) > 10 * 60000) stat(s, 'happiness', 4);
+  s.lastTrick = now;
+  return ok(`${t.icon} Ta-da!`, { trick: id });
+}
+
+export function shareWisdom(s, now = Date.now()) {
+  const b = busy(s);
+  if (b) return no(b);
+  if (!stageAtLeast(s.level, 'wise')) return no(`Wisdom comes with age: unlocks at level 20.`);
+  if (s.lastWisdom === dayKey(now)) return no(`${s.name} already shared today's wisdom.`);
+  s.lastWisdom = dayKey(now);
+  stat(s, 'happiness', 10);
+  return ok(`🦉 ${s.name} says: “${WISDOM[rand(0, WISDOM.length - 1)]}”`);
 }
