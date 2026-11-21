@@ -5,6 +5,8 @@ import { FURNITURE, WALLPAPERS, FLOORS, DEN_W, DEN_H, OTTER_W, zoneOf, itemSize 
 export { DEN_W, DEN_H, OTTER_W, zoneOf, itemSize, clampPos } from './den-data.js';
 import { otterSVG } from './otter.js';
 import { artUrl } from './art.js';
+import { companionSVG } from './extras-draw.js';
+import { COMPANIONS } from './companions.js';
 
 const img = (url, x, y, w, h) => `<image href="${url}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="none"/>`;
 // Uploaded furniture art fills the item's own drawing box.
@@ -99,7 +101,7 @@ function otterInDen(state, pos, { selected = false, editable = false } = {}) {
   const sel = selected ? `<rect x="${x - 4}" y="${y - 4}" width="${OTTER_W + 8}" height="${h + 8}" rx="8" fill="none" stroke="#f3d98c" stroke-width="2.5" stroke-dasharray="6 4"/>` : '';
   return `<g class="den-item den-otter${editable ? ' editable' : ''}" data-uid="otter">
     <ellipse cx="${pos.x}" cy="${pos.y - 2}" rx="${OTTER_W * 0.36}" ry="5" fill="#000" opacity=".25"/>
-    <svg x="${x}" y="${y}" width="${OTTER_W}" height="${h}" viewBox="0 -20 200 250" overflow="visible">${otterSVG(state, { idPrefix: 'den-otter' })}</svg>${state.sleeping ? `<text x="${pos.x + 22}" y="${y + 6}" font-size="16" font-family="Georgia, serif" font-style="italic" fill="#fff3bf">z z</text>` : ''}${sel}</g>`;
+    <svg x="${x}" y="${y}" width="${OTTER_W}" height="${h}" viewBox="0 -24 200 254" overflow="visible">${otterSVG(state, { idPrefix: 'den-otter' })}</svg>${state.sleeping ? `<text x="${pos.x + 22}" y="${y + 6}" font-size="16" font-family="Georgia, serif" font-style="italic" fill="#fff3bf">z z</text>` : ''}${sel}</g>`;
 }
 
 // Where the otter is shown: in bed if napping and there's a bed, else where it was put.
@@ -128,6 +130,12 @@ export function denSVG(state, opts = {}) {
   }
   if (!state.mission) {
     floorThings.push({ y: pos.inBed ? pos.y + 30 : pos.y, html: otterInDen(state, pos, { selected: opts.selected === 'otter', editable: opts.editable && !pos.inBed }) });
+  }
+  const comp = state.companions?.active;
+  if (comp && COMPANIONS[comp] && !state.mission) {
+    const cx = Math.max(40, Math.min(360, pos.x + (pos.x > 300 ? -52 : 52)));
+    const cy = pos.inBed ? 292 : Math.min(296, pos.y + 4);
+    floorThings.push({ y: cy, html: `<g class="den-companion" pointer-events="none"><ellipse cx="${cx}" cy="${cy - 1}" rx="13" ry="3.5" fill="#000" opacity=".22"/><svg x="${cx - 17}" y="${cy - 34}" width="34" height="34" viewBox="0 0 100 100">${companionSVG(comp, { sleeping: state.sleeping })}</svg></g>` });
   }
   floorThings.sort((a, b) => a.y - b.y);
   const ex = opts.extraAttrs || '';

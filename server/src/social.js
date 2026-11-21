@@ -161,6 +161,9 @@ export function createSocial(db, store) {
         friend: card(otherId, rel),
         otter: { name: state.name, level: state.level, stats: state.stats, equipped: state.equipped, persona: state.persona, created: state.created, sleeping: state.sleeping, mission: state.mission ? { id: state.mission.id } : null, den: state.den, collection: state.collection, sets: state.sets, best: state.best },
         huggedToday: doneToday(me, otherId, 'hug'),
+        garden: { dry: (state.garden?.plots || []).filter((p) => p && !p.wateredAt).length },
+        door: state.door,
+        companion: state.companions?.active || null,
       };
     },
 

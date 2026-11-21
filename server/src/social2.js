@@ -71,6 +71,7 @@ export function createSocial2(db, store, social) {
   const friendPoints = (x, y, n) => { const [a, b] = pairKey(x, y); addPoints.run(n, a, b); };
 
   return {
+    notify,
     // ---------- guestbook ----------
     guestbook(owner) {
       return q.gbList.all(owner).map((g) => ({ id: g.id, text: g.text, created: g.created, author: nameOf(g.author), authorCode: social.codeOf(g.author), mine: false }));

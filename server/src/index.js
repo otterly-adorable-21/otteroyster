@@ -24,7 +24,7 @@ const store = createStore(db);
 const social = createSocial(db, store);
 const social2 = createSocial2(db, store, social);
 const museum = createMuseum(db, store);
-const lane = createNeighborhood(db, store, social);
+const lane = createNeighborhood(db, store, social, social2);
 const siteUrl = env.SITE_URL || 'https://otteroyster.online';
 const allowedOrigins = (env.ALLOWED_ORIGINS || 'https://otteroyster.online,https://www.otteroyster.online,https://otterly-adorable-21.github.io').split(',').map((s) => s.trim()).filter(Boolean);
 

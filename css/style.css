@@ -852,7 +852,7 @@ textarea.note-input { resize: vertical; font: inherit; }
 .pick-list { display: grid; gap: 6px; width: 100%; }
 
 /* ---------- care animations (assets/animations) ---------- */
-.care-anim { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; pointer-events: none; z-index: 2; }
+.care-anim { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: 50% 50%; pointer-events: none; z-index: 2; }
 #otter-wrap.anim-replace #otter { visibility: hidden; }
 /* ---------- otter page ---------- */
 .actions { grid-template-columns: repeat(3, 1fr); margin-bottom: 8px; }
@@ -933,5 +933,45 @@ textarea.note-input { resize: vertical; font: inherit; }
 .scene.has-scene-art .pond-decor, .scene.has-scene-art .phase-sky, .scene.has-scene-art .caustics { display: none; }
 .weather-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .house-art { display: block; width: 100%; height: auto; }
-.anim-popup { position: fixed; left: 50%; top: 50%; z-index: 70; width: min(60vw, 260px); aspect-ratio: 420 / 520; transform: translate(-50%, -50%); pointer-events: none; filter: drop-shadow(0 10px 24px rgba(0,0,0,.35)); }
+.anim-popup { position: fixed; left: 50%; top: 50%; z-index: 70; width: min(60vw, 260px); aspect-ratio: 800 / 1016; transform: translate(-50%, -50%); pointer-events: none; filter: drop-shadow(0 10px 24px rgba(0,0,0,.35)); }
 .anim-popup .care-anim { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+
+/* ---------- companions ---------- */
+.companion { position: absolute; bottom: 10px; left: calc(50% - 150px); width: 66px; height: 66px; border: 0; background: none; padding: 0; cursor: pointer; z-index: 3; animation: comp-bob 2.8s ease-in-out infinite; filter: drop-shadow(0 4px 4px rgba(0,0,0,.25)); }
+.companion svg { width: 100%; height: 100%; display: block; }
+.companion.hop { animation: comp-hop .7s ease; }
+@keyframes comp-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes comp-hop { 0%, 100% { transform: translateY(0) scale(1); } 30% { transform: translateY(-26px) scale(1.05, .95); } 60% { transform: translateY(0) scale(1.08, .9); } }
+.scene.night .companion { animation-duration: 5s; }
+.comp-card { display: flex; gap: 14px; align-items: center; margin-top: 12px; }
+.comp-card .comp-art { width: 84px; height: 84px; flex: none; border: 0; padding: 6px; border-radius: 20px; background: radial-gradient(circle at 50% 70%, #d2f2ee, #e9f7f4 70%); display: grid; place-items: center; font-size: 2.4rem; cursor: pointer; }
+.comp-card .comp-art svg { width: 100%; height: 100%; }
+.comp-info { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.comp-info .bar > div { background: linear-gradient(90deg, #f783ac, #ffa8a8); }
+.perk-on { color: #2b8a3e; font-weight: 800; }
+.row.left { justify-content: flex-start; flex-wrap: wrap; }
+.cove-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 10px; }
+.cove-card { display: grid; gap: 4px; justify-items: center; text-align: center; padding: 10px; }
+.cove-card svg { width: 78px; height: 78px; }
+.cove-card.active { box-shadow: 0 0 0 3px var(--gold); }
+.comp-try svg { width: 100%; max-height: 240px; }
+.house > svg.porch-comp { position: absolute; left: 4px; bottom: 30px; width: 30px; height: 30px; pointer-events: none; }
+
+/* ---------- den views, garden, door ---------- */
+.den-views { margin-bottom: 6px; }
+.garden-stage { border-radius: var(--radius); overflow: hidden; box-shadow: var(--gold-ring), var(--shadow); background: #7fa65a; }
+.garden-svg { display: block; width: 100%; height: auto; touch-action: manipulation; }
+.garden-svg .plot { cursor: pointer; }
+.garden-svg .plot.ready { animation: plot-glow 1.6s ease-in-out infinite; }
+.garden-svg .plot.locked { opacity: .65; cursor: default; }
+@keyframes plot-glow { 50% { filter: drop-shadow(0 0 6px #fff3bf); } }
+.garden-list { list-style: none; margin: 10px 0 0; padding: 10px 14px; display: grid; gap: 6px; }
+.seed .seed-icon { font-size: 2.2rem; text-align: center; }
+.door-stage { max-width: 340px; margin: 0 auto; border-radius: var(--radius); background: linear-gradient(#9be8de 0 55%, #7fa65a 55%); box-shadow: var(--gold-ring), var(--shadow); padding: 8px 0 0; }
+.door-stage svg { display: block; width: 100%; height: auto; }
+.item-art.door-art { width: 84px; height: 88px; }
+.door-art svg { width: 78px; height: 84px; }
+.swatch-chip.big { display: block; width: 48px; height: 48px; border-radius: 14px; margin: 0 auto; box-shadow: inset 0 0 0 3px rgba(0,0,0,.12); }
+.card.item.using { box-shadow: 0 0 0 3px var(--gold); }
+.door-try svg { width: 100%; max-height: 260px; }
+.center { text-align: center; }

@@ -7,6 +7,8 @@ import { WALLPAPERS, FLOORS } from './den-data.js';
 import { defaultState } from './core.js';
 import { SNACKS } from './data.js';
 import { TRICKS, STAGES } from './growth.js';
+import { companionSVG, houseFrontSVG } from './extras-draw.js';
+import { DOOR_ITEMS } from './door.js';
 
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -22,6 +24,8 @@ function drawn(g, s) {
     return otterPv(otterState({ sleeping: s.id === 'sleeping', level: stage ? stage.level : 6, stats: s.id === 'sad' ? { hunger: 10, happiness: 20, energy: 30, clean: 40 } : { hunger: 80, happiness: 90, energy: 90, clean: 90 } }));
   }
   if (g.id === 'clothes') return itemPreviewSVG(s.id);
+  if (g.id === 'companions') return `<svg viewBox="0 0 100 100">${companionSVG(s.id.replace('-sleeping', ''), { sleeping: s.id.endsWith('-sleeping') })}</svg>`;
+  if (g.id === 'door') { const it = DOOR_ITEMS[s.id]; return `<svg viewBox="0 0 120 130">${houseFrontSVG({ paint: it.kind === 'paint' ? s.id : 'paint-moss', [it.kind]: s.id })}</svg>`; }
   if (g.id === 'furniture') return furniturePreviewSVG(s.id);
   if (g.id === 'wallpaper') return `<div class="swatch" style="background:${WALLPAPERS[s.id].swatch || '#4f6b4a'}"></div>`;
   if (g.id === 'floor') return `<div class="swatch" style="background:${FLOORS[s.id].swatch || '#6b4d34'}"></div>`;
@@ -38,8 +42,8 @@ function card(g, s, folder = `assets/art/${g.id}/`) {
 }
 
 const animGroup = {
-  id: 'animations', name: 'Animations', size: '420 × 520',
-  tip: 'Animated WebP, GIF, APNG or WebM with a transparent background, about 2–3 seconds, otter centered with feet near the bottom. They play over the pond, or in a pop-up on tabs without the pond. Details: assets/animations/README.md',
+  id: 'animations', name: 'Animations', size: '800 × 1016',
+  tip: 'Animated WebP, GIF, APNG or WebM with a transparent background, about 2–3 seconds, on the same 800 × 1016 canvas as the otter (or half size, 400 × 508). They play over the pond, or in a pop-up on tabs without the pond. Details: assets/animations/README.md',
   slots: [
     ...Object.entries(ANIM).map(([id, a]) => ({ id, name: a.label })),
     ...SNACKS.map((x) => ({ id: `feed-${x.id}`, name: `Eating ${x.name}`, emoji: x.icon, note: 'optional, overrides feed' })),

@@ -184,6 +184,13 @@ export function startHttp({ store, social, social2, museum, lane, auth, port, si
         return send(res, status, rest);
       }
 
+      case 'POST /api/garden/water': {
+        const p = authed(req);
+        if (!p) return send(res, 401, { error: 'Not signed in' });
+        const b = await body(req);
+        const { status, ...rest } = lane.waterFriend(p.id, social.idByCode(String(b.code || '').toUpperCase()));
+        return send(res, status, rest);
+      }
       case 'POST /api/lane/public': {
         const p = authed(req);
         if (!p) return send(res, 401, { error: 'Not signed in' });

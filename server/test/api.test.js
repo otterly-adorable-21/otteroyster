@@ -9,6 +9,7 @@ import { createMuseum } from '../src/museum.js';
 import { createNeighborhood } from '../src/neighborhood.js';
 import { startHttp } from '../src/http.js';
 import * as core from '../../js/core.js';
+import { weatherAt } from '../../js/ambience.js';
 
 const db = openDb(':memory:');
 const store = createStore(db);
@@ -333,4 +334,35 @@ test('link endpoint is rate limited', async () => {
   let limited = false;
   for (let k = 0; k < 15; k++) if ((await call('/api/link', { method: 'POST', body: { code: 'XXXXXX' } })).status === 429) limited = true;
   assert.ok(limited);
+});
+
+test('friends can water your garden for a bonus, and Otter Lane shows doors and companions', async () => {
+  const mk = (name) => ({ ...core.defaultState(), name, pearls: 200 });
+  const A = (await call('/api/register', { method: 'POST', body: { state: mk('Gardener') } })).data;
+  const B = (await call('/api/register', { method: 'POST', body: { state: mk('Helper') } })).data;
+  await call('/api/friends/add', { method: 'POST', token: B.token, body: { code: A.code } });
+  await call('/api/friends/respond', { method: 'POST', token: A.token, body: { code: B.code, accept: true } });
+  const pa = store.byToken(A.token);
+  store.mutate(pa.id, (s) => {
+    s.garden.plots[0] = { crop: 'lily', plantedAt: Date.now(), wateredAt: null, growMs: 0 };
+    s.door.wreath = 'wreath-lily'; s.doorItems.push('wreath-lily');
+    s.companions.owned.duckling = { name: 'Pip', bond: 50, lastPlay: Date.now() };
+    s.companions.active = 'duckling';
+  });
+  const before = store.byToken(B.token).state.pearls;
+  const v = (await call('/api/friends/visit?code=' + A.code, { token: B.token })).data;
+  if (weatherAt(Date.now()) === 'rainy') {
+    assert.equal(v.garden.dry, 0); // the rain got there first
+  } else {
+    assert.equal(v.garden.dry, 1);
+    const w = await call('/api/garden/water', { method: 'POST', token: B.token, body: { code: A.code } });
+    assert.equal(w.status, 200, JSON.stringify(w.data));
+    assert.equal(w.data.state.pearls, before + 3);
+    assert.ok(store.get(pa.id).state.garden.plots[0].friend);
+  }
+  assert.equal((await call('/api/garden/water', { method: 'POST', token: B.token, body: { code: A.code } })).status, 409);
+  const lane = (await call('/api/lane', { token: B.token })).data;
+  const house = lane.friends.find((h) => h.name === 'Gardener');
+  assert.equal(house.door.wreath, 'wreath-lily');
+  assert.equal(house.companion, 'duckling');
 });

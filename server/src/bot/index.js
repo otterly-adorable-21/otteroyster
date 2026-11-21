@@ -13,6 +13,8 @@ import { BOT_BOARDS, BOT_DAILY_CAP } from '../players.js';
 import { LOCATIONS, LOC, RARITY, FINDS, TOTAL_FINDS, SET_REWARD } from '../../../js/world.js';
 import { heartsText, friendLevel } from '../../../js/social.js';
 import { eventEndsAt, nextEvent } from '../../../js/events.js';
+import { CROPS, plotStage, plotReadyAt } from '../../../js/garden.js';
+import { COMPANIONS, BOND_NAMES, BOND_PERK, bondLevel, TREAT_PRICE } from '../../../js/companions.js';
 
 const solo = Object.fromEntries(SOLO.map((g) => [g.id, g]));
 const duels = Object.fromEntries(DUELS.map((g) => [g.id, g]));
@@ -144,6 +146,46 @@ export function createBot({ store, social, museum, siteUrl }) {
     return { embeds: [e], components: rows.slice(0, 5) };
   }
 
+  // ---------- garden ----------
+  function gardenView(user, note = '') {
+    const { state } = load(user);
+    const now = Date.now();
+    const open = core.plotsUnlocked(state);
+    const lines = state.garden.plots.slice(0, open).map((p, k) => {
+      if (!p) return `\`${k + 1}\` 🟫 *empty*`;
+      const c = CROPS[p.crop];
+      const st = plotStage(p, now);
+      return `\`${k + 1}\` ${c.icon} **${c.name}** · ${st === 0 ? 'needs water 💧' : st === 3 ? 'ready! ✨' : `ready <t:${Math.floor(plotReadyAt(p) / 1000)}:R>`}${p.friend ? ' 💕' : ''}`;
+    });
+    const pantry = Object.entries(state.pantry || {}).map(([id, n]) => `${SNACKS.find((x) => x.id === id).icon}×${n}`).join(' ');
+    const e = embed(`🌱 ${state.name}'s Garden`, `${note ? `${note}\n\n` : ''}${lines.join('\n')}${open < 6 ? `\n🔒 More plots open at higher levels.` : ''}\n\n🧺 Pantry: ${pantry || 'empty'} · ⚪ ${state.pearls} pearls`, GREEN);
+    e.setFooter({ text: 'Rain waters everything. Friends can water your garden on the website for a bigger harvest.' });
+    const ready = state.garden.plots.some((p) => p && plotStage(p, now) === 3);
+    const dry = state.garden.plots.some((p) => p && !p.wateredAt);
+    const empty = state.garden.plots.slice(0, open).some((p) => !p);
+    const seeds = Object.entries(CROPS).filter(([, c]) => state.level >= c.level).map(([id, c]) => ({ label: `${c.name} · ${c.seed} pearls`, value: id, emoji: c.icon, description: `${c.minutes >= 60 ? `${c.minutes / 60}h` : `${c.minutes}m`} · ${c.desc}`.slice(0, 100) }));
+    const rows = [row(
+      btn(`gd:${user.id}:water`, 'Water all', dry ? ButtonStyle.Primary : ButtonStyle.Secondary, { emoji: '💧', disabled: !dry }),
+      btn(`gd:${user.id}:harvest`, 'Harvest', ready ? ButtonStyle.Success : ButtonStyle.Secondary, { emoji: '🧺', disabled: !ready }),
+      btn(`gd:${user.id}:refresh`, 'Refresh', ButtonStyle.Secondary, { emoji: '🔄' }),
+    )];
+    if (empty && seeds.length) rows.push(row(select(`gd:${user.id}:plant`, 'Plant a seed in the next empty plot…', seeds)));
+    return { embeds: [e], components: rows };
+  }
+
+  // ---------- companion ----------
+  function companionView(user, note = '') {
+    const { state } = load(user);
+    const c = core.activeCompanion(state);
+    if (!c) {
+      return { embeds: [embed('🐾 Companions', `${note ? `${note}\n\n` : ''}${state.name} doesn't have a companion tagging along yet. Adopt one in the **Companion Cove** on the website (Otter tab)!\n\n${Object.values(COMPANIONS).map((x) => `${x.icon} **${x.name}** (Lv ${x.level}, ${x.price} pearls): ${x.perk}`).join('\n')}`)], components: [row(linkBtn(siteUrl, 'Open the website'))] };
+    }
+    const lvl = bondLevel(c.bond);
+    const filled = Math.round(c.bond / 10);
+    const e = embed(`${c.icon} ${c.name}`, `${note ? `${note}\n\n` : ''}${state.name}'s ${COMPANIONS[c.id].name} · **${BOND_NAMES[lvl]}**\n💕 ${'❤️'.repeat(filled)}${'🤍'.repeat(10 - filled)} ${Math.round(c.bond)}/100\n${c.bond >= BOND_PERK ? '✨' : '🔒'} ${COMPANIONS[c.id].perk}${c.bond >= BOND_PERK ? '' : ` (bond to ${BOND_PERK})`}`);
+    return { embeds: [e], components: [row(btn(`cp:${user.id}:play`, 'Play', ButtonStyle.Primary, { emoji: '🎾' }), btn(`cp:${user.id}:treat`, `Treat (${TREAT_PRICE} pearls)`, ButtonStyle.Secondary, { emoji: '🍪' }))] };
+  }
+
   // ---------- seasonal event ----------
   function eventView(user, note = '') {
     const { state } = load(user);
@@ -241,6 +283,16 @@ export function createBot({ store, social, museum, siteUrl }) {
         const r = social.gift(me.id, other.id, { kind: 'pearls', amount: i.options.getInteger('pearls'), note: i.options.getString('note') });
         if (r.error) return whisper(i, r.status === 403 ? `You need to be friends first! Try \`/friend add\` with <@${u.id}>.` : r.error);
         return i.reply({ content: `🎁 ${user.username} sent <@${u.id}> **${i.options.getInteger('pearls')} pearls**! Open it with \`/friend list\` or on the website.`, allowedMentions: { users: [u.id] } });
+      }
+      case 'garden': {
+        const { state } = load(user);
+        if (!state.name) return i.reply({ ...adoptPrompt(user.id), flags: EPHEMERAL });
+        return i.reply(gardenView(user));
+      }
+      case 'companion': {
+        const { state } = load(user);
+        if (!state.name) return i.reply({ ...adoptPrompt(user.id), flags: EPHEMERAL });
+        return i.reply(companionView(user));
       }
       case 'museum': {
         if (!museum) return whisper(i, 'The museum is closed right now.');
@@ -355,6 +407,7 @@ export function createBot({ store, social, museum, siteUrl }) {
           '`/explore` discover creatures and treasures · `/collection` your journal',
           '`/friend` add and list friends · `/hug @friend` · `/gift @friend` pearls',
           '`/event` this season\'s event: quests, tokens and limited items',
+          '`/garden` plant, water and harvest · `/companion` play with your pet companion · `/museum` the community museum',
           '',
           `**Solo games** \`/play\`: ${SOLO.map((g) => `${g.emoji} ${g.name}`).join(', ')}`,
           `**Challenges** \`/challenge @friend\`: ${DUELS.map((g) => `${g.emoji} ${g.name}`).join(', ')}`,
@@ -432,8 +485,27 @@ export function createBot({ store, social, museum, siteUrl }) {
 
     // Owner-only panels: pet / mission / chest / adopt
     const ownerId = parts[1];
-    if (['pet', 'mis', 'chest', 'adopt', 'adoptname', 'fr', 'ev'].includes(kind) && ownerId !== user.id) {
+    if (['pet', 'mis', 'chest', 'adopt', 'adoptname', 'fr', 'ev', 'gd', 'cp'].includes(kind) && ownerId !== user.id) {
       return whisper(i, 'This otter belongs to someone else! Use `/pet` to see yours. 🦦');
+    }
+
+    if (kind === 'gd') {
+      const action = parts[2];
+      let note = '';
+      if (action !== 'refresh') {
+        const { res } = load(user, (s) => {
+          if (action === 'water') return core.waterAll(s);
+          if (action === 'harvest') return core.harvestAll(s);
+          if (action === 'plant') { const k = s.garden.plots.slice(0, core.plotsUnlocked(s)).findIndex((p) => !p); return k < 0 ? { ok: false, msg: 'No empty plots.' } : core.plant(s, k, i.values[0]); }
+          return { ok: false, msg: '?' };
+        });
+        note = res.ok ? res.msg : `⚠️ ${res.msg}`;
+      }
+      return i.update(gardenView(user, note));
+    }
+    if (kind === 'cp') {
+      const { res } = load(user, (s) => (parts[2] === 'treat' ? core.treatCompanion(s) : core.playCompanion(s)));
+      return i.update(companionView(user, res.ok ? res.msg : `⚠️ ${res.msg}`));
     }
 
     if (kind === 'ev') {

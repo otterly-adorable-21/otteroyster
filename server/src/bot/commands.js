@@ -39,6 +39,8 @@ export const commands = [
     .addIntegerOption((o) => o.setName('pearls').setDescription('How many?').setRequired(true)
       .addChoices(...GIFT_PEARL_OPTIONS.map((n) => ({ name: `${n} pearls`, value: n }))))
     .addStringOption((o) => o.setName('note').setDescription('A little note').setMaxLength(80))),
+  everywhere(new SlashCommandBuilder().setName('garden').setDescription('Your garden: plant seeds, water and harvest')),
+  everywhere(new SlashCommandBuilder().setName('companion').setDescription('Play with your pet companion')),
   everywhere(new SlashCommandBuilder().setName('museum').setDescription('The community Pond Museum: exhibits, milestones and top donors')),
   everywhere(new SlashCommandBuilder().setName('event').setDescription("This season's event: quests, tokens and the limited shop")),
   everywhere(new SlashCommandBuilder().setName('daily').setDescription('Open your daily treasure chest')),

@@ -12,6 +12,9 @@ import { TRAITS } from './personality.js';
 import { STAGES, TRICKS } from './growth.js';
 import { POSTCARD_ART } from './social.js';
 import { WEATHER } from './ambience.js';
+import { COMPANIONS } from './companions.js';
+import { CROPS } from './garden.js';
+import { DOOR_ITEMS } from './door.js';
 
 let files = {};
 let loaded = false;
@@ -76,6 +79,29 @@ export const GROUPS = [
   {
     id: 'clothes', size: OTTER_PX, name: 'Clothes', tip: `Transparent, ${OTTER_PX} px, on the same canvas as the otter: draw only the item, in the spot it sits on the otter. Shop cards crop to the item automatically.`,
     slots: Object.entries(ITEMS).map(([id, it]) => ({ id, name: it.name, note: `${it.slot}${it.event ? ' · event item' : ''}`, emoji: it.icon })),
+  },
+  {
+    id: 'companions', size: '512 × 512', name: 'Pet companions', tip: 'Transparent, 512 × 512 px, the companion standing on the bottom edge, facing right. Optional sleeping pose: <id>-sleeping.',
+    slots: Object.entries(COMPANIONS).flatMap(([id, c]) => [{ id, name: c.name, emoji: c.icon }, { id: `${id}-sleeping`, name: `${c.name} (sleeping)`, emoji: '💤', note: 'optional' }]),
+  },
+  {
+    id: 'garden', name: 'Garden', tip: 'The garden outside the den.',
+    slots: [
+      { id: 'background', name: 'Garden background', size: '1600 × 1200', note: 'Plots sit in 2 rows of 3 on top; keep the lower two-thirds fairly plain' },
+      { id: 'plot', name: 'Soil plot (dry)', size: '400 × 120', note: 'transparent' },
+      { id: 'plot-wet', name: 'Soil plot (watered)', size: '400 × 120', note: 'transparent' },
+    ],
+  },
+  {
+    id: 'crops', name: 'Garden crops', tip: 'Transparent. Each crop has a seed-packet icon (256 × 256) and growth stages (320 × 400, plant standing on the bottom edge): -0 planted seed, -1 sprout, -2 growing, -3 ready to harvest.',
+    slots: Object.entries(CROPS).flatMap(([id, c]) => [
+      { id, name: `${c.name} icon`, emoji: c.icon, size: '256 × 256' },
+      ...[0, 1, 2, 3].map((k) => ({ id: `${id}-${k}`, name: `${c.name}: ${['seed', 'sprout', 'growing', 'ready'][k]}`, size: '320 × 400', note: k === 3 ? '' : 'optional' })),
+    ]),
+  },
+  {
+    id: 'door', size: '480 × 520', name: 'Front door', tip: 'Transparent, 480 × 520 px: the same canvas as the Otter Lane house (lane/house). Draw only the piece, in the spot it goes on the house, so the pieces stack. Paint layers are the door itself.',
+    slots: Object.entries(DOOR_ITEMS).map(([id, it]) => ({ id, name: it.name, emoji: it.icon || '🎨', note: it.kind })),
   },
   {
     id: 'furniture', name: 'Den furniture', tip: 'Transparent PNG/WebP at the size shown (4× the den size). The bottom edge of the picture is where it sits on the floor or wall.',

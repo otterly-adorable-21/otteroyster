@@ -5,7 +5,10 @@ import { FURNITURE, WALLPAPERS, FLOORS, STARTER_DEN, ZONES, zoneOf, clampPos } f
 import { LOC, FINDS, RARITY, MISSION_LOC, EXPLORE_ENERGY, EXPLORE_COOLDOWN_MIN, SET_REWARD } from './world.js';
 import { activeEvent, questsFor, EVENT, EVENT_FIND_CHANCE, TOKENS_PER_ACTIVITY } from './events.js';
 import { TRAITS, TRAIT_IDS, blankPersona, favoritesFor, traitOf, hasTrait } from './personality.js';
-import { dailyMood, exploreLuck } from './ambience.js';
+import { dailyMood, exploreLuck, weatherAt } from './ambience.js';
+import { COMPANIONS, BOND_PERK, BOND_MAX, PLAY_COOLDOWN, TREAT_PRICE, BOND_DECAY_PER_DAY, bondLevel } from './companions.js';
+import { CROPS, PLOT_LEVELS, FRIEND_WATER_BONUS, plotStage } from './garden.js';
+import { DOOR_ITEMS, DOOR_COZY, defaultDoor } from './door.js';
 import { ACHIEVEMENTS, ACH } from './achievements.js';
 import { STAGES, stageOf, stageAtLeast, TRICKS, STORIES, WISDOM, mdOf, isBirthday } from './growth.js';
 
@@ -43,6 +46,11 @@ export function defaultState(now = Date.now()) {
     newAch: [],
     events: {},
     persona: blankPersona(now),
+    companions: { owned: {}, active: null },
+    garden: { plots: PLOT_LEVELS.map(() => null) },
+    pantry: {},
+    door: defaultDoor(),
+    doorItems: ['paint-moss'],
     explored: {},
     sets: [],
     best: {},
@@ -99,6 +107,15 @@ export function normalize(saved) {
   s.explored = { ...(saved.explored || {}) };
   s.sets = Array.isArray(saved.sets) ? saved.sets : [];
   s.floors = Array.isArray(saved.floors) ? saved.floors : ['earth'];
+  const co = saved.companions || {};
+  s.companions = { owned: Object.fromEntries(Object.entries(co.owned || {}).filter(([id]) => COMPANIONS[id])), active: COMPANIONS[co.active] ? co.active : null };
+  if (s.companions.active && !s.companions.owned[s.companions.active]) s.companions.active = null;
+  const plots = Array.isArray(saved.garden?.plots) ? saved.garden.plots : [];
+  s.garden = { plots: PLOT_LEVELS.map((_, k) => (plots[k] && CROPS[plots[k].crop] ? plots[k] : null)) };
+  s.pantry = Object.fromEntries(Object.entries(saved.pantry || {}).filter(([id, n]) => SNACKS.some((x) => x.id === id) && n > 0));
+  s.door = { ...defaultDoor(), ...(saved.door || {}) };
+  for (const k of Object.keys(s.door)) if (s.door[k] && !DOOR_ITEMS[s.door[k]]) s.door[k] = k === 'paint' ? 'paint-moss' : null;
+  s.doorItems = [...new Set(['paint-moss', ...(Array.isArray(saved.doorItems) ? saved.doorItems.filter((id) => DOOR_ITEMS[id]) : [])])];
   // v1 stored memory best as `null` when unplayed
   for (const k of Object.keys(s.best)) if (s.best[k] == null) delete s.best[k];
   s.version = SAVE_VERSION;
@@ -168,7 +185,7 @@ export function tick(s, now = Date.now()) {
     if (s.mission) {
       stat(s, 'hunger', RATES.hunger * 0.5 * mins);
     } else if (s.sleeping) {
-      stat(s, 'energy', 2.5 * (1 + coziness(s) / 60) * (hasTrait(s, 'sleepy') ? 1.3 : 1) * (dailyMood(s, now) === 'dreamy' ? 1.25 : 1) * mins);
+      stat(s, 'energy', 2.5 * (1 + coziness(s) / 60) * (hasTrait(s, 'sleepy') ? 1.3 : 1) * (dailyMood(s, now) === 'dreamy' ? 1.25 : 1) * (perk(s, 'octopus') ? 1.2 : 1) * mins);
       stat(s, 'hunger', RATES.hunger * 0.5 * mins);
       stat(s, 'clean', RATES.clean * 0.5 * mins);
       if (s.stats.energy >= 100) {
@@ -181,7 +198,16 @@ export function tick(s, now = Date.now()) {
       stat(s, 'hunger', RATES.hunger * mins);
       stat(s, 'energy', RATES.energy * mins);
       stat(s, 'clean', RATES.clean * (hasTrait(s, 'tidy') ? 0.7 : 1) * mins);
-      stat(s, 'happiness', RATES.happiness * grumpy * (1 - coziness(s) / 60) * (dailyMood(s, now) === 'cheerful' ? 0.75 : 1) * mins);
+      stat(s, 'happiness', RATES.happiness * grumpy * (1 - coziness(s) / 60) * (dailyMood(s, now) === 'cheerful' ? 0.75 : 1) * (perk(s, 'duckling') ? 0.8 : 1) * mins);
+    }
+    // Companions slowly miss you after a day without play.
+    for (const c of Object.values(s.companions?.owned || {})) {
+      if (now - (c.lastPlay || 0) > 86400000) c.bond = Math.max(10, c.bond - (BOND_DECAY_PER_DAY * mins) / 1440);
+    }
+    // Rain waters the garden.
+    if (s.garden?.plots.some((p) => p && !p.wateredAt) && weatherAt(now) === 'rainy') {
+      for (const p of s.garden.plots) if (p && !p.wateredAt) waterPlot(s, p, now);
+      events.push({ type: 'rain-watered' });
     }
   }
   if (s.mission && now >= s.mission.endsAt) {
@@ -198,8 +224,9 @@ export function feed(s, id) {
   const snack = SNACKS.find((x) => x.id === id);
   if (!snack) return no('Unknown snack.');
   if (s.stats.hunger >= 98) return no(`${s.name} is too full to eat!`);
-  if (s.pearls < snack.price) return no('Not enough pearls.');
-  s.pearls -= snack.price;
+  const fromPantry = (s.pantry?.[id] || 0) > 0;
+  if (!fromPantry && s.pearls < snack.price) return no('Not enough pearls.');
+  if (fromPantry) { s.pantry[id] -= 1; if (!s.pantry[id]) delete s.pantry[id]; } else s.pearls -= snack.price;
   const foodie = hasTrait(s, 'foodie');
   const fav = s.persona.fav.snack === id;
   stat(s, 'hunger', snack.hunger);
@@ -290,7 +317,7 @@ export function startMission(s, id, now = Date.now()) {
   if (s.stats.energy < m.energy) return no(`${s.name} needs ${m.energy} energy for this.`);
   stat(s, 'energy', -m.energy);
   stat(s, 'hunger', -m.energy / 3);
-  s.mission = { id, start: now, endsAt: now + m.minutes * 60000 };
+  s.mission = { id, start: now, endsAt: now + m.minutes * 60000 * (perk(s, 'turtle') ? 0.85 : 1) };
   log(s, `${s.name} set off on ${m.name}.`, now);
   return ok(`${m.icon} ${s.name} set off on ${m.name}!`);
 }
@@ -364,7 +391,7 @@ export function rewardGame(s, gameId, pearls, best, lowerIsBetter = false) {
   const g = GAME_LIST.find((x) => x.id === gameId);
   const cap = g?.maxPearls ?? 60;
   const favGame = s.persona.fav.game === gameId;
-  const boost = (hasTrait(s, 'competitive') ? 1.15 : 1) * (favGame ? 1.1 : 1);
+  const boost = (hasTrait(s, 'competitive') ? 1.15 : 1) * (favGame ? 1.1 : 1) * (perk(s, 'starfish') ? 1.1 : 1);
   const p = Math.max(0, Math.min(Math.round(cap * boost), Math.round(pearls * boost))) + (dailyMood(s) === 'playful' ? 3 : 0);
   s.pearls += p;
   stat(s, 'happiness', 10 + (favGame ? 5 : 0));
@@ -407,6 +434,8 @@ export function coziness(s) {
     seen[p.id] = (seen[p.id] || 0) + 1;
     if (seen[p.id] <= 2) total += it.cozy;
   }
+  total += Object.entries(s.door || {}).filter(([k, v]) => k !== 'paint' && v).length * DOOR_COZY;
+  if (perk(s, 'firefly')) total += 4;
   return Math.min(COZY_MAX, total);
 }
 
@@ -564,12 +593,12 @@ export function explore(s, locId, now = Date.now()) {
     return ok(`${f.icon} ${isNew ? 'Limited discovery!' : 'Found another'} ${s.name} found a ${f.name} (${ev.name} only)!`, { find: { ...f, event: ev.id }, isNew, ups, tokens, fx: [f.icon, ev.icon] });
   }
   if (Math.random() < 0.18) {
-    const p = rand(4, 12);
+    const p = Math.round(rand(4, 12) * (perk(s, 'crab') ? 1.25 : 1));
     s.pearls += p;
     const ups = addXP(s, 2);
     return ok(`${loves}${s.name} poked around ${loc.name} and found ${p} loose pearls.`, { pearls: p, ups, find: null });
   }
-  const d = discover(s, locId, (hasTrait(s, 'adventurous') ? 1.3 : 1) * (favPlace ? 1.2 : 1) * exploreLuck(locId, now) * (dailyMood(s, now) === 'curious' ? 1.2 : 1));
+  const d = discover(s, locId, (hasTrait(s, 'adventurous') ? 1.3 : 1) * (favPlace ? 1.2 : 1) * exploreLuck(locId, now) * (dailyMood(s, now) === 'curious' ? 1.2 : 1) * (perk(s, 'frog') ? 1.15 : 1));
   const r = RARITY[d.find.rarity];
   const msg = loves + (d.isNew
     ? `${d.find.icon} New discovery! ${s.name} found a ${d.find.name} (${r.name})!`
@@ -817,4 +846,156 @@ export function shareWisdom(s, now = Date.now()) {
   s.lastWisdom = dayKey(now);
   stat(s, 'happiness', 10);
   return ok(`🦉 ${s.name} says: “${WISDOM[rand(0, WISDOM.length - 1)]}”`);
+}
+
+// ---------- companions ----------
+export function perk(s, id) {
+  const c = s.companions?.owned?.[id];
+  return s.companions?.active === id && !!c && c.bond >= BOND_PERK;
+}
+export const activeCompanion = (s) => (s.companions?.active ? { id: s.companions.active, ...COMPANIONS[s.companions.active], ...s.companions.owned[s.companions.active] } : null);
+
+export function adoptCompanion(s, id, now = Date.now()) {
+  const c = COMPANIONS[id];
+  if (!c) return no('Unknown companion.');
+  if (s.companions.owned[id]) return no(`You already have a ${c.name}.`);
+  if (s.level < c.level) return no(`Reach level ${c.level} to adopt a ${c.name}.`);
+  if (s.pearls < c.price) return no('Not enough pearls.');
+  s.pearls -= c.price;
+  s.companions.owned[id] = { name: c.name, bond: 10, lastPlay: now, since: now };
+  s.companions.active = id;
+  log(s, `${s.name} made a new friend: a ${c.name}!`, now);
+  memory(s, c.icon, `${s.name} adopted a ${c.name} companion.`, now);
+  count(s, 'companions');
+  return ok(`${c.icon} Welcome home, little ${c.name}! Play together to bond.`, { fx: [c.icon, '💕', '✨'] });
+}
+
+export function setCompanion(s, id) {
+  if (id && !s.companions.owned[id]) return no('You don\'t have that companion.');
+  s.companions.active = id || null;
+  return ok(id ? `${COMPANIONS[id].icon} ${s.companions.owned[id].name} is tagging along.` : 'Your companion is resting at home.');
+}
+
+export function renameCompanion(s, id, name) {
+  const c = s.companions.owned[id];
+  if (!c) return no('You don\'t have that companion.');
+  const n = String(name || '').replace(/[<>]/g, '').trim().slice(0, 16);
+  if (!n) return no('Pick a name.');
+  c.name = n;
+  return ok(`${COMPANIONS[id].icon} Say hi to ${n}!`);
+}
+
+export function playCompanion(s, now = Date.now()) {
+  const id = s.companions.active;
+  const c = id && s.companions.owned[id];
+  if (!c) return no('Pick a companion to play with first.');
+  const wait = (c.lastPlay || 0) + PLAY_COOLDOWN - now;
+  if (wait > 0 && c.bond > 10) return no(`${c.name} is still tired from playing. Try again in ${Math.ceil(wait / 60000)} min.`);
+  const before = bondLevel(c.bond);
+  c.bond = Math.min(BOND_MAX, c.bond + 10);
+  c.lastPlay = now;
+  stat(s, 'happiness', 6);
+  grow(s, 'social');
+  const ups = addXP(s, 3);
+  const leveled = bondLevel(c.bond) > before;
+  return ok(`${COMPANIONS[id].icon} ${s.name} and ${c.name} played together!${leveled && c.bond >= BOND_PERK && before < 2 ? ` You're bonded now: ${COMPANIONS[id].perk.toLowerCase()}!` : ''}`, { fx: [COMPANIONS[id].icon, '💕'], ups });
+}
+
+export function treatCompanion(s) {
+  const id = s.companions.active;
+  const c = id && s.companions.owned[id];
+  if (!c) return no('Pick a companion first.');
+  if (c.bond >= BOND_MAX) return no(`${c.name} couldn't be any happier!`);
+  if (s.pearls < TREAT_PRICE) return no('Not enough pearls.');
+  s.pearls -= TREAT_PRICE;
+  c.bond = Math.min(BOND_MAX, c.bond + 15);
+  return ok(`${COMPANIONS[id].icon} ${c.name} gobbled the treat! 💕`, { fx: [COMPANIONS[id].icon, '🍪'] });
+}
+
+// ---------- garden ----------
+export const plotsUnlocked = (s) => PLOT_LEVELS.filter((l) => s.level >= l).length;
+
+function waterPlot(s, p, now, friend = false) {
+  p.wateredAt = now;
+  p.growMs = CROPS[p.crop].minutes * 60000 * (perk(s, 'seahorse') ? 0.8 : 1);
+  if (friend) p.friend = true;
+}
+
+export function plant(s, idx, cropId, now = Date.now()) {
+  const c = CROPS[cropId];
+  if (!c) return no('Unknown seed.');
+  if (idx < 0 || idx >= plotsUnlocked(s)) return no(`That plot opens at level ${PLOT_LEVELS[idx] ?? '?'}.`);
+  if (s.garden.plots[idx]) return no('Something is already growing there.');
+  if (s.level < c.level) return no(`Reach level ${c.level} to plant ${c.name}.`);
+  if (s.pearls < c.seed) return no('Not enough pearls.');
+  s.pearls -= c.seed;
+  const p = { crop: cropId, plantedAt: now, wateredAt: null, growMs: 0 };
+  s.garden.plots[idx] = p;
+  const raining = weatherAt(now) === 'rainy';
+  if (raining) waterPlot(s, p, now);
+  return ok(`${c.icon} Planted ${c.name}!${raining ? ' The rain is watering it already. 🌧️' : ' Give it some water to start growing. 💧'}`);
+}
+
+export function water(s, idx, now = Date.now(), { friend = false } = {}) {
+  const p = s.garden.plots[idx];
+  if (!p) return no('Nothing is planted there.');
+  if (p.wateredAt) return no('Already watered!');
+  waterPlot(s, p, now, friend);
+  return ok(`💧 Watered the ${CROPS[p.crop].name}. Ready ${fmtMins(p.growMs / 60000)} from now.`);
+}
+
+export function waterAll(s, now = Date.now()) {
+  const dry = s.garden.plots.filter((p) => p && !p.wateredAt);
+  if (!dry.length) return no('Everything is watered.');
+  for (const p of dry) waterPlot(s, p, now);
+  return ok(`💧 Watered ${dry.length} plant${dry.length === 1 ? '' : 's'}.`, { fx: ['💧', '🌱'] });
+}
+
+export function harvest(s, idx, now = Date.now()) {
+  const p = s.garden.plots[idx];
+  if (!p) return no('Nothing is planted there.');
+  if (plotStage(p, now) < 3) return no('Not ready yet.');
+  const c = CROPS[p.crop];
+  const k = 1 + (p.friend ? FRIEND_WATER_BONUS : 0);
+  const got = [];
+  if (c.pearls) { const n = Math.round(c.pearls * k); s.pearls += n; got.push(`${n} pearls`); }
+  for (const [snack, n0] of Object.entries(c.pantry || {})) {
+    const n = Math.max(n0, Math.round(n0 * k));
+    s.pantry[snack] = (s.pantry[snack] || 0) + n;
+    got.push(`${n} ${SNACKS.find((x) => x.id === snack).name.toLowerCase()}`);
+  }
+  s.garden.plots[idx] = null;
+  count(s, 'harvests');
+  const ups = addXP(s, c.xp);
+  log(s, `Harvested ${c.name}: ${got.join(', ')}.`, now);
+  return ok(`${c.icon} Harvested ${c.name}! +${got.join(', +')}${p.friend ? ' (a friend helped water it 💕)' : ''}`, { fx: [c.icon, '✨'], ups, got });
+}
+
+export function harvestAll(s, now = Date.now()) {
+  const ready = s.garden.plots.map((p, k) => (p && plotStage(p, now) === 3 ? k : -1)).filter((k) => k >= 0);
+  if (!ready.length) return no('Nothing is ready yet.');
+  const msgs = ready.map((k) => harvest(s, k, now));
+  return ok(msgs.length === 1 ? msgs[0].msg : `🧺 Harvested ${msgs.length} plants! ${msgs.map((m) => (m.got || []).join(', ')).join(' · ')}`, { fx: ['🧺', '✨'], ups: msgs.reduce((a, m) => a + (m.ups || 0), 0) });
+}
+
+const fmtMins = (m) => (m >= 60 ? `${Math.round((m / 60) * 10) / 10} h` : `${Math.round(m)} min`);
+
+// ---------- front door ----------
+export function buyDoorItem(s, id) {
+  const it = DOOR_ITEMS[id];
+  if (!it) return no('Unknown decoration.');
+  if (s.doorItems.includes(id)) return setDoor(s, id);
+  if (s.pearls < it.price) return no('Not enough pearls.');
+  s.pearls -= it.price;
+  s.doorItems.push(id);
+  s.door[it.kind] = id;
+  return ok(`🚪 ${it.name} is up on your door!`, { fx: [it.icon || '🎨', '✨'] });
+}
+
+export function setDoor(s, id) {
+  const it = DOOR_ITEMS[id];
+  if (!it || !s.doorItems.includes(id)) return no('You don\'t own that yet.');
+  if (s.door[it.kind] === id && it.kind !== 'paint') { s.door[it.kind] = null; return ok(`Took down the ${it.name}.`); }
+  s.door[it.kind] = id;
+  return ok(`🚪 ${it.name} is up!`);
 }

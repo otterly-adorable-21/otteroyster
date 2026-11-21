@@ -7,7 +7,7 @@ import { stageOf } from '../../js/growth.js';
 
 const ACTIVE_DAYS = 30;
 
-export function createNeighborhood(db, store, social) {
+export function createNeighborhood(db, store, social, social2 = null) {
   const q = {
     recent: db.prepare('SELECT id FROM players WHERE updated > ? ORDER BY random() LIMIT 60'),
   };
@@ -25,6 +25,8 @@ export function createNeighborhood(db, store, social) {
       color: WALLPAPERS[s.den?.wallpaper]?.swatch || '#4f6b4a',
       cozy: core.coziness(s),
       equipped: s.equipped,
+      door: s.door,
+      companion: s.companions?.active || null,
       home: !s.mission,
       sleeping: !!s.sleeping,
       birthday: core.celebratesBirthday(s),
@@ -67,6 +69,22 @@ export function createNeighborhood(db, store, social) {
         code: social.codeOf(otherId),
         otter: { name: s.name, level: s.level, stats: s.stats, equipped: s.equipped, sleeping: s.sleeping, mission: s.mission ? { id: s.mission.id } : null, den: s.den, persona: s.persona, created: s.created, sets: s.sets, collection: s.collection },
       };
+    },
+
+    // Water a friend's dry garden plots. Their harvest gets a bonus; you get a few pearls.
+    waterFriend(meId, otherId) {
+      if (!otherId || !social.areFriends(meId, otherId)) return { status: 403, error: 'You can only water friends\' gardens.' };
+      let n = 0;
+      let owner = '';
+      store.mutate(otherId, (s) => {
+        owner = s.name;
+        const now = Date.now();
+        s.garden.plots.forEach((p, k) => { if (p && !p.wateredAt && core.water(s, k, now, { friend: true }).ok) n += 1; });
+      });
+      if (!n) return { status: 409, error: 'Their garden is already watered. 🌱' };
+      const me = store.mutate(meId, (s) => { s.pearls += 3; core.grow(s, 'social'); });
+      social2?.notify(otherId, meId, 'garden', `💧 ${me.state.name || 'A friend'} watered ${n} plant${n === 1 ? '' : 's'} in your garden! They'll grow a bigger harvest.`);
+      return { status: 200, msg: `💧 You watered ${n} plant${n === 1 ? '' : 's'} in ${owner}'s garden! +3 pearls`, state: me.state, version: me.version };
     },
 
     setPublic(meId, on) {

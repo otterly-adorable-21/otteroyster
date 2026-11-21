@@ -22,6 +22,10 @@ care button is pressed. Until a file is here, the built-in effects play instead.
 | `hug` | Hugging a friend's otter |
 | `outfit` | Putting on clothes |
 | `donate` | Donating to the Pond Museum |
+| `companion-play` | Playing with your pet companion |
+| `plant` | Planting a seed in the garden |
+| `water` | Watering the garden |
+| `harvest` | Harvesting the garden |
 
 On tabs where the pond isn't showing (Den, Explore, Friends), the animation plays
 in a little pop-up in the middle of the screen instead.
@@ -32,9 +36,10 @@ Add the extension that matches your file, e.g. `bath.webp`.
 video with a transparent background. Use a transparent background so the pond
 shows through.
 
-**Size:** square-ish, about **420 × 520 px** (the otter's spot on the pond is 214 × 262,
-so 2× keeps it sharp on phones). Keep the otter roughly centered with its feet near
-the bottom, like the drawn otter, so it lines up.
+**Size:** **800 × 1016 px**, the same canvas as the still otter and the clothes
+(`assets/art/otter/_template.png` has guide lines). Keep the otter in the same spot
+as in the template so the animation lines up when it swaps in. To keep files small
+you can export at half size, **400 × 508**: same shape, same placement.
 
 **Length:** about 2–3 seconds. By default the animation *replaces* the drawn otter
 while it plays, then the drawn otter comes back.

@@ -24,6 +24,10 @@ export const SLOTS = {
   hug: { duration: 2000, label: 'Hugging a friend' },
   outfit: { duration: 1800, label: 'Putting on an outfit' },
   donate: { duration: 2200, label: 'Donating to the museum' },
+  'companion-play': { duration: 2200, label: 'Playing with your companion' },
+  plant: { duration: 1800, label: 'Planting a seed' },
+  water: { duration: 1800, label: 'Watering the garden' },
+  harvest: { duration: 2200, label: 'Harvesting the garden' },
 };
 
 let manifest = null; // optional assets/animations/animations.json

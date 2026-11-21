@@ -347,6 +347,13 @@ test('friends on Discord: add, accept, hug, gift, open', async () => {
   assert.match(text(), /Friendship/);
 });
 
+test('garden and companion on Discord', async () => {
+  await cmd(users.ana, 'garden');
+  assert.match(text(), /Garden/);
+  await cmd(users.ana, 'companion');
+  assert.match(text(), /ompanion/);
+});
+
 test('museum on Discord', async () => {
   await cmd(users.ana, 'museum');
   assert.match(text(), /Pond Museum/);

@@ -3,6 +3,9 @@ import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelec
 import { otterSVG } from '../../../js/otter.js';
 import { STAT_INFO, mood, coziness, COZY_MAX, personaInfo, stageOf } from '../../../js/core.js';
 import { denSVG } from '../../../js/den.js';
+import { companionSVG } from '../../../js/extras-draw.js';
+import { activeCompanion } from '../../../js/core.js';
+import { COMPANIONS, BOND_NAMES, bondLevel } from '../../../js/companions.js';
 
 export const COLOR = 0x1f8f95;
 export const GOLD = 0xd9b45a;
@@ -78,7 +81,8 @@ const STAR = (x, y, r) => `<path d="M${x},${y - r} C${x + r * 0.15},${y - r * 0.
 
 function sceneSVG(s) {
   const night = s.sleeping;
-  const otter = s.mission ? '' : `<svg x="140" y="28" width="200" height="250" viewBox="0 -20 200 250" overflow="visible">${otterSVG(s)}</svg>`;
+  const comp = activeCompanion(s);
+  const otter = s.mission ? '' : `<svg x="140" y="24" width="200" height="254" viewBox="0 -24 200 254" overflow="visible">${otterSVG(s)}</svg>${comp ? `<svg x="88" y="196" width="70" height="70" viewBox="0 0 100 100">${companionSVG(comp.id, { sleeping: s.sleeping })}</svg>` : ''}`;
   const away = s.mission
     ? '<g fill="#fff" opacity=".8"><circle cx="240" cy="170" r="10"/><circle cx="260" cy="140" r="7"/><circle cx="248" cy="114" r="5"/><circle cx="264" cy="94" r="4"/></g><ellipse cx="240" cy="190" rx="60" ry="14" fill="none" stroke="#fff" stroke-opacity=".4" stroke-width="2"/>'
     : '<ellipse cx="240" cy="262" rx="78" ry="14" fill="#fff" opacity=".18"/>';
@@ -119,6 +123,8 @@ export function petCard(s, { title, extra = '', footer } = {}) {
     { name: 'Personality', value: pi.trait ? `${pi.trait.icon} **${pi.trait.name}**${pi.also ? ` (and a bit ${pi.also.icon} ${pi.also.name.toLowerCase()})` : ''}\n*${pi.trait.perk}*` : '🌱 Still discovering who they are…', inline: false },
     { name: 'Favorites', value: `${pi.fav.snack.icon} ${pi.fav.snack.name} · ${pi.fav.place.icon} ${pi.fav.place.name} · ${pi.fav.game.icon} ${pi.fav.game.name}`, inline: false },
   );
+  const comp = activeCompanion(s);
+  if (comp) e.addFields({ name: 'Companion', value: `${comp.icon} **${comp.name}** the ${COMPANIONS[comp.id].name} · ${BOND_NAMES[bondLevel(comp.bond)]}`, inline: false });
   if (footer) e.setFooter({ text: footer });
   const file = petAttachment(s);
   if (file) e.setImage('attachment://otter.png');
