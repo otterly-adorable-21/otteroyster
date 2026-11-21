@@ -1,7 +1,7 @@
 // Discord UI helpers: embeds, buttons, the pet picture.
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, AttachmentBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { otterSVG } from '../../../js/otter.js';
-import { STAT_INFO, mood, coziness, COZY_MAX } from '../../../js/core.js';
+import { STAT_INFO, mood, coziness, COZY_MAX, personaInfo } from '../../../js/core.js';
 import { denSVG } from '../../../js/den.js';
 
 export const COLOR = 0x1f8f95;
@@ -114,6 +114,11 @@ export function petAttachment(s) {
 export function petCard(s, { title, extra = '', footer } = {}) {
   const e = embed(title ?? `${s.name} 🦦`, `**Level ${s.level}**  ·  ${moodLine(s)}\n${statLines(s)}${extra ? `\n\n${extra}` : ''}`);
   e.addFields({ name: 'Pearls', value: `⚪ ${s.pearls}`, inline: true }, { name: 'XP', value: `${s.xp}/${40 + s.level * 30}`, inline: true });
+  const pi = personaInfo(s);
+  e.addFields(
+    { name: 'Personality', value: pi.trait ? `${pi.trait.icon} **${pi.trait.name}**${pi.also ? ` (and a bit ${pi.also.icon} ${pi.also.name.toLowerCase()})` : ''}\n*${pi.trait.perk}*` : '🌱 Still discovering who they are…', inline: false },
+    { name: 'Favorites', value: `${pi.fav.snack.icon} ${pi.fav.snack.name} · ${pi.fav.place.icon} ${pi.fav.place.name} · ${pi.fav.game.icon} ${pi.fav.game.name}`, inline: false },
+  );
   if (footer) e.setFooter({ text: footer });
   const file = petAttachment(s);
   if (file) e.setImage('attachment://otter.png');

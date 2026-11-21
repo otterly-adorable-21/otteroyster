@@ -683,3 +683,20 @@ details.cmd-list[open] summary { margin-bottom: 6px; }
 .quest.done { opacity: .7; }
 .quest-done { font-size: 1.4rem; }
 .finds.two { grid-template-columns: repeat(2, 1fr); }
+
+/* ---------- personality ---------- */
+.snack { position: relative; }
+.fav-heart { position: absolute; top: 4px; right: 6px; font-size: .8rem; }
+.persona { display: grid; gap: 12px; }
+.persona-head { display: flex; gap: 12px; align-items: flex-start; }
+.persona-head b { font-family: var(--display); font-size: 1.25rem; }
+.persona-icon { font-size: 2rem; width: 54px; height: 54px; flex: none; display: grid; place-items: center; border-radius: 50%; background: radial-gradient(circle at 50% 35%, #fff, #fff3bf 60%, #f3d98c); box-shadow: 0 0 0 2px var(--gold); }
+.persona-perk { margin-top: 4px; font-size: .85rem; font-weight: 800; color: var(--teal); }
+.persona-bars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 12px; }
+.persona-bar { display: flex; align-items: center; gap: 6px; }
+.persona-bar .bar { flex: 1; margin: 0; background: #e8efe9; }
+.persona-bar .bar > div { background: linear-gradient(90deg, var(--gold), var(--gold-light)); }
+.persona-favs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: .85rem; font-weight: 700; }
+.fav-chip { background: #fff4f6; border-radius: 99px; padding: 3px 10px; box-shadow: inset 0 0 0 1px #f8c6d2; }
+.fav-tag { font-family: 'Nunito', sans-serif; font-size: .7rem; font-weight: 800; color: #c2255c; background: #fff0f4; padding: 2px 7px; border-radius: 99px; vertical-align: middle; white-space: nowrap; }
+.visit-persona { font-size: .9rem; margin: 4px 0; }

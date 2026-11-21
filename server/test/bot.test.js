@@ -84,6 +84,8 @@ test('pet care, adoption, daily chest, missions', async () => {
   assert.equal(lastOut(i)[0], 'modal');
   await submit(users.ana, 'adoptname:100', 'Pebble');
   assert.match(text(), /Welcome to the family/);
+  assert.match(text(), /Personality/);
+  assert.match(text(), /Favorites/);
   assert.equal(store.getByDiscord('100').state.name, 'Pebble');
 
   await choose(users.ana, 'pet:100:feed', 'kelp');

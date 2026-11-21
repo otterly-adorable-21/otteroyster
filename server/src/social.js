@@ -66,6 +66,7 @@ export function createSocial(db, store) {
       away: !!s.mission,
       sleeping: !!s.sleeping,
       equipped: s.equipped,
+      trait: core.traitOf(s).trait,
       points: rel?.points || 0,
       friendship: friendLevel(rel?.points || 0).name,
     };
@@ -139,13 +140,16 @@ export function createSocial(db, store) {
     // A friend's public otter + den. Visiting once a day grows friendship.
     visit(me, otherId) {
       if (!otherId || !areFriends(me, otherId)) return err(403, 'You can only visit friends.');
-      if (onceToday(me, otherId, 'visit')) addPoints(me, otherId, FRIEND_POINTS.visit);
+      if (onceToday(me, otherId, 'visit')) {
+        addPoints(me, otherId, FRIEND_POINTS.visit);
+        store.mutate(me, (s) => core.grow(s, 'social'));
+      }
       const { state } = store.mutate(otherId, () => null);
       const rel = relation(me, otherId);
       return {
         status: 200,
         friend: card(otherId, rel),
-        otter: { name: state.name, level: state.level, stats: state.stats, equipped: state.equipped, sleeping: state.sleeping, mission: state.mission ? { id: state.mission.id } : null, den: state.den, collection: state.collection, sets: state.sets, best: state.best },
+        otter: { name: state.name, level: state.level, stats: state.stats, equipped: state.equipped, persona: state.persona, created: state.created, sleeping: state.sleeping, mission: state.mission ? { id: state.mission.id } : null, den: state.den, collection: state.collection, sets: state.sets, best: state.best },
         huggedToday: doneToday(me, otherId, 'hug'),
       };
     },
@@ -154,13 +158,15 @@ export function createSocial(db, store) {
       if (!otherId || !areFriends(me, otherId)) return err(403, 'You can only hug friends\' otters.');
       if (!onceToday(me, otherId, 'hug')) return err(429, "You've already hugged their otter today. Come back tomorrow!");
       addPoints(me, otherId, FRIEND_POINTS.hug);
-      store.mutate(me, (s) => core.trackQuest(s, 'hug'));
+      store.mutate(me, (s) => { core.trackQuest(s, 'hug'); core.grow(s, 'social', 2); });
+      let amount = HUG_HAPPINESS;
       const { state } = store.mutate(otherId, (s) => {
         if (!s.name) return;
-        s.stats.happiness = core.clamp(s.stats.happiness + HUG_HAPPINESS);
+        if (core.hasTrait(s, 'social')) amount = Math.round(HUG_HAPPINESS * 1.5);
+        s.stats.happiness = core.clamp(s.stats.happiness + amount);
         core.log(s, `${myName} stopped by and gave ${s.name} a big hug! 🤗`);
       });
-      return { status: 200, msg: `🤗 You gave ${state.name} a big hug! (+${HUG_HAPPINESS} happiness)` };
+      return { status: 200, msg: `🤗 You gave ${state.name} a big hug! (+${amount} happiness${amount > HUG_HAPPINESS ? ', they love hugs 💞' : ''})` };
     },
 
     // kind: 'pearls' (amount) | 'furniture' (item from your storage)
@@ -188,6 +194,7 @@ export function createSocial(db, store) {
           sent = { kind, item, amount: 1 };
         } else { problem = 'Unknown gift.'; return; }
         core.log(s, `Sent a gift to a friend. 🎁`);
+        core.grow(s, 'social', 2);
       });
       if (problem) return err(400, problem);
       q.giftInsert.run(me, otherId, sent.kind, sent.item, sent.amount, cleanNote || null, Date.now());

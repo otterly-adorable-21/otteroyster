@@ -4,6 +4,7 @@ import { ITEMS, SNACKS, MISSIONS, GAME_LIST } from './data.js';
 import { FURNITURE, WALLPAPERS, FLOORS, STARTER_DEN, ZONES, zoneOf, clampPos } from './den-data.js';
 import { LOC, FINDS, RARITY, MISSION_LOC, EXPLORE_ENERGY, EXPLORE_COOLDOWN_MIN, SET_REWARD } from './world.js';
 import { activeEvent, questsFor, EVENT, EVENT_FIND_CHANCE, TOKENS_PER_ACTIVITY } from './events.js';
+import { TRAITS, TRAIT_IDS, blankPersona, favoritesFor, traitOf, hasTrait } from './personality.js';
 
 export const SAVE_VERSION = 2;
 
@@ -29,6 +30,7 @@ export function defaultState(now = Date.now()) {
     floors: ['earth'],
     collection: {},
     events: {},
+    persona: blankPersona(now),
     explored: {},
     sets: [],
     best: {},
@@ -68,6 +70,10 @@ export function normalize(saved) {
   }
   s.wallpapers = Array.isArray(saved.wallpapers) ? saved.wallpapers : ['moss'];
   s.collection = { ...(saved.collection || {}) };
+  s.persona = {
+    pts: { ...blankPersona(s.created).pts, ...(saved.persona?.pts || {}) },
+    fav: favoritesFor(s.created), // always derived from birth time, so every device agrees
+  };
   s.events = { ...(saved.events || {}) };
   s.explored = { ...(saved.explored || {}) };
   s.sets = Array.isArray(saved.sets) ? saved.sets : [];
@@ -141,7 +147,7 @@ export function tick(s, now = Date.now()) {
     if (s.mission) {
       stat(s, 'hunger', RATES.hunger * 0.5 * mins);
     } else if (s.sleeping) {
-      stat(s, 'energy', 2.5 * (1 + coziness(s) / 60) * mins);
+      stat(s, 'energy', 2.5 * (1 + coziness(s) / 60) * (hasTrait(s, 'sleepy') ? 1.3 : 1) * mins);
       stat(s, 'hunger', RATES.hunger * 0.5 * mins);
       stat(s, 'clean', RATES.clean * 0.5 * mins);
       if (s.stats.energy >= 100) {
@@ -153,7 +159,7 @@ export function tick(s, now = Date.now()) {
       const grumpy = s.stats.hunger < 25 || s.stats.clean < 25 ? 2 : 1;
       stat(s, 'hunger', RATES.hunger * mins);
       stat(s, 'energy', RATES.energy * mins);
-      stat(s, 'clean', RATES.clean * mins);
+      stat(s, 'clean', RATES.clean * (hasTrait(s, 'tidy') ? 0.7 : 1) * mins);
       stat(s, 'happiness', RATES.happiness * grumpy * (1 - coziness(s) / 60) * mins);
     }
   }
@@ -173,12 +179,16 @@ export function feed(s, id) {
   if (s.stats.hunger >= 98) return no(`${s.name} is too full to eat!`);
   if (s.pearls < snack.price) return no('Not enough pearls.');
   s.pearls -= snack.price;
+  const foodie = hasTrait(s, 'foodie');
+  const fav = s.persona.fav.snack === id;
   stat(s, 'hunger', snack.hunger);
-  stat(s, 'happiness', snack.happiness);
+  stat(s, 'happiness', snack.happiness + (foodie ? 5 : 0) + (fav ? (foodie ? 20 : 10) : 0));
+  grow(s, 'foodie');
   const ups = addXP(s, 2);
   log(s, `${s.name} ate ${snack.name.toLowerCase()}.`);
   trackQuest(s, 'feed');
-  return ok(`${s.name} munched the ${snack.name.toLowerCase()}! 😋`, { fx: [snack.icon, '😋'], ups });
+  const msg = fav ? `${s.name} LOVES ${snack.name.toLowerCase()}! It's their favorite! 💕` : `${s.name} munched the ${snack.name.toLowerCase()}! 😋`;
+  return ok(msg, { fx: fav ? [snack.icon, '💕', '😋'] : [snack.icon, '😋'], ups, fav });
 }
 
 export function cuddle(s) {
@@ -200,6 +210,7 @@ export function bath(s) {
   stat(s, 'happiness', 4);
   const ups = addXP(s, 2);
   log(s, `${s.name} had a bubble bath.`);
+  grow(s, 'tidy');
   trackQuest(s, 'care');
   return ok(`${s.name} splashes around in the bubbles! 🫧`, { fx: ['🫧', '🫧', '💧'], ups });
 }
@@ -208,7 +219,7 @@ export function toggleSleep(s) {
   if (!s.name) return no(busy(s));
   if (s.mission) return no(busy(s));
   s.sleeping = !s.sleeping;
-  if (s.sleeping) log(s, `${s.name} curled up for a nap.`);
+  if (s.sleeping) { log(s, `${s.name} curled up for a nap.`); grow(s, 'sleepy'); }
   return ok(s.sleeping ? `${s.name} curled up for a nap. 💤` : `${s.name} woke up! ☀️`);
 }
 
@@ -271,8 +282,9 @@ export function recallMission(s) {
 function finishMission(s, now) {
   const m = MISSIONS.find((x) => x.id === s.mission.id);
   s.mission = null;
-  const pearls = rand(m.pearls[0], m.pearls[1]);
+  const pearls = Math.round(rand(m.pearls[0], m.pearls[1]) * (hasTrait(s, 'adventurous') ? 1.2 : 1));
   s.pearls += pearls;
+  grow(s, 'adventurous', 2);
   stat(s, 'happiness', 10);
   let found = null;
   for (const [id, chance] of m.loot) {
@@ -286,7 +298,7 @@ function finishMission(s, now) {
   let discovery = null;
   const locId = MISSION_LOC[m.id];
   if (locId && Math.random() < 0.7) {
-    const d = discover(s, locId, 1.5);
+    const d = discover(s, locId, hasTrait(s, 'adventurous') ? 1.9 : 1.5);
     discovery = d.find.id;
     ups += d.ups;
   }
@@ -326,9 +338,12 @@ export function payForGame(s, gameId) {
 export function rewardGame(s, gameId, pearls, best, lowerIsBetter = false) {
   const g = GAME_LIST.find((x) => x.id === gameId);
   const cap = g?.maxPearls ?? 60;
-  const p = Math.max(0, Math.min(cap, Math.round(pearls)));
+  const favGame = s.persona.fav.game === gameId;
+  const boost = (hasTrait(s, 'competitive') ? 1.15 : 1) * (favGame ? 1.1 : 1);
+  const p = Math.max(0, Math.min(Math.round(cap * boost), Math.round(pearls * boost)));
   s.pearls += p;
-  stat(s, 'happiness', 10);
+  stat(s, 'happiness', 10 + (favGame ? 5 : 0));
+  grow(s, 'competitive');
   s.plays[gameId] = (s.plays[gameId] || 0) + 1;
   let record = false;
   if (best != null) {
@@ -342,12 +357,13 @@ export function rewardGame(s, gameId, pearls, best, lowerIsBetter = false) {
   log(s, `${s.name} played ${g ? g.name : gameId} and earned ${p} pearls.`);
   trackQuest(s, 'game');
   eventTokens(s, TOKENS_PER_ACTIVITY.game);
-  return { pearls: p, record, ups };
+  return { pearls: p, record, ups, favGame };
 }
 
 // Simple pearl reward used by Discord quick games (no energy cost).
 export function grantPearls(s, n, reason) {
-  const p = Math.max(0, Math.round(n));
+  const p = Math.max(0, Math.round(n * (hasTrait(s, 'competitive') ? 1.15 : 1)));
+  if (n > 0) grow(s, 'competitive');
   s.pearls += p;
   if (reason) log(s, reason);
   return p;
@@ -500,6 +516,10 @@ export function explore(s, locId, now = Date.now()) {
   stat(s, 'happiness', 3);
   s.explored[locId] = now;
   trackQuest(s, 'explore', 1, now);
+  grow(s, 'adventurous');
+  const favPlace = s.persona.fav.place === locId;
+  if (favPlace) stat(s, 'happiness', 3);
+  const loves = favPlace ? `${s.name} loves ${loc.name}! 💕 ` : '';
   const tokens = eventTokens(s, TOKENS_PER_ACTIVITY.explore, now);
   const ev = activeEvent(now);
   if (ev && Math.random() < EVENT_FIND_CHANCE) {
@@ -514,13 +534,13 @@ export function explore(s, locId, now = Date.now()) {
     const p = rand(4, 12);
     s.pearls += p;
     const ups = addXP(s, 2);
-    return ok(`${s.name} poked around ${loc.name} and found ${p} loose pearls.`, { pearls: p, ups, find: null });
+    return ok(`${loves}${s.name} poked around ${loc.name} and found ${p} loose pearls.`, { pearls: p, ups, find: null });
   }
-  const d = discover(s, locId);
+  const d = discover(s, locId, (hasTrait(s, 'adventurous') ? 1.3 : 1) * (favPlace ? 1.2 : 1));
   const r = RARITY[d.find.rarity];
-  const msg = d.isNew
+  const msg = loves + (d.isNew
     ? `${d.find.icon} New discovery! ${s.name} found a ${d.find.name} (${r.name})!`
-    : `${d.find.icon} ${s.name} found another ${d.find.name}.`;
+    : `${d.find.icon} ${s.name} found another ${d.find.name}.`);
   return ok(msg + (d.setDone ? ` 🏅 ${loc.name} collection complete! +${SET_REWARD.pearls} pearls` : ''), { find: d.find, isNew: d.isNew, setDone: d.setDone, ups: d.ups, fx: [d.find.icon, '✨'] });
 }
 
@@ -598,4 +618,32 @@ export function buyEventItem(s, id, now = Date.now()) {
   }
   log(s, `Got the limited ${name} from ${st.event.name}! ✨`, now);
   return ok(`✨ ${name} is yours to keep forever!`, { fx: [st.event.icon, '✨'] });
+}
+
+// ---------- personality ----------
+export { TRAITS, traitOf, hasTrait };
+
+// Add points toward a trait (each nudges your otter's personality).
+export function grow(s, trait, n = 1) {
+  if (!s.name || !s.persona || !TRAIT_IDS.includes(trait)) return;
+  const before = traitOf(s).trait;
+  s.persona.pts[trait] = (s.persona.pts[trait] || 0) + n;
+  const after = traitOf(s).trait;
+  if (after && after !== before) log(s, `${s.name} is becoming quite ${TRAITS[after].name.toLowerCase()}! ${TRAITS[after].icon}`);
+}
+
+// Everything the UI needs to describe an otter's personality.
+export function personaInfo(s) {
+  const t = traitOf(s);
+  const fav = s.persona?.fav || favoritesFor(s.created);
+  return {
+    trait: t.trait ? { id: t.trait, ...TRAITS[t.trait] } : null,
+    also: t.also ? { id: t.also, ...TRAITS[t.also] } : null,
+    ranked: t.ranked,
+    fav: {
+      snack: SNACKS.find((x) => x.id === fav.snack),
+      place: LOC[fav.place],
+      game: GAME_LIST.find((x) => x.id === fav.game),
+    },
+  };
 }

@@ -138,6 +138,7 @@ function endGame(g, r) {
     <div class="result">
       <div class="result-icon">${g.icon}</div>
       <h2>${res.record ? 'New record! 🏆' : 'Nice job!'}</h2>
+      ${res.favGame ? `<p>${esc(state.name)} loves this game! 💕 (+10% pearls)</p>` : ''}
       <p>${r.summary}</p>
       <div class="rewards"><span class="chip"><span class="pearl-icon"></span> +${res.pearls}</span><span class="chip">💛 +10</span></div>
       <div class="row">
@@ -281,6 +282,27 @@ function panelEvent() {
     <div class="settings"><button class="link" data-tab="home">← Back to ${esc(state.name)}</button></div>`;
 }
 
+function personaCard() {
+  if (!state.name) return '';
+  const pi = core.personaInfo(state);
+  const top = pi.ranked[0][1] || 1;
+  return `<h2 class="section-title">Personality</h2>
+    <div class="card persona">
+      <div class="persona-head"><span class="persona-icon">${pi.trait ? pi.trait.icon : '🌱'}</span>
+        <div><b>${pi.trait ? `${esc(state.name)} is ${pi.trait.name.toLowerCase()}` : `${esc(state.name)} is still discovering who they are`}</b>
+        <div class="muted">${pi.trait ? `${pi.trait.desc}${pi.also ? ` Also a bit ${pi.also.name.toLowerCase()} ${pi.also.icon}.` : ''}` : 'Their personality grows from how you play together.'}</div>
+        ${pi.trait ? `<div class="persona-perk">✨ ${pi.trait.perk}</div>` : ''}</div></div>
+      <div class="persona-bars">${pi.ranked.map(([id, pts]) => `<div class="persona-bar" title="${core.TRAITS[id].name}: grows from ${core.TRAITS[id].from}">
+        <span>${core.TRAITS[id].icon}</span><div class="bar"><div style="width:${Math.min(100, (pts / Math.max(top, 6)) * 100)}%"></div></div></div>`).join('')}</div>
+      <div class="persona-favs">
+        <span>❤️ Favorites:</span>
+        <span class="fav-chip">${pi.fav.snack.icon} ${pi.fav.snack.name}</span>
+        <span class="fav-chip">${pi.fav.place.icon} ${pi.fav.place.name}</span>
+        <span class="fav-chip">${pi.fav.game.icon} ${pi.fav.game.name}</span>
+      </div>
+    </div>`;
+}
+
 function panelHome() {
   const claimed = state.lastDaily === core.dayKey();
   const asleep = state.sleeping;
@@ -288,7 +310,7 @@ function panelHome() {
     <h2 class="section-title">Snacks</h2>
     <div class="snacks">
       ${SNACKS.map((s) => `<button class="snack" data-action="feed" data-id="${s.id}" ${state.pearls < s.price ? 'disabled' : ''}>
-        <span class="snack-icon">${s.icon}</span><span class="snack-name">${s.name}</span>
+        <span class="snack-icon">${s.icon}</span>${state.persona?.fav.snack === s.id ? '<span class="fav-heart" title="Favorite!">❤️</span>' : ''}<span class="snack-name">${s.name}</span>
         <span class="snack-price">${s.price ? `<span class="pearl-icon"></span> ${s.price}` : 'Free'}</span></button>`).join('')}
     </div>
     <h2 class="section-title">Care</h2>
@@ -298,6 +320,7 @@ function panelHome() {
       <button class="action" data-action="sleep"><span>${asleep ? '☀️' : '🌙'}</span>${asleep ? 'Wake up' : 'Nap'}</button>
       <button class="action ${claimed ? '' : 'glow'}" data-action="daily"><span>🎁</span>${claimed ? 'Gift claimed' : 'Daily gift'}</button>
     </div>
+    ${personaCard()}
     <h2 class="section-title">Journal</h2>
     <ul class="journal">
       ${state.log.slice(0, 6).map((l) => `<li><time>${new Date(l.t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</time>${esc(l.msg)}</li>`).join('') || '<li>Nothing yet. Say hi to your otter!</li>'}
@@ -391,7 +414,7 @@ function panelMissions() {
       <button class="btn small" data-action="journal">📖 Journal ${found}/${TOTAL_FINDS}</button></div>
     <div class="map-wrap">${mapSVG(state, loc.id)}</div>
     <div class="card loc-card ${locked ? 'locked' : ''}">
-      <div class="loc-title"><span class="loc-icon">${loc.icon}</span><div><h3>${loc.name}${state.sets.includes(loc.id) ? ' 🏅' : ''}</h3><p class="muted">${loc.desc}</p></div></div>
+      <div class="loc-title"><span class="loc-icon">${loc.icon}</span><div><h3>${loc.name}${state.sets.includes(loc.id) ? ' 🏅' : ''}${state.persona?.fav.place === loc.id ? ` <span class="fav-tag">❤️ ${esc(state.name)}'s favorite</span>` : ''}</h3><p class="muted">${loc.desc}</p></div></div>
       ${loc.id === 'lilypond' ? '<div class="row"><button class="btn small" data-tab="home">🦦 Visit your otter</button><button class="btn small" data-tab="den">🏡 Go to the den</button></div>' : ''}
       ${exploreBtn}
       ${busyMsg ? `<p class="muted small-note">${esc(state.name)} is ${busyMsg === 'away' ? 'out on a mission' : 'napping'} right now.</p>` : ''}
@@ -416,7 +439,7 @@ function panelArcade() {
       <div class="card arcade-card">
         <button class="arcade-play" data-action="game" data-id="${g.id}" aria-label="Play ${g.name}">
           <span class="arcade-icon">${g.icon}</span>
-          <b>${g.name}</b>
+          <b>${g.name}${state.persona?.fav.game === g.id ? ' <span class="fav-tag">❤️ favorite</span>' : ''}</b>
           <span class="muted">${g.desc}</span>
         </button>
         <div class="arcade-foot"><span class="muted">⚡ ${g.energy}${bestLabel(g) ? ` · ${bestLabel(g)}` : ''}</span>
@@ -453,7 +476,7 @@ function friendCard(f, k) {
   return `<div class="card friend">
     <div class="friend-art">${miniOtter(f, `fr${k}`)}</div>
     <div class="friend-info"><b>${esc(f.name)}</b>${f.owner ? `<span class="muted"> · ${esc(f.owner)}</span>` : ''}
-      <div class="muted">Lv ${f.level} · ${f.away ? '🧭 exploring' : f.sleeping ? '💤 napping' : f.mood === 'happy' ? '😊 happy' : f.mood === 'sad' ? '🥺 needs love' : '🙂 okay'}</div>
+      <div class="muted">${f.trait && core.TRAITS[f.trait] ? `${core.TRAITS[f.trait].icon} ${core.TRAITS[f.trait].name} · ` : ''}Lv ${f.level} · ${f.away ? '🧭 exploring' : f.sleeping ? '💤 napping' : f.mood === 'happy' ? '😊 happy' : f.mood === 'sad' ? '🥺 needs love' : '🙂 okay'}</div>
       <div class="hearts" title="${f.points} friendship points">${heartsText(f.points)} <small>${f.friendship}</small></div></div>
     <div class="friend-actions">
       <button class="btn small primary" data-action="fr-visit" data-code="${f.code}">Visit</button>
@@ -546,6 +569,7 @@ async function visitFriend(code) {
     <div class="den-stage visit-den">${denSVG(st, { extraAttrs: `class="den-svg" role="img" aria-label="${esc(o.name)}'s den"` }).replace(/den-otter-/g, 'visit-otter-')}</div>
     <div class="visit-info">
       <div class="hearts">${heartsText(r.friend.points)} <small>${r.friend.friendship}${friendLevel(r.friend.points).next ? ` · ${friendLevel(r.friend.points).next - r.friend.points} to next` : ''}</small></div>
+      ${(() => { const pi = core.personaInfo(st); return `<div class="visit-persona">${pi.trait ? `${pi.trait.icon} <b>${pi.trait.name}</b>` : '🌱 Still discovering'} · ❤️ ${pi.fav.snack.icon} ${pi.fav.place.icon} ${pi.fav.game.icon}</div>`; })()}
       <div class="muted">Lv ${o.level} · 📖 ${found}/${TOTAL_FINDS} discoveries · 🏅 ${(o.sets || []).length} sets · ✨ coziness ${core.coziness(st)}</div>
     </div>
     <div class="row">
