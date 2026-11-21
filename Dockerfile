@@ -2,6 +2,8 @@
 # Works on Railway, Fly.io, Render, or any Docker host.
 FROM node:22-slim
 WORKDIR /app
+# A font so text in Shelly's Discord pictures can be drawn.
+RUN apt-get update && apt-get install -y --no-install-recommends fonts-dejavu-core && rm -rf /var/lib/apt/lists/*
 COPY server/package.json server/package-lock.json ./server/
 RUN cd server && npm ci --omit=dev
 COPY . .

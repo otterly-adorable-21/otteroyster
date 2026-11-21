@@ -1,6 +1,7 @@
 // Discord UI helpers: embeds, buttons, the pet picture.
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, AttachmentBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { otterSVG } from '../../../js/otter.js';
+import { MISSIONS } from '../../../js/data.js';
 import { STAT_INFO, mood, coziness, COZY_MAX, personaInfo, stageOf } from '../../../js/core.js';
 import { denSVG } from '../../../js/den.js';
 import { companionSVG } from '../../../js/extras-draw.js';
@@ -82,9 +83,15 @@ const STAR = (x, y, r) => `<path d="M${x},${y - r} C${x + r * 0.15},${y - r * 0.
 function sceneSVG(s) {
   const night = s.sleeping;
   const comp = activeCompanion(s);
-  const otter = s.mission ? '' : `<svg x="140" y="24" width="200" height="254" viewBox="0 -24 200 254" overflow="visible">${otterSVG(s)}</svg>${comp ? `<svg x="88" y="196" width="70" height="70" viewBox="0 0 100 100">${companionSVG(comp.id, { sleeping: s.sleeping, look: { color: comp.color, pattern: comp.pattern, acc: comp.acc } })}</svg>` : ''}`;
-  const away = s.mission
-    ? '<g fill="#fff" opacity=".8"><circle cx="240" cy="170" r="10"/><circle cx="260" cy="140" r="7"/><circle cx="248" cy="114" r="5"/><circle cx="264" cy="94" r="4"/></g><ellipse cx="240" cy="190" rx="60" ry="14" fill="none" stroke="#fff" stroke-opacity=".4" stroke-width="2"/>'
+  const look = comp ? { color: comp.color, pattern: comp.pattern, acc: comp.acc } : {};
+  // On a mission the otter is still shown, smaller and off in the distance.
+  const mis = s.mission ? MISSIONS.find((m) => m.id === s.mission.id) : null;
+  const otter = mis
+    ? `<svg x="250" y="70" width="120" height="152" viewBox="0 -24 200 254" overflow="visible">${otterSVG({ ...s, sleeping: false })}</svg>${comp ? `<svg x="214" y="170" width="44" height="44" viewBox="0 0 100 100">${companionSVG(comp.id, { look })}</svg>` : ''}`
+    : `<svg x="140" y="24" width="200" height="254" viewBox="0 -24 200 254" overflow="visible">${otterSVG(s)}</svg>${comp ? `<svg x="88" y="196" width="70" height="70" viewBox="0 0 100 100">${companionSVG(comp.id, { sleeping: s.sleeping, look })}</svg>` : ''}`;
+  const away = mis
+    ? `<ellipse cx="310" cy="222" rx="54" ry="10" fill="#fff" opacity=".2"/><path d="M200,236 q20,-8 40,0 t40,0 t40,0 t40,0" stroke="#fff" stroke-opacity=".45" stroke-width="3" fill="none"/>
+      <rect x="24" y="24" width="${Math.min(440, 190 + mis.name.length * 9.5)}" height="40" rx="20" fill="#0c3440" opacity=".85"/><text x="44" y="50" font-size="17" font-weight="700" fill="#f3d98c" font-family="sans-serif">Out exploring: ${mis.name.replace(/[<&>]/g, '')}</text>`
     : '<ellipse cx="240" cy="262" rx="78" ry="14" fill="#fff" opacity=".18"/>';
   return `<svg xmlns="http://www.w3.org/2000/svg" width="480" height="300" viewBox="0 0 480 300">
     <defs><radialGradient id="w" cx="50%" cy="55%" r="75%"><stop offset="0" stop-color="#9be8de"/><stop offset=".35" stop-color="#3cc7c0"/><stop offset=".75" stop-color="#1f8f95"/><stop offset="1" stop-color="#0c3440"/></radialGradient>
