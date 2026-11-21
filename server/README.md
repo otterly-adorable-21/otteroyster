@@ -51,14 +51,24 @@ and cover the linking/sync API.
 
 ## Host it
 
-The bot must stay online, so it needs an always-on Node host with a **persistent disk**
-for the SQLite file (`DB_PATH`). Good fits: Railway, Fly.io, or a small VPS. Hosts with a
-throwaway filesystem would lose everyone's otters on each restart unless you attach a
-volume.
+The server must stay online all the time and needs a **persistent disk** for the
+database. The repo includes a `Dockerfile`, so most hosts can build it straight
+from GitHub. Railway is the easiest:
 
-1. Deploy the **whole repo** (the server imports `../js`). The start command is `cd server && npm install && npm start`.
-2. Set the `.env` values as environment variables on the host. Point `DB_PATH` at the mounted volume.
-3. Give it the domain **api.otteroyster.online**: add a `CNAME` record at your registrar pointing to the host. The website automatically talks to `https://api.otteroyster.online` when it's served from otteroyster.online.
+1. Sign in at railway.com with GitHub → **New Project** → **Deploy from GitHub repo** → pick `otteroyster`.
+   In the service's **Settings**, set the branch to the one GitHub Pages uses. Railway finds the `Dockerfile` by itself.
+2. **Add a volume:** right-click the service → **Attach volume** → mount path `/data`. That's where everyone's otters are saved.
+3. **Variables** tab:
+   - `SITE_URL` = `https://otteroyster.online`
+   - `ALLOWED_ORIGINS` = `https://otteroyster.online,https://www.otteroyster.online`
+   - `DISCORD_TOKEN` and `DISCORD_APP_ID` (from the Discord steps above). Leave them out to run without the bot for now.
+4. **Settings → Networking → Custom domain:** enter `api.otteroyster.online`. Railway shows a `CNAME` record. Add it at your domain registrar.
+5. When the domain shows a green check, open https://api.otteroyster.online/api/info. It should say `"app":"otteroyster"`.
+   The website's Friends tab then connects automatically.
+
+Hosting like this usually costs a few dollars a month; check the host's current pricing.
+Fly.io and Render work the same way: deploy the `Dockerfile`, attach a volume at `/data`,
+and set the same variables.
 
 ## Bot commands
 
@@ -71,6 +81,9 @@ volume.
 | `/visit @friend` | Peek inside a friend's den |
 | `/explore place` | Explore a place on the map and discover creatures and treasures |
 | `/collection [@user]` | The collection journal |
+| `/friend add/list/remove` | Friends: add by @mention or friend code, accept requests, open gifts |
+| `/hug @friend` | Cheer up a friend's otter (once a day) |
+| `/gift @friend` | Send pearls (up to 100 a day) |
 | `/daily` | Pick one of three treasure chests (once a day) |
 | `/mission` | Start, check or recall an expedition |
 | `/play` | Solo: Trivia, Emoji Mystery, Word Scramble, Raft Rescue (hangman), Number Hunt, Higher or Lower, Rock Paper Scissors, Urchin Sweeper (minesweeper), Fishing |

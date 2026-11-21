@@ -16,6 +16,7 @@ minigames, and bring them along to Discord, where friends can play together.
   - Arcade: Oyster Dive, Fish Frenzy, Bubble Hop
   - Skill: Tide Fishing, Bubble Burst, Crab Catcher
   - Puzzle: Shell Match, Pearl Pop (match-3), Shell Shuffle, Word Tide (word search)
+- **Friends:** friend codes, visiting dens, daily hugs that cheer up friends' otters, gifts of pearls and furniture, and friendship levels. Works with a website-only account or through Discord.
 - **Discord bot:** the same otter follows you into Discord with 9 solo games, 3 friend challenges, 5 voice-chat party games, daily chests, missions and leaderboards. See [`server/README.md`](server/README.md).
 
 The website works on its own (progress saved in the browser). Linking Discord
@@ -38,6 +39,7 @@ js/data.js            items, snacks, missions, arcade catalog
 js/otter.js           the otter drawing + outfit layering
 js/den.js, den-data.js  the den drawing + furniture catalog (shared with the bot)
 js/world.js, map.js   places, discoveries and the world map
+js/social.js          friendship levels and gift limits
 js/main.js            website UI
 js/sync.js            talks to the server for Discord linking/sync
 js/assets.js          detects brand art in /assets
@@ -65,4 +67,4 @@ Then open http://localhost:8787 (website + API). For the website alone, any stat
 ## Deploying
 
 - **Website** → GitHub Pages: Settings → Pages → deploy from `main` / root. `CNAME` sets otteroyster.online. At your registrar, add `A` records for `@` → `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`, and a `CNAME` for `www` → `<github-username>.github.io`. Then tick **Enforce HTTPS**.
-- **Server + bot** → any always-on Node host with a persistent disk, at `api.otteroyster.online`. Step-by-step instructions are in [`server/README.md`](server/README.md).
+- **Server + bot** → any Docker host with a persistent volume (the repo has a `Dockerfile`), at `api.otteroyster.online`. A click-by-click Railway guide is in [`server/README.md`](server/README.md#host-it).

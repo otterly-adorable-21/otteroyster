@@ -5,9 +5,12 @@ import assert from 'node:assert/strict';
 import { openDb } from '../src/db.js';
 import { createStore } from '../src/players.js';
 import { createBot } from '../src/bot/index.js';
+import { createSocial } from '../src/social.js';
 
-const store = createStore(openDb(':memory:'));
-const { handle } = createBot({ store, siteUrl: 'https://otteroyster.online' });
+const db = openDb(':memory:');
+const store = createStore(db);
+const social = createSocial(db, store);
+const { handle } = createBot({ store, social, siteUrl: 'https://otteroyster.online' });
 
 const errors = [];
 const origError = console.error;
@@ -39,7 +42,7 @@ function interaction(user, opts) {
     isButton: () => !!opts.customId && !opts.values && !opts.fields,
     isStringSelectMenu: () => !!opts.values,
     isModalSubmit: () => !!opts.fields,
-    options: { getString: (k) => opts.options?.[k] ?? null, getUser: (k) => opts.options?.[k] ?? null },
+    options: { getString: (k) => opts.options?.[k] ?? null, getUser: (k) => opts.options?.[k] ?? null, getInteger: (k) => opts.options?.[k] ?? null, getSubcommand: () => opts.options?.getSub },
     fields: { getTextInputValue: () => opts.fields?.answer },
     async reply(p) { this.replied = true; this.out.push(['reply', ser(p)]); },
     async update(p) { this.replied = true; this.out.push(['update', ser(p)]); },
@@ -314,6 +317,30 @@ test('party games: impostor, trivia battle, hot potato, would you rather, forbid
 
   await cmd(users.ana, 'leaderboard', { game: 'd-wins' });
   assert.match(text(), /Ana|Pebble|Biscuit/);
+});
+
+test('friends on Discord: add, accept, hug, gift, open', async () => {
+  let i = await run(users.ana, { command: 'friend', options: { getSub: 'add', user: users.bo } });
+  assert.match(JSON.stringify(i.out), /Friend request sent/);
+  i = await run(users.bo, { command: 'friend', options: { getSub: 'list' } });
+  const acc = comps(lastOut(i)[1]).find((c) => c.custom_id?.includes(':acc:'));
+  assert.ok(acc, 'accept button shown');
+  await click(users.bo, acc.custom_id);
+  assert.match(text(), /Biscuit|Pebble/);
+  i = await cmd(users.ana, 'hug', { friend: users.bo });
+  assert.match(JSON.stringify(i.out), /big hug/);
+  i = await cmd(users.ana, 'hug', { friend: users.bo });
+  assert.match(JSON.stringify(i.out), /already hugged/);
+  i = await cmd(users.ana, 'hug', { friend: users.cy });
+  assert.match(JSON.stringify(i.out), /friends first/);
+  i = await run(users.ana, { command: 'gift', options: { friend: users.bo, pearls: 10 } });
+  assert.match(JSON.stringify(i.out), /sent/);
+  i = await run(users.bo, { command: 'friend', options: { getSub: 'list' } });
+  const open = comps(lastOut(i)[1]).find((c) => c.custom_id?.includes(':open:'));
+  await click(users.bo, open.custom_id);
+  assert.match(text(), /You opened: 10 pearls/);
+  await cmd(users.ana, 'visit', { friend: users.bo });
+  assert.match(text(), /Friendship/);
 });
 
 test('no handler errors were logged', () => {

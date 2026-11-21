@@ -8,6 +8,7 @@ import { FURNITURE, WALLPAPERS, FLOORS, DEN_CATS } from './den-data.js';
 import { denSVG, furniturePreviewSVG } from './den.js';
 import { LOCATIONS, LOC, RARITY, FINDS, TOTAL_FINDS, EXPLORE_ENERGY, SET_REWARD } from './world.js';
 import { mapSVG } from './map.js';
+import { heartsText, friendLevel, GIFT_PEARL_OPTIONS, GIFT_PEARLS_PER_DAY } from './social.js';
 
 // ---------- helpers ----------
 const $ = (s) => document.querySelector(s);
@@ -347,45 +348,147 @@ function panelArcade() {
     </div>`).join('') + `<p class="note">Games cost a little energy, earn pearls and make ${esc(state.name || 'your otter')} happy.</p>`;
 }
 
-function panelDiscord() {
-  const cmds = `
-    <h2 class="section-title">Bot commands</h2>
-    <div class="card cmd-list">
-      <div><code>/pet</code> See your otter and feed, cuddle, bathe or nap</div>
-      <div><code>/daily</code> Daily treasure chest</div>
-      <div><code>/den</code> Show off your den · <code>/visit @friend</code> Peek inside a friend's den</div>
-      <div><code>/mission</code> Send your otter on an adventure</div>
-      <div><code>/explore</code> Discover creatures and treasures · <code>/collection</code> Your journal</div>
-      <div><code>/play</code> Solo games: trivia, fishing, hangman, minesweeper and more</div>
-      <div><code>/challenge</code> Challenge a friend: Connect Four, Tic-Tac-Toe, Rock Paper Scissors</div>
-      <div><code>/party</code> Group games for voice chats: Impostor, Trivia Battle, Categories and more</div>
-      <div><code>/leaderboard</code> Top scores · <code>/profile</code> Show off your otter</div>
-    </div>`;
-  if (!sync.online) {
-    return `<div class="empty"><div class="empty-icon">📡</div><p>The OtterOyster server isn't reachable right now, so Discord linking is unavailable. Your otter is still saved on this device.</p>
-      <button class="btn" data-action="recheck">Try again</button></div>${cmds}`;
-  }
+// ---------- friends ----------
+let friendsData = null; // last /api/friends response
+let giftsData = [];
+let friendsLoading = false;
+
+async function loadFriends() {
+  if (!sync.online || !sync.linked || friendsLoading) return;
+  friendsLoading = true;
+  try {
+    const [f, g] = await Promise.all([sync.friends(), sync.gifts()]);
+    if (f.ok) friendsData = f;
+    if (g.ok) giftsData = g.gifts;
+  } catch { /* offline */ }
+  friendsLoading = false;
+  if (tab === 'friends') renderPanel();
+}
+
+// A small otter portrait from a friend's public info.
+function miniOtter(f, prefix) {
+  const lvl = f.mood === 'happy' ? 90 : f.mood === 'sad' ? 20 : 60;
+  const st = { ...core.defaultState(), stats: { hunger: lvl, happiness: lvl, energy: lvl, clean: lvl }, equipped: f.equipped || {}, sleeping: !!f.sleeping };
+  return `<svg viewBox="0 -24 200 254" aria-hidden="true">${otterSVG(st, { idPrefix: prefix })}</svg>`;
+}
+
+function friendCard(f, k) {
+  return `<div class="card friend">
+    <div class="friend-art">${miniOtter(f, `fr${k}`)}</div>
+    <div class="friend-info"><b>${esc(f.name)}</b>${f.owner ? `<span class="muted"> · ${esc(f.owner)}</span>` : ''}
+      <div class="muted">Lv ${f.level} · ${f.away ? '🧭 exploring' : f.sleeping ? '💤 napping' : f.mood === 'happy' ? '😊 happy' : f.mood === 'sad' ? '🥺 needs love' : '🙂 okay'}</div>
+      <div class="hearts" title="${f.points} friendship points">${heartsText(f.points)} <small>${f.friendship}</small></div></div>
+    <div class="friend-actions">
+      <button class="btn small primary" data-action="fr-visit" data-code="${f.code}">Visit</button>
+      <button class="btn small" data-action="fr-gift" data-code="${f.code}" data-name="${esc(f.name)}">🎁</button>
+    </div></div>`;
+}
+
+function discordSection() {
   const invite = sync.info?.invite;
-  if (sync.linked) {
-    return `<div class="card linked">
-      <div class="linked-head"><span class="big-emoji">🔗</span><div><b>Linked to Discord</b>
-      <div class="muted">${linkedName ? `Discord: <b>${esc(linkedName)}</b> · ` : ''}${esc(state.name || 'Your otter')} is shared between this website and the bot.</div></div></div>
-      <div class="row"><button class="btn" data-action="syncnow">Sync now</button><button class="btn" data-action="unlink">Unlink</button></div>
-    </div>${invite ? `<p class="note"><a href="${esc(invite)}" target="_blank" rel="noopener">Add the bot to a server or your account</a></p>` : ''}${cmds}`;
+  const cmds = `<details class="card cmd-list"><summary><b>Discord bot commands</b></summary>
+      <div><code>/pet</code> See your otter and feed, cuddle, bathe or nap</div>
+      <div><code>/friend</code> Add and list friends · <code>/hug @friend</code> · <code>/gift @friend</code></div>
+      <div><code>/den</code> Show off your den · <code>/visit @friend</code> Peek inside a friend's den</div>
+      <div><code>/mission</code> Adventures · <code>/explore</code> Discoveries · <code>/collection</code> Journal</div>
+      <div><code>/daily</code> Daily treasure chest · <code>/leaderboard</code> Top scores · <code>/profile</code></div>
+      <div><code>/play</code> Solo games: trivia, fishing, hangman, minesweeper and more</div>
+      <div><code>/challenge</code> Connect Four, Tic-Tac-Toe, Rock Paper Scissors with a friend</div>
+      <div><code>/party</code> Voice-chat games: Impostor, Trivia Battle, Hot Potato and more</div></details>`;
+  if (linkedName) {
+    return `<h2 class="section-title">Discord</h2><div class="card linked"><div class="linked-head"><span class="big-emoji">🔗</span><div><b>Linked to Discord</b>
+      <div class="muted">Discord: <b>${esc(linkedName)}</b>. ${esc(state.name || 'Your otter')} follows you into Discord.</div></div></div>
+      ${invite ? `<a class="btn small" href="${esc(invite)}" target="_blank" rel="noopener">Add the bot to a server</a>` : ''}</div>${cmds}`;
   }
-  return `<div class="card">
-    <img class="hero-art" src="${art.float || 'assets/web/otter-float.webp'}" alt="">
-    <h2 class="section-title flush">Bring ${esc(state.name || 'your otter')} to Discord 🦦</h2>
+  return `<h2 class="section-title">Discord</h2><div class="card">
+    <p class="flush-p">Bring ${esc(state.name || 'your otter')} into Discord to play games with friends in chats and voice calls.</p>
     <ol class="steps">
-      <li>${invite ? `<a href="${esc(invite)}" target="_blank" rel="noopener">Add the OtterOyster bot</a>` : 'Add the OtterOyster bot'} to your Discord account or a server.</li>
+      <li>${invite ? `<a href="${esc(invite)}" target="_blank" rel="noopener">Add the Otter &amp; Oyster bot</a>` : 'Add the Otter &amp; Oyster bot'} to your Discord account or a server.</li>
       <li>Type <code>/link</code> anywhere the bot is. It privately sends you a 6-letter code.</li>
       <li>Enter the code here:</li>
     </ol>
     <form class="link-form" data-form="link">
       <input name="code" maxlength="6" autocomplete="off" placeholder="ABC123" aria-label="Link code" required>
       <button class="btn primary" type="submit">Link</button>
+    </form></div>${cmds}`;
+}
+
+function panelFriends() {
+  if (!sync.online) {
+    return `<div class="empty"><div class="empty-icon">📡</div><p>The Otter &amp; Oyster server isn't reachable right now, so friends and Discord are unavailable. Your otter is still saved on this device.</p>
+      <button class="btn" data-action="recheck">Try again</button></div>`;
+  }
+  if (!sync.linked) {
+    return `<div class="card signup">
+      <img class="hero-art" src="${art.float || 'assets/web/otter-float.webp'}" alt="">
+      <h2 class="section-title flush">Make otter friends 🦦💕</h2>
+      <p class="flush-p">Save ${esc(state.name || 'your otter')} online to add friends, visit their dens, give hugs and send gifts. Your otter then also works on other devices and in Discord.</p>
+      <button class="btn primary wide" data-action="register">Save my otter online</button>
+      <p class="muted center">Already use the Discord bot? Link it below instead.</p></div>
+      ${discordSection()}`;
+  }
+  if (!friendsData) {
+    loadFriends();
+    return '<div class="empty"><div class="empty-icon">🫧</div><p>Finding your friends…</p></div>';
+  }
+  const d = friendsData;
+  return `
+    <div class="card code-card"><div><small class="muted">Your friend code</small><div class="friend-code">${d.code}</div></div>
+      <button class="btn small" data-action="fr-copy" data-code="${d.code}">📋 Copy</button></div>
+    <form class="link-form add-friend" data-form="addfriend">
+      <input name="code" maxlength="9" autocomplete="off" placeholder="OTR-XXXXX" aria-label="Friend code" required>
+      <button class="btn primary" type="submit">Add friend</button>
     </form>
-  </div>${cmds}`;
+    ${giftsData.length ? `<h2 class="section-title">Gifts for you</h2><div class="card gifts">
+      ${giftsData.map((g) => `<div class="gift-row"><span class="gift-icon">${g.kind === 'pearls' ? '<span class="pearl-icon"></span>' : '🎁'}</span>
+        <div><b>${g.kind === 'pearls' ? `${g.amount} pearls` : esc(FURNITURE[g.item]?.name || 'A gift')}</b> <span class="muted">from ${esc(g.from)}</span>${g.note ? `<div class="gift-note">“${esc(g.note)}”</div>` : ''}</div></div>`).join('')}
+      <button class="btn primary wide" data-action="gifts-open">Open ${giftsData.length > 1 ? `all ${giftsData.length} gifts` : 'gift'}</button></div>` : ''}
+    ${d.incoming.length ? `<h2 class="section-title">Friend requests</h2>${d.incoming.map((f, k) => `<div class="card friend">
+      <div class="friend-art">${miniOtter(f, `in${k}`)}</div>
+      <div class="friend-info"><b>${esc(f.name)}</b>${f.owner ? `<span class="muted"> · ${esc(f.owner)}</span>` : ''}<div class="muted">Lv ${f.level} wants to be friends!</div></div>
+      <div class="friend-actions"><button class="btn small primary" data-action="fr-accept" data-code="${f.code}">Accept</button>
+      <button class="btn small" data-action="fr-decline" data-code="${f.code}">No thanks</button></div></div>`).join('')}` : ''}
+    <h2 class="section-title">Friends <small>${d.friends.length}</small></h2>
+    ${d.friends.length ? d.friends.map(friendCard).join('') : `<div class="empty"><div class="empty-icon">🦦</div><p>No friends yet! Share your code <b>${d.code}</b> or add a friend's code above.</p></div>`}
+    ${d.outgoing.length ? `<p class="note">⏳ Waiting for ${d.outgoing.map((f) => esc(f.name)).join(', ')} to accept.</p>` : ''}
+    <p class="note">💗 Visit, hug, gift and play together to grow your friendship.</p>
+    ${discordSection()}
+    <div class="settings"><button class="link" data-action="unlink">Sign out on this device</button></div>`;
+}
+
+async function visitFriend(code) {
+  showModal('<div class="result"><div class="result-icon">🫧</div><p>Swimming over…</p></div>', { wide: true });
+  const r = await sync.visit(code);
+  if ($('#modal').hidden) return;
+  if (!r.ok) { $('#modal-card').innerHTML = `<div class="result"><p>${esc(r.error || 'Could not visit right now.')}</p><button class="btn primary" data-close>OK</button></div>`; return; }
+  const o = r.otter;
+  const st = { ...core.defaultState(), ...o, mission: o.mission ? { ...o.mission, start: 0, endsAt: 0 } : null, den: o.den };
+  const found = Object.keys(o.collection || {}).filter((id) => FINDS[id]).length;
+  $('#modal-card').innerHTML = `<div class="visit">
+    <div class="game-top"><h2>🏡 ${esc(o.name)}'s Den</h2><button class="icon-btn" data-close aria-label="Close">✕</button></div>
+    <div class="den-stage visit-den">${denSVG(st, { extraAttrs: `class="den-svg" role="img" aria-label="${esc(o.name)}'s den"` }).replace(/den-otter-/g, 'visit-otter-')}</div>
+    <div class="visit-info">
+      <div class="hearts">${heartsText(r.friend.points)} <small>${r.friend.friendship}${friendLevel(r.friend.points).next ? ` · ${friendLevel(r.friend.points).next - r.friend.points} to next` : ''}</small></div>
+      <div class="muted">Lv ${o.level} · 📖 ${found}/${TOTAL_FINDS} discoveries · 🏅 ${(o.sets || []).length} sets · ✨ coziness ${core.coziness(st)}</div>
+    </div>
+    <div class="row">
+      <button class="btn ${r.huggedToday ? '' : 'primary'}" data-action="fr-hug" data-code="${code}" ${r.huggedToday ? 'disabled' : ''}>${r.huggedToday ? '🤗 Hugged today' : `🤗 Hug ${esc(o.name)}`}</button>
+      <button class="btn" data-action="fr-gift" data-code="${code}" data-name="${esc(o.name)}">🎁 Send a gift</button>
+    </div></div>`;
+}
+
+function giftDialog(code, name) {
+  const storage = Object.keys(FURNITURE).filter((id) => core.inStorage(state, id) > 0);
+  showModal(`<form class="gift-form" data-form="gift" data-code="${code}">
+    <h2>🎁 A gift for ${esc(name)}</h2>
+    <p class="muted">Pearls (up to ${GIFT_PEARLS_PER_DAY} a day)</p>
+    <div class="gift-options">${GIFT_PEARL_OPTIONS.map((n, k) => `<label class="gift-opt"><input type="radio" name="gift" value="pearls:${n}" ${k === 0 ? 'checked' : ''} ${state.pearls < n ? 'disabled' : ''}><span><span class="pearl-icon"></span> ${n}</span></label>`).join('')}</div>
+    <p class="muted">…or something from your den storage</p>
+    ${storage.length ? `<div class="gift-options">${storage.map((id) => `<label class="gift-opt"><input type="radio" name="gift" value="furniture:${id}"><span class="gift-furn"><span class="den-art">${furniturePreviewSVG(id)}</span>${FURNITURE[id].name}</span></label>`).join('')}</div>`
+    : '<p class="muted small-note">(Nothing in storage. Put something away in your den to gift it.)</p>'}
+    <input name="note" maxlength="80" placeholder="Add a little note (optional)" class="note-input">
+    <div class="row"><button class="btn" type="button" data-close>Cancel</button><button class="btn primary" type="submit">Send gift</button></div>
+  </form>`);
 }
 
 // ---------- the den ----------
@@ -495,7 +598,7 @@ document.addEventListener('pointerup', () => {
   if (moved) commit();
 });
 
-const PANELS = { home: panelHome, den: panelDen, closet: panelCloset, missions: panelMissions, arcade: panelArcade, discord: panelDiscord };
+const PANELS = { home: panelHome, den: panelDen, closet: panelCloset, missions: panelMissions, arcade: panelArcade, friends: panelFriends };
 
 function renderPanel() {
   $('#panel').innerHTML = PANELS[tab]();
@@ -648,6 +751,7 @@ async function doLink(code, keep) {
   }
   if (!r.token) { toast(r.error || 'That code did not work. Try /link again.'); return; }
   linkedName = r.discordName || '';
+  friendsData = null;
   closeModal();
   await sync.check();
   adoptRemote(r.state, r.version, `🔗 Linked! ${r.state.name} can now visit Discord.`);
@@ -658,6 +762,7 @@ document.addEventListener('click', async (e) => {
   const tabBtn = e.target.closest('[data-tab]');
   if (tabBtn) {
     tab = tabBtn.dataset.tab;
+    if (tab === 'friends') loadFriends();
     renderPanel();
     if (tabBtn.closest('.tabs')) window.scrollTo({ top: 0 });
     return;
@@ -691,6 +796,40 @@ document.addEventListener('click', async (e) => {
       } catch { /* ignore */ }
       location.reload();
       return null;
+    }
+    case 'register': {
+      a.disabled = true;
+      const r = await sync.register(state);
+      if (!r.token) { a.disabled = false; return toast(r.error || 'Could not save online right now.'); }
+      adoptRemote(r.state, r.version, `☁️ ${state.name} is saved online! Now add some friends.`);
+      friendsData = null;
+      return loadFriends();
+    }
+    case 'fr-copy':
+      try { await navigator.clipboard.writeText(a.dataset.code); toast('Friend code copied! 📋'); } catch { toast(a.dataset.code); }
+      return null;
+    case 'fr-accept':
+    case 'fr-decline': {
+      const r = await sync.respond(a.dataset.code, a.dataset.action === 'fr-accept');
+      toast(r.ok ? (r.accepted ? '🤝 New friend!' : 'Request declined.') : r.error || 'Something went wrong.');
+      return loadFriends();
+    }
+    case 'fr-visit': return visitFriend(a.dataset.code);
+    case 'fr-hug': {
+      const r = await sync.hug(a.dataset.code);
+      toast(r.ok ? r.msg : r.error || 'Could not hug right now.');
+      if (r.ok) { a.disabled = true; a.textContent = '🤗 Hugged today'; a.classList.remove('primary'); burst(['🤗', '💕'], 6); }
+      return loadFriends();
+    }
+    case 'fr-gift': return giftDialog(a.dataset.code, a.dataset.name || 'your friend');
+    case 'gifts-open': {
+      await pushNow();
+      const r = await sync.claim('all');
+      if (!r.ok) return toast(r.error || 'Could not open gifts right now.');
+      adoptRemote(r.state, r.version, `🎁 You got ${r.opened.join(', ')}!`);
+      burst(['🎁', '✨', '💕'], 10);
+      giftsData = [];
+      return loadFriends();
     }
     case 'explore': {
       const r = core.explore(state, id);
@@ -733,7 +872,9 @@ document.addEventListener('click', async (e) => {
     case 'recheck': await sync.check(); return renderAll() || renderPanel();
     case 'syncnow': return pullNow(false);
     case 'unlink':
-      if (confirm('Unlink from Discord? Your otter stays on this device, but changes will stop syncing.')) {
+      if (confirm('Sign out on this device? Your otter stays here, but it stops syncing with your online account, friends and Discord.')) {
+        friendsData = null;
+        linkedName = '';
         sync.unlink();
         commit({ push: false });
         toast('Unlinked from Discord.');
@@ -742,7 +883,7 @@ document.addEventListener('click', async (e) => {
     case 'keep': return doLink(a.dataset.code, a.dataset.keep);
     case 'havediscord':
       closeModal();
-      tab = 'discord';
+      tab = 'friends';
       renderPanel();
       toast('Run /link in Discord, then enter the code below.');
       return;
@@ -772,6 +913,26 @@ document.addEventListener('submit', (e) => {
     if (first) burst(['💖', '🦦', '✨'], 10);
   } else if (form.dataset.form === 'link') {
     doLink(form.code.value);
+  } else if (form.dataset.form === 'addfriend') {
+    sync.addFriend(form.code.value.trim().toUpperCase()).then((r) => {
+      toast(r.ok ? (r.accepted ? `🤝 You and ${r.friend.name} are now friends!` : `📨 Friend request sent to ${r.friend.name}!`) : r.error || 'Could not add that friend.');
+      if (r.ok) form.reset();
+      loadFriends();
+    });
+  } else if (form.dataset.form === 'gift') {
+    const [kind, val] = (new FormData(form).get('gift') || '').split(':');
+    if (!kind) return toast('Pick a gift first.');
+    const btnEl = form.querySelector('[type=submit]');
+    btnEl.disabled = true;
+    (async () => {
+      await pushNow();
+      const r = await sync.gift(form.dataset.code, kind === 'pearls' ? { kind, amount: Number(val), note: form.note.value } : { kind, item: val, note: form.note.value });
+      if (!r.ok) { btnEl.disabled = false; return toast(r.error || 'Could not send the gift.'); }
+      closeModal();
+      adoptRemote(r.state, r.version, '🎁 Gift sent! They will find it in their gift inbox.');
+      burst(['🎁', '💕'], 8);
+      loadFriends();
+    })();
   }
 });
 

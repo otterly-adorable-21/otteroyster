@@ -10,6 +10,7 @@ import { PARTY, lobbyMessage, handleLobby } from './games/party.js';
 import { whisper, EPHEMERAL, shuffle } from './games/_util.js';
 import { BOT_BOARDS, BOT_DAILY_CAP } from '../players.js';
 import { LOCATIONS, LOC, RARITY, FINDS, TOTAL_FINDS, SET_REWARD } from '../../../js/world.js';
+import { heartsText, friendLevel } from '../../../js/social.js';
 
 const solo = Object.fromEntries(SOLO.map((g) => [g.id, g]));
 const duels = Object.fromEntries(DUELS.map((g) => [g.id, g]));
@@ -17,7 +18,7 @@ const parties = Object.fromEntries(PARTY.map((g) => [g.id, g]));
 
 const asPlayer = (u) => ({ id: u.id, name: u.displayName || u.globalName || u.username, username: u.username });
 
-export function createBot({ store, siteUrl }) {
+export function createBot({ store, social, siteUrl }) {
   // ---------- shared context for games ----------
   function makeCtx(user) {
     return {
@@ -25,6 +26,7 @@ export function createBot({ store, siteUrl }) {
       award: (u, n, reason) => store.award(store.forDiscord({ id: u.id, username: u.username }).id, n, reason),
       recordScore: (u, game, score) => store.recordScore(store.forDiscord({ id: u.id, username: u.username }).id, game, score),
       addWin: (u) => store.addToScore(store.forDiscord({ id: u.id, username: u.username }).id, 'd-wins', 1),
+      addChallengePoints: (a, b) => social.addChallengePoints(store.forDiscord({ id: a.id, username: a.username }).id, store.forDiscord({ id: b.id, username: b.username }).id),
       rewardNote(got, wanted) {
         if (got) return `🦪 **+${got} pearls** for your otter!`;
         if (!wanted) return '';
@@ -118,6 +120,23 @@ export function createBot({ store, siteUrl }) {
     return { text: `**${p} pearls**!`, icon: '⚪' };
   }
 
+  // ---------- friends ----------
+  function friendsView(user, note = '') {
+    const me = store.forDiscord(user);
+    const l = social.list(me.id);
+    const e = embed('🦦 Friends', `${note ? `${note}\n\n` : ''}Your friend code: **\`${l.code}\`** (share it, or use \`/friend add @someone\`)`);
+    e.addFields({ name: `Friends (${l.friends.length})`, value: l.friends.length ? l.friends.slice(0, 15).map((f) => `${heartsText(f.points)} **${f.name}**${f.owner ? ` (${f.owner})` : ''} · ${f.friendship}`).join('\n') : 'No friends yet. Add one!' });
+    if (l.incoming.length) e.addFields({ name: '📬 Friend requests', value: l.incoming.map((f) => `**${f.name}**${f.owner ? ` (${f.owner})` : ''}`).join('\n') });
+    if (l.outgoing.length) e.addFields({ name: '⏳ Waiting on', value: l.outgoing.map((f) => f.name).join(', ') });
+    if (l.gifts) e.addFields({ name: '🎁 Gifts', value: `You have **${l.gifts}** unopened gift${l.gifts > 1 ? 's' : ''}!` });
+    const rows = l.incoming.slice(0, 4).map((f) => row(
+      btn(`fr:${user.id}:acc:${f.code}`, `Accept ${f.name}`.slice(0, 80), ButtonStyle.Success),
+      btn(`fr:${user.id}:dec:${f.code}`, 'Decline', ButtonStyle.Secondary),
+    ));
+    if (l.gifts) rows.push(row(btn(`fr:${user.id}:open:all`, 'Open gifts', ButtonStyle.Primary, { emoji: '🎁' })));
+    return { embeds: [e], components: rows.slice(0, 5) };
+  }
+
   // ---------- command handlers ----------
   async function onCommand(i) {
     const user = i.user;
@@ -150,10 +169,53 @@ export function createBot({ store, siteUrl }) {
         const friend = i.options.getUser('friend');
         const p = store.getByDiscord(friend.id);
         if (!p?.state.name) return whisper(i, `${friend.username} hasn't adopted an otter yet. Invite them with \`/pet\`!`);
+        const me = store.forDiscord(user);
+        const v = social.areFriends(me.id, p.id) ? social.visit(me.id, p.id) : null;
         const { state } = store.mutate(p.id, () => null);
         const card = denCard(state, { title: `🏡 Visiting ${state.name}'s Den` });
+        if (v?.friend) card.embeds[0].addFields({ name: 'Friendship', value: `${heartsText(v.friend.points)} ${v.friend.friendship}`, inline: true });
         card.embeds[0].setFooter({ text: `${state.name} belongs to ${friend.displayName || friend.username}` });
         return i.reply(card);
+      }
+      case 'friend': {
+        const sub = i.options.getSubcommand();
+        const me = store.forDiscord(user);
+        if (sub === 'list') return i.reply({ ...friendsView(user), flags: EPHEMERAL });
+        if (sub === 'add') {
+          const u = i.options.getUser('user');
+          const code = i.options.getString('code');
+          if (!u && !code) return whisper(i, 'Pick a Discord user or type a friend code (like `OTR-AB3CD`).');
+          if (u?.bot) return whisper(i, "Bots can't be otter friends. 🤖");
+          const other = u ? store.forDiscord(u).id : social.idByCode(code);
+          const r = social.request(me.id, other);
+          if (r.error) return whisper(i, r.error);
+          if (r.accepted) return i.reply({ content: `🤝 You and **${r.friend.name}** are now friends!${u ? ` ${'<@'}${u.id}>` : ''}`, allowedMentions: { users: u ? [u.id] : [] } });
+          return i.reply({ content: `📨 Friend request sent${u ? ` to <@${u.id}>` : ''}! They can accept with \`/friend list\`.`, allowedMentions: { users: u ? [u.id] : [] } });
+        }
+        if (sub === 'remove') {
+          const u = i.options.getUser('user');
+          social.remove(me.id, store.forDiscord(u).id);
+          return whisper(i, `Removed ${u.username} from your friends.`);
+        }
+        return whisper(i, 'Unknown option.');
+      }
+      case 'hug': {
+        const u = i.options.getUser('friend');
+        const me = load(user).player;
+        const other = store.getByDiscord(u.id);
+        if (!other?.state.name) return whisper(i, `${u.username} doesn't have an otter yet.`);
+        const r = social.hug(me.id, other.id, store.get(me.id).state.name || user.username);
+        if (r.error) return whisper(i, r.status === 403 ? `You need to be friends first! Try \`/friend add\` with <@${u.id}>.` : r.error);
+        return i.reply({ content: `🤗 ${user.username} gave <@${u.id}>'s otter **${other.state.name}** a big hug! (+happiness, +friendship)`, allowedMentions: { users: [u.id] } });
+      }
+      case 'gift': {
+        const u = i.options.getUser('friend');
+        const me = load(user).player;
+        const other = store.getByDiscord(u.id);
+        if (!other) return whisper(i, `${u.username} doesn't have an otter yet.`);
+        const r = social.gift(me.id, other.id, { kind: 'pearls', amount: i.options.getInteger('pearls'), note: i.options.getString('note') });
+        if (r.error) return whisper(i, r.status === 403 ? `You need to be friends first! Try \`/friend add\` with <@${u.id}>.` : r.error);
+        return i.reply({ content: `🎁 ${user.username} sent <@${u.id}> **${i.options.getInteger('pearls')} pearls**! Open it with \`/friend list\` or on the website.`, allowedMentions: { users: [u.id] } });
       }
       case 'explore': {
         const locId = i.options.getString('place');
@@ -250,6 +312,7 @@ export function createBot({ store, siteUrl }) {
           '`/daily` daily treasure chest · `/mission` send your otter exploring',
           '`/den` show off your den · `/visit @friend` peek inside a friend\'s den',
           '`/explore` discover creatures and treasures · `/collection` your journal',
+          '`/friend` add and list friends · `/hug @friend` · `/gift @friend` pearls',
           '',
           `**Solo games** \`/play\`: ${SOLO.map((g) => `${g.emoji} ${g.name}`).join(', ')}`,
           `**Challenges** \`/challenge @friend\`: ${DUELS.map((g) => `${g.emoji} ${g.name}`).join(', ')}`,
@@ -327,8 +390,19 @@ export function createBot({ store, siteUrl }) {
 
     // Owner-only panels: pet / mission / chest / adopt
     const ownerId = parts[1];
-    if (['pet', 'mis', 'chest', 'adopt', 'adoptname'].includes(kind) && ownerId !== user.id) {
+    if (['pet', 'mis', 'chest', 'adopt', 'adoptname', 'fr'].includes(kind) && ownerId !== user.id) {
       return whisper(i, 'This otter belongs to someone else! Use `/pet` to see yours. 🦦');
+    }
+
+    if (kind === 'fr') {
+      const [, , action, code] = parts;
+      const me = store.forDiscord(user);
+      if (action === 'open') {
+        const r = social.claim(me.id, 'all');
+        return i.update(friendsView(user, r.error ? r.error : `🎁 You opened: ${r.opened.join(', ')}!`));
+      }
+      const r = social.respond(me.id, social.idByCode(code), action === 'acc');
+      return i.update(friendsView(user, r.error ? `⚠️ ${r.error}` : r.accepted ? '🤝 New friend!' : 'Request declined.'));
     }
 
     if (kind === 'adopt') return i.showModal(textModal(`adoptname:${user.id}`, 'Adopt an otter', "What's your otter's name?", { max: 16, placeholder: 'Pebble' }));
@@ -399,9 +473,9 @@ export function createBot({ store, siteUrl }) {
   return { handle };
 }
 
-export async function startBot({ token, store, siteUrl }) {
+export async function startBot({ token, store, social, siteUrl }) {
   const client = new Client({ intents: [GatewayIntentBits.Guilds] });
-  const { handle } = createBot({ store, siteUrl });
+  const { handle } = createBot({ store, social, siteUrl });
   client.on(Events.InteractionCreate, handle);
   client.once(Events.ClientReady, (c) => {
     console.log(`🦦 Discord bot logged in as ${c.user.tag}`);

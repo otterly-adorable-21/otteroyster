@@ -81,6 +81,32 @@ export const sync = {
     ls(VERSION_KEY, null);
   },
 
+  // Create an online account for the otter on this device (no Discord needed).
+  async register(state) {
+    const r = await call('/api/register', { method: 'POST', auth: false, body: { state } });
+    if (r.ok && r.data.token) {
+      ls(TOKEN_KEY, r.data.token);
+      this.version = r.data.version;
+    }
+    return { status: r.status, ...r.data };
+  },
+
+  // Signed-in API helper: returns { status, ok, ...data }.
+  async api(path, body) {
+    const r = await call(path, body === undefined ? {} : { method: 'POST', body });
+    if (r.status === 401) this.unlink();
+    return { status: r.status, ok: r.ok, ...r.data };
+  },
+  friends() { return this.api('/api/friends'); },
+  addFriend(code) { return this.api('/api/friends/add', { code }); },
+  respond(code, accept) { return this.api('/api/friends/respond', { code, accept }); },
+  removeFriend(code) { return this.api('/api/friends/remove', { code }); },
+  visit(code) { return this.api(`/api/friends/visit?code=${encodeURIComponent(code)}`); },
+  hug(code) { return this.api('/api/friends/hug', { code }); },
+  gift(code, gift) { return this.api('/api/friends/gift', { code, ...gift }); },
+  gifts() { return this.api('/api/gifts'); },
+  claim(id) { return this.api('/api/gifts/claim', { id }); },
+
   async score(game, score) {
     if (!this.linked || !this.online) return;
     try { await call('/api/score', { method: 'POST', body: { game, score } }); } catch { /* ignore */ }

@@ -20,8 +20,9 @@ function limiter(max, windowMs) {
   };
 }
 
-export function startHttp({ store, port, siteRoot, allowedOrigins, info }) {
+export function startHttp({ store, social, port, siteRoot, allowedOrigins, info }) {
   const linkLimit = limiter(10, 60_000);
+  const registerLimit = limiter(20, 60_000);
   const apiLimit = limiter(240, 60_000);
 
   function cors(req, res) {
@@ -62,9 +63,31 @@ export function startHttp({ store, port, siteRoot, allowedOrigins, info }) {
       case 'GET /api/info':
         return send(res, 200, { app: 'otteroyster', ...info() });
 
+      case 'POST /api/register': {
+        if (!registerLimit(ip)) return send(res, 429, { error: 'Too many tries. Wait a minute.' });
+        const b = await body(req);
+        const { status, ...rest } = social.register(b.state);
+        return send(res, status, rest);
+      }
+
       case 'POST /api/link': {
         if (!linkLimit(ip)) return send(res, 429, { error: 'Too many tries. Wait a minute and run /link again.' });
         const b = await body(req);
+        const me = authed(req);
+        if (me) {
+          // Already have a website account: merge it with the Discord one.
+          const discordId = store.redeemCode(b.code);
+          if (!discordId) return send(res, 400, { error: 'That code is invalid or expired. Run /link again in Discord.' });
+          const d = store.get(discordId);
+          const keep = b.keep === 'web' || b.keep === 'discord' ? b.keep : undefined;
+          const web = b.state?.name ? b.state : me.state;
+          if (d.id !== me.id && web?.name && d.state.name && !keep) return send(res, 409, { conflict: true, server: { name: d.state.name, level: d.state.level } });
+          const finalState = keep === 'discord' || !web?.name ? d.state : web;
+          if (d.id !== me.id) social.merge(d.id, me.id, finalState);
+          store.consumeCode(b.code);
+          const fresh = store.get(d.id);
+          return send(res, 200, { token: (req.headers.authorization || '').replace(/^Bearer\s+/i, ''), state: fresh.state, version: fresh.version, discordName: fresh.discordName });
+        }
         const r = store.link(b.code, b.state, b.keep === 'web' || b.keep === 'discord' ? b.keep : undefined);
         const { status, ...rest } = r;
         return send(res, status, rest);
@@ -73,7 +96,7 @@ export function startHttp({ store, port, siteRoot, allowedOrigins, info }) {
       case 'GET /api/save': {
         const p = authed(req);
         if (!p) return send(res, 401, { error: 'Not linked' });
-        return send(res, 200, { state: p.state, version: p.version, discordName: p.discordName });
+        return send(res, 200, { state: p.state, version: p.version, discordName: p.discordName, code: social.codeOf(p.id) });
       }
 
       case 'PUT /api/save': {
@@ -92,6 +115,54 @@ export function startHttp({ store, port, siteRoot, allowedOrigins, info }) {
         const b = await body(req);
         const improved = store.recordScore(p.id, String(b.game || ''), b.score);
         return send(res, 200, { improved });
+      }
+
+      case 'GET /api/friends': {
+        const p = authed(req);
+        if (!p) return send(res, 401, { error: 'Not signed in' });
+        const { status, ...rest } = social.list(p.id);
+        return send(res, status, rest);
+      }
+
+      case 'POST /api/friends/add':
+      case 'POST /api/friends/respond':
+      case 'POST /api/friends/remove':
+      case 'POST /api/friends/hug':
+      case 'POST /api/friends/gift': {
+        const p = authed(req);
+        if (!p) return send(res, 401, { error: 'Not signed in' });
+        const b = await body(req);
+        const other = social.idByCode(b.code);
+        const action = url.pathname.split('/').pop();
+        const r = action === 'add' ? social.request(p.id, other)
+          : action === 'respond' ? social.respond(p.id, other, !!b.accept)
+            : action === 'remove' ? social.remove(p.id, other)
+              : action === 'hug' ? social.hug(p.id, other, p.state.name || 'A friend')
+                : social.gift(p.id, other, b);
+        const { status, ...rest } = r;
+        return send(res, status, rest);
+      }
+
+      case 'GET /api/friends/visit': {
+        const p = authed(req);
+        if (!p) return send(res, 401, { error: 'Not signed in' });
+        const { status, ...rest } = social.visit(p.id, social.idByCode(url.searchParams.get('code')));
+        return send(res, status, rest);
+      }
+
+      case 'GET /api/gifts': {
+        const p = authed(req);
+        if (!p) return send(res, 401, { error: 'Not signed in' });
+        const { status, ...rest } = social.inbox(p.id);
+        return send(res, status, rest);
+      }
+
+      case 'POST /api/gifts/claim': {
+        const p = authed(req);
+        if (!p) return send(res, 401, { error: 'Not signed in' });
+        const b = await body(req);
+        const { status, ...rest } = social.claim(p.id, b.id);
+        return send(res, status, rest);
       }
 
       case 'GET /api/leaderboard': {

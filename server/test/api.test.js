@@ -3,11 +3,14 @@ import assert from 'node:assert/strict';
 import { resolve } from 'node:path';
 import { openDb } from '../src/db.js';
 import { createStore } from '../src/players.js';
+import { createSocial } from '../src/social.js';
 import { startHttp } from '../src/http.js';
 import * as core from '../../js/core.js';
 
-const store = createStore(openDb(':memory:'));
-const server = startHttp({ store, port: 0, siteRoot: resolve(import.meta.dirname, '..', '..'), allowedOrigins: [], info: () => ({ invite: null }) });
+const db = openDb(':memory:');
+const store = createStore(db);
+const social = createSocial(db, store);
+const server = startHttp({ store, social, port: 0, siteRoot: resolve(import.meta.dirname, '..', '..'), allowedOrigins: [], info: () => ({ invite: null }) });
 await new Promise((r) => server.once('listening', r));
 const base = `http://localhost:${server.address().port}`;
 after(() => server.close());
@@ -89,6 +92,86 @@ test('Discord pearl income is capped per day', () => {
   assert.equal(total, 300);
 });
 
+
+test('friends: register, request, accept, visit, hug, gifts', async () => {
+  const mk = (name, extra = {}) => ({ ...core.defaultState(), name, pearls: 200, ...extra });
+  const A = (await call('/api/register', { method: 'POST', body: { state: mk('Ana') } })).data;
+  const B = (await call('/api/register', { method: 'POST', body: { state: mk('Bo') } })).data;
+  assert.match(A.code, /^OTR-[A-Z0-9]{5}$/);
+  assert.equal((await call('/api/register', { method: 'POST', body: { state: core.defaultState() } })).status, 400);
+
+  // request + accept
+  assert.equal((await call('/api/friends/add', { method: 'POST', token: A.token, body: { code: A.code } })).status, 400);
+  assert.equal((await call('/api/friends/add', { method: 'POST', token: A.token, body: { code: 'OTR-NOPE0' } })).status, 404);
+  const req = await call('/api/friends/add', { method: 'POST', token: A.token, body: { code: B.code } });
+  assert.equal(req.data.accepted, false);
+  let lb = (await call('/api/friends', { token: B.token })).data;
+  assert.equal(lb.incoming.length, 1);
+  assert.equal(lb.incoming[0].name, 'Ana');
+  assert.equal((await call('/api/friends/visit?code=' + A.code, { token: B.token })).status, 403);
+  await call('/api/friends/respond', { method: 'POST', token: B.token, body: { code: A.code, accept: true } });
+  lb = (await call('/api/friends', { token: B.token })).data;
+  assert.equal(lb.friends.length, 1);
+
+  // visit shows the otter + den, and grows friendship once a day
+  const v = (await call('/api/friends/visit?code=' + B.code, { token: A.token })).data;
+  assert.equal(v.otter.name, 'Bo');
+  assert.ok(Array.isArray(v.otter.den.items));
+  await call('/api/friends/visit?code=' + B.code, { token: A.token });
+  assert.equal((await call('/api/friends', { token: A.token })).data.friends[0].points, 1);
+
+  // hug: once a day, cheers up the other otter
+  const bBefore = store.byToken(B.token).state.stats.happiness;
+  assert.equal((await call('/api/friends/hug', { method: 'POST', token: A.token, body: { code: B.code } })).status, 200);
+  assert.equal((await call('/api/friends/hug', { method: 'POST', token: A.token, body: { code: B.code } })).status, 429);
+  assert.ok(store.byToken(B.token).state.stats.happiness > bBefore - 1);
+
+  // gifts: pearls (daily cap) and furniture from storage
+  const g1 = await call('/api/friends/gift', { method: 'POST', token: A.token, body: { code: B.code, kind: 'pearls', amount: 50, note: 'hi <b>' } });
+  assert.equal(g1.status, 200);
+  assert.equal(g1.data.state.pearls, 150);
+  assert.equal((await call('/api/friends/gift', { method: 'POST', token: A.token, body: { code: B.code, kind: 'pearls', amount: 60 } })).status, 400);
+  assert.equal((await call('/api/friends/gift', { method: 'POST', token: A.token, body: { code: B.code, kind: 'furniture', item: 'shellbed' } })).status, 400); // still placed in den
+  const aId = store.byToken(A.token).id;
+  store.mutate(aId, (s) => { const bed = s.den.items.find((p) => p.id === 'shellbed'); core.storeItem(s, bed.uid); });
+  assert.equal((await call('/api/friends/gift', { method: 'POST', token: A.token, body: { code: B.code, kind: 'furniture', item: 'shellbed' } })).status, 200);
+  const inbox = (await call('/api/gifts', { token: B.token })).data.gifts;
+  assert.equal(inbox.length, 2);
+  assert.equal(inbox.find((g) => g.kind === 'pearls').note, 'hi b');
+  const before = store.byToken(B.token).state;
+  const opened = (await call('/api/gifts/claim', { method: 'POST', token: B.token, body: { id: 'all' } })).data;
+  assert.equal(opened.opened.length, 2);
+  assert.equal(opened.state.pearls, before.pearls + 50);
+  assert.equal(opened.state.furniture.shellbed, (before.furniture.shellbed || 0) + 1);
+  assert.equal((await call('/api/gifts/claim', { method: 'POST', token: B.token, body: { id: 'all' } })).status, 404);
+  assert.ok((await call('/api/friends', { token: A.token })).data.friends[0].points >= 6);
+});
+
+test('linking Discord to an existing website account merges them', async () => {
+  const W = (await call('/api/register', { method: 'POST', body: { state: { ...core.defaultState(), name: 'Webbo' } } })).data;
+  const F = (await call('/api/register', { method: 'POST', body: { state: { ...core.defaultState(), name: 'Pal' } } })).data;
+  await call('/api/friends/add', { method: 'POST', token: W.token, body: { code: F.code } });
+  await call('/api/friends/respond', { method: 'POST', token: F.token, body: { code: W.code, accept: true } });
+  // a Discord user with their own otter runs /link
+  const d = store.forDiscord({ id: 'disc-merge', username: 'webbo_on_discord' });
+  store.mutate(d.id, (s) => { s.name = 'Discotter'; });
+  const code = store.makeLinkCode(d.id);
+  const ask = await call('/api/link', { method: 'POST', token: W.token, body: { code, state: store.byToken(W.token).state } });
+  assert.equal(ask.status, 409);
+  const done = await call('/api/link', { method: 'POST', token: W.token, body: { code, state: store.byToken(W.token).state, keep: 'web' } });
+  assert.equal(done.status, 200);
+  assert.equal(done.data.token, W.token);
+  const merged = store.byToken(W.token);
+  assert.equal(merged.discordId, 'disc-merge');
+  assert.equal(merged.state.name, 'Webbo');
+  // friends and friend code survived the merge
+  const list = (await call('/api/friends', { token: W.token })).data;
+  assert.equal(list.friends.length, 1);
+  assert.equal(list.friends[0].name, 'Pal');
+  assert.equal(list.code, W.code);
+});
+
+// Runs last: it deliberately uses up the link rate limit.
 test('link endpoint is rate limited', async () => {
   let limited = false;
   for (let k = 0; k < 15; k++) if ((await call('/api/link', { method: 'POST', body: { code: 'XXXXXX' } })).status === 429) limited = true;

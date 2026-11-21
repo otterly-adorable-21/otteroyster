@@ -113,6 +113,14 @@ export function createStore(db) {
       return { status: 200, token, state: fresh.state, version: fresh.version, discordName: fresh.discordName };
     },
 
+    // Use up a /link code and return the Discord player's id (or null).
+    redeemCode(code) {
+      const c = q.codeFind.get(String(code || '').toUpperCase());
+      if (!c || c.expires < Date.now()) return null;
+      return c.player_id;
+    },
+    consumeCode(code) { q.codeDelete.run(String(code || '').toUpperCase()); },
+
     byToken(token) {
       if (!token) return null;
       const t = q.tokenFind.get(hash(token));

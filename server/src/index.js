@@ -4,6 +4,7 @@ import { dirname, resolve } from 'node:path';
 import { loadEnv } from './env.js';
 import { openDb } from './db.js';
 import { createStore } from './players.js';
+import { createSocial } from './social.js';
 import { startHttp } from './http.js';
 
 loadEnv();
@@ -11,7 +12,9 @@ const here = dirname(fileURLToPath(import.meta.url));
 const env = process.env;
 
 const db = openDb(resolve(here, '..', env.DB_PATH || './data/otteroyster.db'));
+console.log(`💾 Database: ${resolve(here, '..', env.DB_PATH || './data/otteroyster.db')}`);
 const store = createStore(db);
+const social = createSocial(db, store);
 const siteUrl = env.SITE_URL || 'https://otteroyster.online';
 const allowedOrigins = (env.ALLOWED_ORIGINS || 'https://otteroyster.online,https://www.otteroyster.online').split(',').map((s) => s.trim()).filter(Boolean);
 
@@ -20,6 +23,7 @@ const invite = env.DISCORD_APP_ID ? `https://discord.com/oauth2/authorize?client
 
 startHttp({
   store,
+  social,
   port: Number(env.PORT || 8787),
   siteRoot: resolve(here, '..', '..'),
   allowedOrigins,
@@ -29,7 +33,7 @@ startHttp({
 if (env.DISCORD_TOKEN) {
   const { startBot } = await import('./bot/index.js');
   try {
-    bot = await startBot({ token: env.DISCORD_TOKEN, store, siteUrl });
+    bot = await startBot({ token: env.DISCORD_TOKEN, store, social, siteUrl });
   } catch (err) {
     console.error('❌ Discord login failed:', err.message);
   }

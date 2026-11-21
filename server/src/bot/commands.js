@@ -7,6 +7,7 @@ import { DUELS } from './games/duel.js';
 import { PARTY } from './games/party.js';
 import { BOT_BOARDS } from '../players.js';
 import { LOCATIONS } from '../../../js/world.js';
+import { GIFT_PEARL_OPTIONS } from '../../../js/social.js';
 
 const everywhere = (b) => b
   .setContexts(InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel)
@@ -24,6 +25,20 @@ export const commands = [
       .addChoices(...LOCATIONS.map((l) => ({ name: `${l.icon} ${l.name}${l.level > 1 ? ` (Lv ${l.level})` : ''}`, value: l.id }))))),
   everywhere(new SlashCommandBuilder().setName('collection').setDescription('Your collection journal of discoveries')
     .addUserOption((o) => o.setName('user').setDescription("Peek at a friend's journal"))),
+  everywhere(new SlashCommandBuilder().setName('friend').setDescription('Make friends with other otters')
+    .addSubcommand((c) => c.setName('list').setDescription('Your friends, friend code and requests'))
+    .addSubcommand((c) => c.setName('add').setDescription('Send a friend request')
+      .addUserOption((o) => o.setName('user').setDescription('A Discord friend'))
+      .addStringOption((o) => o.setName('code').setDescription('Or a friend code from the website, like OTR-AB3CD')))
+    .addSubcommand((c) => c.setName('remove').setDescription('Remove a friend')
+      .addUserOption((o) => o.setName('user').setDescription('Who?').setRequired(true)))),
+  everywhere(new SlashCommandBuilder().setName('hug').setDescription("Give a friend's otter a hug (once a day)")
+    .addUserOption((o) => o.setName('friend').setDescription('Whose otter?').setRequired(true))),
+  everywhere(new SlashCommandBuilder().setName('gift').setDescription('Send pearls to a friend')
+    .addUserOption((o) => o.setName('friend').setDescription('Who?').setRequired(true))
+    .addIntegerOption((o) => o.setName('pearls').setDescription('How many?').setRequired(true)
+      .addChoices(...GIFT_PEARL_OPTIONS.map((n) => ({ name: `${n} pearls`, value: n }))))
+    .addStringOption((o) => o.setName('note').setDescription('A little note').setMaxLength(80))),
   everywhere(new SlashCommandBuilder().setName('daily').setDescription('Open your daily treasure chest')),
   everywhere(new SlashCommandBuilder().setName('mission').setDescription('Send your otter on an adventure, or check on them')),
   everywhere(new SlashCommandBuilder().setName('play').setDescription('Play a solo game for pearls')

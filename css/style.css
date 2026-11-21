@@ -541,8 +541,8 @@ code { background: #e3f1ec; padding: 1px 6px; border-radius: 6px; font-size: 0.8
 }
 
 /* ---------- the den ---------- */
-body[data-view='den'] .scene, body[data-view='den'] .lily-divider, body[data-view='missions'] .scene, body[data-view='missions'] .lily-divider { display: none; }
-body[data-view='den'] .stats, body[data-view='missions'] .stats { padding-top: 4px; }
+body[data-view='den'] .scene, body[data-view='den'] .lily-divider, body[data-view='missions'] .scene, body[data-view='missions'] .lily-divider, body[data-view='friends'] .scene, body[data-view='friends'] .lily-divider { display: none; }
+body[data-view='den'] .stats, body[data-view='missions'] .stats, body[data-view='friends'] .stats { padding-top: 4px; }
 .den-stage { position: relative; border-radius: 26px; overflow: hidden; touch-action: pan-y; user-select: none;
   box-shadow: 0 0 0 2px rgba(217, 180, 90, 0.7), 0 0 0 6px rgba(12, 52, 64, 0.9), 0 0 0 7px rgba(217, 180, 90, 0.35), 0 18px 40px rgba(0, 0, 0, 0.45); }
 .den-stage.editing { touch-action: none; }
@@ -611,3 +611,42 @@ body[data-view='den'] .stats, body[data-view='missions'] .stats { padding-top: 4
 .journal-loc-head { display: flex; justify-content: space-between; margin-bottom: 8px; }
 .big-find { font-size: 4rem !important; display: grid; place-items: center; }
 @media (max-width: 370px) { .finds { grid-template-columns: repeat(3, 1fr); } }
+
+/* ---------- friends ---------- */
+.flush-p { margin: 0 0 8px; }
+.center { text-align: center; }
+.btn.wide { width: 100%; padding: 13px; font-size: 1.02rem; margin-top: 6px; }
+.signup { display: grid; gap: 6px; }
+.code-card { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 14px; }
+.friend-code { font-family: ui-monospace, 'SFMono-Regular', monospace; font-size: 1.35rem; font-weight: 800; letter-spacing: .08em; color: var(--deep); }
+.add-friend { margin-top: 10px; }
+.add-friend input { letter-spacing: .1em; }
+.friend { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.friend-art { width: 56px; height: 70px; flex: none; border-radius: 16px; background: radial-gradient(circle at 50% 70%, #9be8de, #3cc7c0 70%); display: grid; place-items: end center; overflow: hidden; box-shadow: var(--gold-ring); }
+.friend-art svg { width: 54px; height: 68px; }
+.friend-info { flex: 1; min-width: 0; }
+.friend-info b { font-family: var(--display); font-size: 1.2rem; }
+.hearts { font-size: .85rem; margin-top: 2px; }
+.hearts small { color: var(--muted); font-weight: 700; }
+.friend-actions { display: flex; flex-direction: column; gap: 6px; }
+.gifts { display: grid; gap: 8px; }
+.gift-row { display: flex; gap: 10px; align-items: center; }
+.gift-icon { font-size: 1.6rem; width: 34px; text-align: center; }
+.gift-icon .pearl-icon { width: 1.4em; height: 1.4em; }
+.gift-note { font-style: italic; color: var(--muted); font-size: .85rem; }
+details.cmd-list summary { cursor: pointer; }
+details.cmd-list[open] summary { margin-bottom: 6px; }
+.visit { display: grid; gap: 10px; }
+.visit-den { border-radius: 18px; }
+.visit-info { text-align: center; }
+.gift-form { display: grid; gap: 8px; }
+.gift-form h2 { font-size: 1.6rem; color: var(--deep); text-align: center; }
+.gift-form p { margin: 4px 0 0; }
+.gift-options { display: flex; flex-wrap: wrap; gap: 8px; }
+.gift-opt input { position: absolute; opacity: 0; pointer-events: none; }
+.gift-opt > span { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 12px; background: #fff; box-shadow: inset 0 0 0 1px var(--line); font-weight: 800; cursor: pointer; font-size: .85rem; }
+.gift-opt input:checked + span { box-shadow: inset 0 0 0 3px var(--teal); background: #eef7f4; }
+.gift-opt input:disabled + span { opacity: .4; cursor: not-allowed; }
+.gift-opt input:focus-visible + span { outline: 2px dashed var(--teal); outline-offset: 2px; }
+.gift-furn .den-art { width: 34px; height: 28px; }
+.note-input { font: inherit; padding: 10px 12px; border-radius: 12px; border: 2px solid var(--line); background: #fff; color: var(--ink); }

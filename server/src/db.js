@@ -36,6 +36,32 @@ export function openDb(path) {
       PRIMARY KEY (player_id, game)
     );
     CREATE INDEX IF NOT EXISTS scores_game ON scores(game, score);
+    CREATE TABLE IF NOT EXISTS friends (
+      a TEXT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+      b TEXT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+      status TEXT NOT NULL,            -- 'pending' | 'accepted'
+      requester TEXT NOT NULL,
+      points INTEGER NOT NULL DEFAULT 0,
+      created INTEGER NOT NULL,
+      PRIMARY KEY (a, b)
+    );
+    CREATE TABLE IF NOT EXISTS daily_actions (
+      actor TEXT NOT NULL, target TEXT NOT NULL, kind TEXT NOT NULL, day TEXT NOT NULL,
+      PRIMARY KEY (actor, target, kind, day)
+    );
+    CREATE TABLE IF NOT EXISTS gifts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      from_id TEXT NOT NULL, to_id TEXT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+      kind TEXT NOT NULL, item TEXT, amount INTEGER NOT NULL DEFAULT 0, note TEXT,
+      created INTEGER NOT NULL, claimed INTEGER NOT NULL DEFAULT 0
+    );
+    CREATE INDEX IF NOT EXISTS gifts_to ON gifts(to_id, claimed);
   `);
+  // Columns added after launch.
+  const cols = db.prepare('PRAGMA table_info(players)').all().map((c) => c.name);
+  if (!cols.includes('friend_code')) {
+    db.exec('ALTER TABLE players ADD COLUMN friend_code TEXT');
+    db.exec('CREATE UNIQUE INDEX IF NOT EXISTS players_code ON players(friend_code)');
+  }
   return db;
 }

@@ -17,6 +17,7 @@ async function settle(s, ctx, winnerId) {
     if (won) ctx.addWin(p);
     lines.push(`${mention(p.id)}: ${got ? `+${got} ⚪` : '*(no otter yet, use /pet to adopt one)*'}`);
   }
+  ctx.addChallengePoints?.(a, b);
   return lines.join('\n');
 }
 
