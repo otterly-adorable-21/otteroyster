@@ -804,6 +804,7 @@ function panelHome() {
     ${todayCard()}
     <h2 class="section-title">About ${nm}</h2>
     ${growthCard()}
+    ${state.level >= 18 ? legacyCard() : ''}
     ${personaCard().replace('<h2 class="section-title">Personality</h2>', '')}
     ${achievementsCard()}
     <h2 class="section-title">Journal</h2>
@@ -843,7 +844,6 @@ function growthCard() {
     ${state.tricks.length ? `<div class="tricks"><small class="muted">Tricks:</small>${state.tricks.map((id) => { const t = TRICKS.find((x) => x.id === id); return `<button class="btn small" data-action="trick" data-id="${id}">${t.icon} ${t.name}</button>`; }).join('')}</div>` : ''}
     <div class="bday-line">🎂 Birthday: <b>${birthdayLabel(state.birthday)}</b>${bDays === 0 || isBirthday(state) ? ' · <b>today!</b>' : bDays != null ? ` · in ${bDays} day${bDays === 1 ? '' : 's'}` : ''}
       ${state.birthdaySet ? '' : '<button class="link small" data-action="bday-set">change</button>'}</div>
-    ${state.level >= LEGACY_LEVEL ? '<button class="link block-link" data-action="legacy">🦉 Legacy goals, ranks and titles</button>' : ''}
   </div>`;
 }
 
@@ -2200,7 +2200,7 @@ document.addEventListener('click', async (e) => {
     case 'relogin-dismiss': sync.dismissRelogin(); return renderPanel();
     case 'legacy': return openLegacy();
     case 'species': { const r = act(core.setSpecies(state, id)); lastOtter = ''; return r; }
-    case 'legacy-claim': { const r = act(core.claimLegacy(state, id)); if (!$('#modal').hidden) openLegacy(); return r; }
+    case 'legacy-claim': return act(core.claimLegacy(state, id));
     case 'lore-book': return openSub('lore');
     case 'npc': return openNpc(id);
     case 'favor': { const r = act(core.doFavor(state, id)); if (r.ok) openNpc(id); return r; }

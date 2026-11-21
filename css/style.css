@@ -1074,8 +1074,10 @@ svg.swatch-chip { display: block; }
 .den-head { flex-wrap: wrap; }
 .den-head .row { flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
 .den-head .btn.on { background: var(--card); color: var(--ink); box-shadow: var(--gold-ring); }
-.chips { scrollbar-width: none; }
-.chips::-webkit-scrollbar { display: none; }
+.chips { scrollbar-width: thin; scrollbar-color: rgba(217, 180, 90, .6) transparent; }
+.chips::-webkit-scrollbar { height: 6px; }
+.chips::-webkit-scrollbar-thumb { background: rgba(217, 180, 90, .6); border-radius: 99px; }
+.chips::-webkit-scrollbar-track { background: transparent; }
 .closet-slots { margin-top: 12px; }
 .segmented + .chips { margin-top: 12px; }
 .den-head { flex-wrap: nowrap; }
