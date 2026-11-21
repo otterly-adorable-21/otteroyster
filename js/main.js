@@ -39,8 +39,111 @@ function loadLocal() {
     return null;
   }
 }
+// Save status shown in the header: local (this device) and cloud (online account).
+const saveInfo = { localOk: true, localAt: 0, cloud: 'off', cloudAt: 0 }; // cloud: off | saving | ok | error | conflict
+
 function saveLocal() {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch { /* storage blocked */ }
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+    saveInfo.localOk = true;
+    saveInfo.localAt = Date.now();
+  } catch {
+    saveInfo.localOk = false;
+  }
+}
+
+function saveStatus() {
+  if (!state.name) return { icon: '💾', text: 'Save', cls: '' };
+  if (!saveInfo.localOk && saveInfo.cloud !== 'ok') return { icon: '⚠️', text: 'Not saved', cls: 'bad' };
+  if (sync.linked) {
+    if (!sync.online) return { icon: '💾', text: 'Saved here', cls: 'warn' };
+    if (saveInfo.cloud === 'saving' || pushTimer) return { icon: '☁️', text: 'Saving…', cls: 'busy' };
+    if (saveInfo.cloud === 'error') return { icon: '☁️', text: 'Retrying…', cls: 'warn' };
+    return { icon: '☁️', text: 'Saved', cls: 'good' };
+  }
+  return { icon: '💾', text: 'Saved here', cls: '' };
+}
+
+function renderSaveChip() {
+  const chip = $('#save-chip');
+  if (!chip) return;
+  const st = saveStatus();
+  chip.className = `save-chip ${st.cls}`;
+  chip.querySelector('[data-save-icon]').textContent = st.icon;
+  chip.querySelector('[data-save-text]').textContent = st.text;
+}
+
+const ago = (t) => {
+  if (!t) return 'not yet';
+  const s = Math.round((Date.now() - t) / 1000);
+  if (s < 10) return 'just now';
+  if (s < 60) return `${s} seconds ago`;
+  if (s < 3600) return `${Math.round(s / 60)} min ago`;
+  return new Date(t).toLocaleString([], { hour: 'numeric', minute: '2-digit', month: 'short', day: 'numeric' });
+};
+
+function savePanelHTML(extra = '') {
+  const online = sync.online;
+  const signedIn = sync.linked;
+  const lastBackup = (() => { try { return Number(localStorage.getItem('otteroyster.lastBackup') || 0); } catch { return 0; } })();
+  return `<div class="save-panel">
+    <div class="game-top"><h2>💾 Save &amp; devices</h2><button class="icon-btn" data-close aria-label="Close">✕</button></div>
+    <div class="save-rows">
+      <div class="save-row"><span>📱</span><div><b>This device</b><div class="muted">${saveInfo.localOk ? `Saved automatically · ${ago(saveInfo.localAt)}` : 'This browser is blocking storage (private mode?). Use an online save or a backup!'}</div></div></div>
+      <div class="save-row"><span>☁️</span><div><b>Online save</b><div class="muted">${signedIn ? (online ? `On · saved ${ago(saveInfo.cloudAt)}${linkedName ? ` · linked to Discord (${esc(linkedName)})` : ''}` : 'On, but the server is unreachable right now. Changes are kept here and sync when it is back.') : online ? 'Off. Save online to keep your otter safe and use it on other devices.' : "Unavailable: the server isn't reachable from this page."}</div></div></div>
+      <div class="save-row"><span>🗂️</span><div><b>Backup file</b><div class="muted">${lastBackup ? `Last downloaded ${ago(lastBackup)}` : 'No backup yet'}</div></div></div>
+    </div>
+    ${extra}
+    <div class="save-actions">
+      <button class="btn primary" data-action="save-now">💾 Save now</button>
+      ${online && !signedIn ? '<button class="btn" data-action="register">☁️ Save my otter online</button>' : ''}
+      ${online && signedIn ? '<button class="btn" data-action="device-code">📲 Use on another device</button>' : ''}
+    </div>
+    ${online ? `<form class="link-form" data-form="link"><input name="code" maxlength="6" autocomplete="off" placeholder="CODE" aria-label="Device or Discord code" required><button class="btn" type="submit">Load otter</button></form>
+      <p class="muted small-note">Got a code from another device or from <code>/link</code> in Discord? Enter it to load that otter here.</p>` : ''}
+    <h3 class="den-sub dark">Backups</h3>
+    <div class="save-actions">
+      <button class="btn" data-action="backup">⬇️ Download backup</button>
+      <label class="btn">⬆️ Restore backup<input type="file" accept=".json,application/json" data-restore hidden></label>
+    </div>
+    <p class="muted small-note">Clearing your browser's cookies or site data erases the otter saved on this device. An online save or a backup file keeps it safe.</p>
+    ${!online ? `<p class="muted small-note">Tried: ${sync.tried.map(esc).join(', ') || '—'}. <button class="link" data-action="recheck">Try again</button></p>` : ''}
+  </div>`;
+}
+
+function showSavePanel(extra = '') { showModal(savePanelHTML(extra)); }
+
+function downloadBackup() {
+  const data = { app: 'otteroyster', kind: 'backup', exported: new Date().toISOString(), state };
+  const blob = new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${(state.name || 'otter').replace(/[^a-z0-9]+/gi, '-').toLowerCase()}-backup-${core.dayKey()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  try { localStorage.setItem('otteroyster.lastBackup', String(Date.now())); } catch { /* ignore */ }
+  toast('🗂️ Backup downloaded! Keep it somewhere safe.');
+}
+
+async function restoreBackup(file) {
+  let data;
+  try { data = JSON.parse(await file.text()); } catch { return toast("That file isn't an Otter & Oyster backup."); }
+  const st = data?.state || data;
+  if (!st || typeof st !== 'object' || !st.name || !st.stats) return toast("That file isn't an Otter & Oyster backup.");
+  if (!confirm(`Restore ${st.name} (level ${st.level || 1}) from ${data.exported ? new Date(data.exported).toLocaleDateString() : 'this backup'}? This replaces ${state.name ? `${state.name} on this device` : 'the otter on this device'}${sync.linked ? ' and your online save' : ''}.`)) return;
+  state = core.normalize(st);
+  lastOtter = '';
+  runTick();
+  commit({ push: false });
+  if (sync.linked && sync.online) {
+    // Overwrite the online save with the restored otter.
+    try { const r = await sync.pull(); if (r) sync.version = r.version; } catch { /* offline */ }
+    await pushNow();
+  }
+  closeModal();
+  toast(`🦦 ${state.name} is back!`);
+  burst(['💖', '🦦', '✨'], 10);
 }
 
 let state = loadLocal() || core.defaultState();
@@ -160,8 +263,7 @@ function renderHeader() {
   $('#level').textContent = state.level;
   $('#xp-fill').style.width = `${(state.xp / core.xpNeed(state.level)) * 100}%`;
   $('#pearls').textContent = state.pearls;
-  $('#sync-dot').hidden = !sync.linked;
-  $('#sync-dot').classList.toggle('off', !sync.online);
+  renderSaveChip();
 }
 
 function renderStats() {
@@ -515,7 +617,8 @@ function discordSection() {
 
 function panelFriends() {
   if (!sync.online) {
-    return `<div class="empty"><div class="empty-icon">📡</div><p>The Otter &amp; Oyster server isn't reachable right now, so friends and Discord are unavailable. Your otter is still saved on this device.</p>
+    return `<div class="empty"><div class="empty-icon">📡</div><p>The Otter &amp; Oyster server isn't reachable from this page, so friends and Discord are unavailable. Your otter is still saved on this device.</p>
+      <p class="muted small-note">Looked for it at: ${sync.tried.map(esc).join(', ') || location.origin}</p>
       <button class="btn" data-action="recheck">Try again</button></div>`;
   }
   if (!sync.linked) {
@@ -735,12 +838,21 @@ function updateLive() {
 }
 
 // ---------- sync ----------
-async function pushNow() {
-  if (!sync.linked || !sync.online) return;
+async function pushNow({ keepalive = false } = {}) {
+  clearTimeout(pushTimer);
+  pushTimer = 0;
+  if (!sync.linked || !sync.online) { renderSaveChip(); return; }
+  saveInfo.cloud = 'saving';
+  renderSaveChip();
   try {
-    const r = await sync.push(state);
+    const r = await sync.push(state, { keepalive });
     if (r.conflict) adoptRemote(r.state, r.version, 'Updated with changes from Discord 🔄');
-  } catch { /* offline; will retry on next change */ }
+    saveInfo.cloud = r.ok || r.conflict ? 'ok' : 'error';
+    if (r.ok || r.conflict) saveInfo.cloudAt = Date.now();
+  } catch {
+    saveInfo.cloud = 'error'; // offline; retried on the next change and every minute
+  }
+  renderSaveChip();
 }
 
 async function pullNow(quiet = true) {
@@ -810,6 +922,8 @@ function closeModal() {
   $('#modal').hidden = true;
   $('#modal-card').innerHTML = '';
   setTimeout(showReports, 300);
+  // No otter yet (e.g. closed the load screen without loading one): ask again.
+  setTimeout(() => { if (!state.name && $('#modal').hidden) askName(true); }, 50);
 }
 
 function askName(first) {
@@ -823,7 +937,7 @@ function askName(first) {
       ${first ? '<p>Give your new friend a name. Feed them, dress them up, send them on adventures and play games together.</p>' : ''}
       <input name="name" maxlength="16" required autocomplete="off" placeholder="${idea}" value="${first ? '' : esc(state.name)}" aria-label="Otter name">
       <button class="btn primary" type="submit">${first ? 'Adopt 🦦' : 'Save'}</button>
-      ${first && sync.online ? '<button class="link" type="button" data-action="havediscord">Already have an otter on Discord?</button>' : ''}
+      ${first ? '<button class="link" type="button" data-action="havediscord">Already have an otter? Load it from another device, Discord or a backup</button>' : ''}
     </form>`, { locked: first });
   setTimeout(() => $('#modal input')?.focus(), 50);
 }
@@ -844,10 +958,10 @@ async function doLink(code, keep) {
   const r = await sync.link(code.trim().toUpperCase(), state.name ? state : null, keep);
   if (r.status === 409 && r.conflict) {
     showModal(`<div class="result"><div class="result-icon">🦦🦦</div><h2>Two otters!</h2>
-      <p>Your Discord account already has <b>${esc(r.server.name)}</b> (level ${r.server.level}). This website has <b>${esc(state.name)}</b> (level ${state.level}). Which one do you want to keep?</p>
-      <div class="row"><button class="btn" data-action="keep" data-keep="discord" data-code="${esc(code)}">Keep ${esc(r.server.name)}</button>
-      <button class="btn primary" data-action="keep" data-keep="web" data-code="${esc(code)}">Keep ${esc(state.name)}</button></div>
-      <p class="muted">The other otter will be released back to the sea.</p></div>`);
+      <p>That code belongs to <b>${esc(r.server.name)}</b> (level ${r.server.level}). This device has <b>${esc(state.name)}</b> (level ${state.level}). Which otter do you want to keep?</p>
+      <div class="row"><button class="btn primary" data-action="keep" data-keep="discord" data-code="${esc(code)}">Keep ${esc(r.server.name)}<br><small>(from the code)</small></button>
+      <button class="btn" data-action="keep" data-keep="web" data-code="${esc(code)}">Keep ${esc(state.name)}<br><small>(this device)</small></button></div>
+      <p class="muted">The other otter will be released back to the sea. Tip: download a backup first if you're not sure (💾 Save).</p></div>`);
     return;
   }
   if (!r.token) { toast(r.error || 'That code did not work. Try /link again.'); return; }
@@ -898,11 +1012,29 @@ document.addEventListener('click', async (e) => {
       location.reload();
       return null;
     }
+    case 'save-panel': return showSavePanel();
+    case 'save-now':
+      saveLocal();
+      await pushNow();
+      toast(sync.linked && sync.online ? (saveInfo.cloud === 'ok' ? '☁️ Saved online and on this device!' : '💾 Saved on this device. Online save will retry.') : '💾 Saved on this device!');
+      if (!$('#modal').hidden && $('.save-panel')) $('#modal-card').innerHTML = savePanelHTML();
+      return null;
+    case 'backup': return downloadBackup();
+    case 'device-code': {
+      const r = await sync.deviceCode();
+      if (!r.ok) return toast(r.error || 'Could not make a code right now.');
+      await pushNow();
+      return showSavePanel(`<div class="device-code"><small class="muted">On your other device, open <b>${esc(location.host)}</b> → 💾 Save → enter:</small>
+        <div class="friend-code big">${r.code}</div><small class="muted">Works once, for 10 minutes.</small></div>`);
+    }
     case 'register': {
       a.disabled = true;
       const r = await sync.register(state);
       if (!r.token) { a.disabled = false; return toast(r.error || 'Could not save online right now.'); }
-      adoptRemote(r.state, r.version, `☁️ ${state.name} is saved online! Now add some friends.`);
+      adoptRemote(r.state, r.version, `☁️ ${state.name} is saved online!`);
+      saveInfo.cloud = 'ok';
+      saveInfo.cloudAt = Date.now();
+      if (!$('#modal').hidden && $('.save-panel')) $('#modal-card').innerHTML = savePanelHTML();
       friendsData = null;
       return loadFriends();
     }
@@ -972,7 +1104,10 @@ document.addEventListener('click', async (e) => {
     case 'game': closeModal(); return playGame(id);
     case 'board': return showLeaderboard(id);
     case 'rename': return askName(false);
-    case 'recheck': await sync.check(); return renderAll() || renderPanel();
+    case 'recheck':
+      await sync.check();
+      if (!$('#modal').hidden && $('.save-panel')) $('#modal-card').innerHTML = savePanelHTML();
+      return renderAll() || renderPanel();
     case 'syncnow': return pullNow(false);
     case 'unlink':
       if (confirm('Sign out on this device? Your otter stays here, but it stops syncing with your online account, friends and Discord.')) {
@@ -985,11 +1120,9 @@ document.addEventListener('click', async (e) => {
       return;
     case 'keep': return doLink(a.dataset.code, a.dataset.keep);
     case 'havediscord':
-      closeModal();
-      tab = 'friends';
-      renderPanel();
-      toast('Run /link in Discord, then enter the code below.');
-      return;
+      if (!sync.online) await sync.check();
+      showSavePanel('<p class="muted small-note">Get a code from 💾 Save → 📲 <b>Use on another device</b> on your other device, or type <code>/link</code> in Discord. Or restore a backup file below.</p>');
+      return null;
     case 'reset':
       if (confirm('Start over with a new otter? This erases all progress on this device.')) {
         sync.unlink();
@@ -1039,6 +1172,10 @@ document.addEventListener('submit', (e) => {
   }
 });
 
+document.addEventListener('change', (e) => {
+  if (e.target.matches('[data-restore]') && e.target.files?.[0]) restoreBackup(e.target.files[0]);
+});
+
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !$('#modal').hidden && !$('#modal').dataset.locked) {
     if (gameOpen) quitGame();
@@ -1049,7 +1186,7 @@ document.addEventListener('keydown', (e) => {
 $('#otter-wrap').addEventListener('click', () => act(core.cuddle(state)));
 
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) { saveLocal(); return; }
+  if (document.hidden) { saveLocal(); if (sync.linked && sync.online) pushNow({ keepalive: true }); return; }
   runTick();
   commit({ push: false });
   pullNow();

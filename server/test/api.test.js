@@ -171,6 +171,20 @@ test('linking Discord to an existing website account merges them', async () => {
   assert.equal(list.code, W.code);
 });
 
+test('device codes load the same otter on another device', async () => {
+  const A = (await call('/api/register', { method: 'POST', body: { state: { ...core.defaultState(), name: 'Roamer', pearls: 321 } } })).data;
+  assert.equal((await call('/api/device-code', { method: 'POST', body: {} })).status, 401);
+  const { code } = (await call('/api/device-code', { method: 'POST', token: A.token, body: {} })).data;
+  assert.match(code, /^[A-Z2-9]{6}$/);
+  // a fresh device with no otter of its own
+  const fresh = await call('/api/link', { method: 'POST', body: { code } });
+  assert.equal(fresh.status, 200);
+  assert.equal(fresh.data.state.name, 'Roamer');
+  assert.equal(fresh.data.state.pearls, 321);
+  assert.notEqual(fresh.data.token, A.token);
+  assert.equal((await call('/api/save', { token: fresh.data.token })).data.state.name, 'Roamer');
+});
+
 // Runs last: it deliberately uses up the link rate limit.
 test('link endpoint is rate limited', async () => {
   let limited = false;

@@ -117,6 +117,12 @@ export function startHttp({ store, social, port, siteRoot, allowedOrigins, info 
         return send(res, 200, { improved });
       }
 
+      case 'POST /api/device-code': {
+        const p = authed(req);
+        if (!p) return send(res, 401, { error: 'Not signed in' });
+        return send(res, 200, { code: store.makeLinkCode(p.id), expiresIn: 600 });
+      }
+
       case 'GET /api/friends': {
         const p = authed(req);
         if (!p) return send(res, 401, { error: 'Not signed in' });

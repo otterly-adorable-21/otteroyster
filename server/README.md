@@ -101,6 +101,11 @@ Railway is the easiest:
 6. DNS changes take a few minutes to a few hours. When Railway shows a green check next to the domain,
    https://otteroyster.online is served by the new server, and Friends and Discord light up on the website.
 
+**Keeping the website on GitHub Pages instead?** That works too: put the server's Railway
+address (e.g. `https://otteroyster-production.up.railway.app`) in `SERVER_FALLBACK` in
+`js/config.js`. The website then finds the server there, and the server already accepts
+requests from otteroyster.online.
+
 Hosting like this usually costs a few dollars a month; check the host's current pricing.
 Fly.io and Render work the same way: deploy the `Dockerfile`, attach a volume at `/data`,
 set the same variables, and point the domain at it.

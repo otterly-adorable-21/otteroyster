@@ -98,8 +98,6 @@ a { color: inherit; }
 .xpbar { width: 96px; height: 7px; border-radius: 99px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
 #xp-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--gold), var(--gold-light)); border-radius: inherit; transition: width 0.4s; }
 .top-right { display: flex; align-items: center; gap: 8px; }
-.sync-dot { font-size: 1.05rem; }
-.sync-dot.off { opacity: 0.35; filter: grayscale(1); }
 .pearl-count {
   display: flex; align-items: center; gap: 7px;
   background: rgba(255, 250, 240, 0.08); padding: 6px 14px 6px 7px; border-radius: 99px;
@@ -700,3 +698,24 @@ details.cmd-list[open] summary { margin-bottom: 6px; }
 .fav-chip { background: #fff4f6; border-radius: 99px; padding: 3px 10px; box-shadow: inset 0 0 0 1px #f8c6d2; }
 .fav-tag { font-family: 'Nunito', sans-serif; font-size: .7rem; font-weight: 800; color: #c2255c; background: #fff0f4; padding: 2px 7px; border-radius: 99px; vertical-align: middle; white-space: nowrap; }
 .visit-persona { font-size: .9rem; margin: 4px 0; }
+
+/* ---------- saving ---------- */
+.save-chip { display: inline-flex; align-items: center; gap: 4px; border: 0; padding: 6px 10px; border-radius: 99px; font-size: .78rem; font-weight: 800;
+  background: rgba(255, 250, 240, 0.08); color: var(--aqua-light); box-shadow: inset 0 0 0 1px rgba(155, 232, 222, 0.3); }
+.save-chip.good { color: #b2f2bb; box-shadow: inset 0 0 0 1px rgba(178, 242, 187, .45); }
+.save-chip.busy { color: var(--gold-light); }
+.save-chip.warn { color: #ffd8a8; box-shadow: inset 0 0 0 1px rgba(255, 216, 168, .5); }
+.save-chip.bad { color: #ffc9c9; box-shadow: inset 0 0 0 1px rgba(255, 135, 135, .6); }
+@media (max-width: 380px) { .save-chip [data-save-text] { display: none; } }
+.save-panel { display: grid; gap: 12px; }
+.save-panel h2 { font-size: 1.5rem; color: var(--deep); }
+.save-rows { display: grid; gap: 8px; }
+.save-row { display: flex; gap: 10px; align-items: flex-start; background: #fff; border-radius: 14px; padding: 10px 12px; box-shadow: inset 0 0 0 1px var(--line); }
+.save-row > span { font-size: 1.4rem; }
+.save-row .muted { font-size: .82rem; }
+.save-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.save-actions .btn { flex: 1 1 auto; }
+.save-actions label.btn { cursor: pointer; }
+.den-sub.dark { color: var(--deep); margin: 4px 0 0; }
+.device-code { text-align: center; background: #fff9db; border-radius: 16px; padding: 12px; box-shadow: var(--gold-ring); display: grid; gap: 4px; }
+.friend-code.big { font-size: 2rem; letter-spacing: .2em; }

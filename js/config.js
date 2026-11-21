@@ -14,4 +14,12 @@ function readOverride() {
   }
 }
 
+// Optional: the server's own address (e.g. your Railway "….up.railway.app" URL).
+// Used as a fallback when the site is served by a plain static host (like GitHub
+// Pages) that has no /api of its own. Leave empty if the server hosts the site.
+export const SERVER_FALLBACK = '';
+
 export const API_BASE = readOverride() || location.origin;
+
+// Addresses to try, in order.
+export const API_CANDIDATES = [...new Set([readOverride(), location.origin, SERVER_FALLBACK].filter(Boolean).map((u) => u.replace(/\/$/, '')))];
