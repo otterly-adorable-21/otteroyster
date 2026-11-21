@@ -25,3 +25,11 @@ export const heartsText = (points) => {
   const l = friendLevel(points);
   return '💗'.repeat(l.hearts) + '🤍'.repeat(5 - l.hearts);
 };
+
+// Shell Mail postcard designs.
+export const POSTCARD_ART = {
+  pond: { name: 'Lily Pond', icon: '🪷' },
+  lighthouse: { name: 'Lighthouse', icon: '🗼' },
+  reef: { name: 'Pearl Reef', icon: '🐠' },
+  moon: { name: 'Moonlit Night', icon: '🌙' },
+};

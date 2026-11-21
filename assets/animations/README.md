@@ -14,6 +14,17 @@ care button is pressed. Until a file is here, the built-in effects play instead.
 | `wake` | Waking up |
 | `gift` | Opening the daily gift |
 | `trick-rollover`, `trick-juggle`, `trick-handstand`, `trick-twirl` | Performing a trick (Grown Otters learn these) |
+| `levelup` | Reaching a new level |
+| `grow` | Growing into the next stage (Young, Grown, Wise) |
+| `birthday` | The birthday party starting |
+| `mission-return` | Coming home from a mission |
+| `discover` | Finding something new while exploring |
+| `hug` | Hugging a friend's otter |
+| `outfit` | Putting on clothes |
+| `donate` | Donating to the Pond Museum |
+
+On tabs where the pond isn't showing (Den, Explore, Friends), the animation plays
+in a little pop-up in the middle of the screen instead.
 
 Add the extension that matches your file, e.g. `bath.webp`.
 

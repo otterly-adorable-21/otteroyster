@@ -1,5 +1,6 @@
 // Illustrated world map (viewBox 0 0 400 460) with tappable places.
 import { LOCATIONS, LOC, ROUTES } from './world.js';
+import { artUrl, svgIcon } from './art.js';
 
 const willow = (x, y, k = 1) => `<g transform="translate(${x} ${y}) scale(${k})">
   <rect x="-3" y="-4" width="6" height="22" rx="2" fill="#5a3f2a"/>
@@ -75,7 +76,7 @@ export function mapSVG(state, selected) {
       <circle r="30" fill="transparent"/>
       ${sel ? '<circle r="25" fill="none" stroke="#f3d98c" stroke-width="2" stroke-dasharray="4 4" class="pin-ring"/>' : ''}
       <circle r="19" fill="${locked ? '#5d6b6b' : '#fffaf0'}" stroke="#d9b45a" stroke-width="3"/>
-      <text y="7" text-anchor="middle" font-size="19">${locked ? '🔒' : l.icon}</text>
+      ${locked ? '<text y="7" text-anchor="middle" font-size="19">🔒</text>' : svgIcon(`places/${l.id}`, l.icon, 30, 'y="7" text-anchor="middle" font-size="19"')}
       ${done ? '<text x="15" y="-11" text-anchor="middle" font-size="12">🏅</text>' : ''}
       ${here ? '<circle cx="-15" cy="-14" r="7" fill="#d9635b" stroke="#fffaf0" stroke-width="2"/><text x="-15" y="-10.5" text-anchor="middle" font-size="9" fill="#fff">🦦</text>' : ''}
       <text y="35" text-anchor="middle" font-size="11.5" font-weight="800" fill="#fffaf0" stroke="#0c3440" stroke-width="3.5" paint-order="stroke" font-family="Nunito, system-ui, sans-serif">${l.name}${locked ? ` · Lv ${l.level}` : ''}</text>
@@ -87,12 +88,12 @@ export function mapSVG(state, selected) {
       <linearGradient id="map-land" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4d7a3a"/><stop offset="1" stop-color="#7fa65a"/></linearGradient>
       <radialGradient id="map-pearl" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#d2f2ee"/></radialGradient>
     </defs>
-    ${scenery()}
+    ${artUrl('map/world') ? `<image href="${artUrl('map/world')}" width="400" height="460" preserveAspectRatio="xMidYMid slice"/>` : scenery()}
     ${routes}
     ${pins}
     ${[['museum', '🏛️', 'Pond Museum', 128, 214], ['lane', '🏘️', 'Otter Lane', 276, 198]].map(([id, icon, name, x, y]) => `<g class="map-pin building" data-place="${id}" transform="translate(${x} ${y})" tabindex="0" role="button" aria-label="${name}">
       <circle r="28" fill="transparent"/><rect x="-18" y="-18" width="36" height="36" rx="10" fill="#fffaf0" stroke="#d9b45a" stroke-width="3"/>
-      <text y="7" text-anchor="middle" font-size="19">${icon}</text>
+      ${svgIcon(`places/${id}`, icon, 30, 'y="7" text-anchor="middle" font-size="19"')}
       <text y="34" text-anchor="middle" font-size="11.5" font-weight="800" fill="#fff3bf" stroke="#0c3440" stroke-width="3.5" paint-order="stroke" font-family="Nunito, system-ui, sans-serif">${name}</text></g>`).join('')}
   </svg>`;
 }

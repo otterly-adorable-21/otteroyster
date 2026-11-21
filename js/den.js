@@ -4,6 +4,11 @@ import { FURNITURE, WALLPAPERS, FLOORS, DEN_W, DEN_H, OTTER_W, zoneOf, itemSize 
 
 export { DEN_W, DEN_H, OTTER_W, zoneOf, itemSize, clampPos } from './den-data.js';
 import { otterSVG } from './otter.js';
+import { artUrl } from './art.js';
+
+const img = (url, x, y, w, h) => `<image href="${url}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="none"/>`;
+// Uploaded furniture art fills the item's own drawing box.
+const furnitureArt = (id, it) => { const u = artUrl(`furniture/${id}`); if (!u) return it.svg; const [x, y, w, h] = it.vb.split(' ').map(Number); return img(u, x, y, w, h); };
 
 const WALL_BOTTOM = 196;
 
@@ -31,11 +36,15 @@ const PATTERNS = {
 };
 
 function room(wallpaper, floor) {
+  const wp = artUrl(`wallpaper/${wallpaper}`);
+  const fl = artUrl(`floor/${floor}`);
+  const back = artUrl('den/back');
   return `
-  <rect width="${DEN_W}" height="${WALL_BOTTOM}" fill="url(#wp-${wallpaper})"/>
-  <rect y="${WALL_BOTTOM}" width="${DEN_W}" height="${DEN_H - WALL_BOTTOM}" fill="url(#fl-${floor})"/>
+  ${wp ? img(wp, 0, 0, DEN_W, WALL_BOTTOM) : `<rect width="${DEN_W}" height="${WALL_BOTTOM}" fill="url(#wp-${wallpaper})"/>`}
+  ${fl ? img(fl, 0, WALL_BOTTOM, DEN_W, DEN_H - WALL_BOTTOM) : `<rect y="${WALL_BOTTOM}" width="${DEN_W}" height="${DEN_H - WALL_BOTTOM}" fill="url(#fl-${floor})"/>`}
   <rect y="${WALL_BOTTOM}" width="${DEN_W}" height="${DEN_H - WALL_BOTTOM}" fill="url(#den-floorshade)"/>
   <rect y="${WALL_BOTTOM - 4}" width="${DEN_W}" height="6" fill="#5a3f2a" opacity=".7"/>
+  ${back ? img(back, 0, 0, DEN_W, DEN_H) : `
   <!-- round window to the pond -->
   <g transform="translate(300 78)">
     <circle r="40" fill="url(#den-window)"/>
@@ -48,10 +57,12 @@ function room(wallpaper, floor) {
   <!-- tunnel back out to the pond -->
   <path d="M28,${WALL_BOTTOM + 2} V136 Q28,104 58,104 Q88,104 88,136 V${WALL_BOTTOM + 2}Z" fill="#2a1d14"/>
   <path d="M28,${WALL_BOTTOM + 2} V136 Q28,104 58,104 Q88,104 88,136 V${WALL_BOTTOM + 2}" fill="none" stroke="#8a6644" stroke-width="5"/>
-  <circle cx="58" cy="150" r="3" fill="#e6ff9c" opacity=".8"/>`;
+  <circle cx="58" cy="150" r="3" fill="#e6ff9c" opacity=".8"/>`}`;
 }
 
 function burrowFrame() {
+  const fr = artUrl('den/frame');
+  if (fr) return img(fr, 0, 0, DEN_W, DEN_H);
   return `
   <path fill-rule="evenodd" fill="#3b2a1e" d="M0,0 H${DEN_W} V${DEN_H} H0Z M14,${DEN_H} V112 Q14,10 200,8 Q386,10 386,112 V${DEN_H}Z"/>
   <path d="M14,${DEN_H} V112 Q14,10 200,8 Q386,10 386,112 V${DEN_H}" fill="none" stroke="#5a3f2a" stroke-width="6"/>
@@ -78,7 +89,7 @@ function itemSVG(p, { selected = false, editable = false } = {}) {
   const flip = p.flip ? ` transform="translate(${p.x * 2} 0) scale(-1 1)"` : '';
   const shadow = zoneOf(p.id) === 'floor' ? `<ellipse cx="${p.x}" cy="${p.y - 1}" rx="${w * 0.42}" ry="${Math.max(3, w * 0.07)}" fill="#000" opacity=".22"/>` : '';
   const sel = selected ? `<rect x="${x - 4}" y="${y - 4}" width="${w + 8}" height="${h + 8}" rx="8" fill="none" stroke="#f3d98c" stroke-width="2.5" stroke-dasharray="6 4"/>` : '';
-  return `<g class="den-item${editable ? ' editable' : ''}" data-uid="${p.uid}">${shadow}<g${flip}><svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="${it.vb}" overflow="visible">${it.svg}</svg></g>${sel}</g>`;
+  return `<g class="den-item${editable ? ' editable' : ''}" data-uid="${p.uid}">${shadow}<g${flip}><svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="${it.vb}" overflow="visible">${furnitureArt(p.id, it)}</svg></g>${sel}</g>`;
 }
 
 function otterInDen(state, pos, { selected = false, editable = false } = {}) {
@@ -148,5 +159,5 @@ function partyDecor() {
 // Small preview of one catalog item for shop cards.
 export function furniturePreviewSVG(id) {
   const it = FURNITURE[id];
-  return `<svg viewBox="${it.vb}" aria-hidden="true"><defs><radialGradient id="den-pearl" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#fff"/><stop offset=".45" stop-color="#f1e8ff"/><stop offset=".75" stop-color="#d2f2ee"/><stop offset="1" stop-color="#c6b8d6"/></radialGradient></defs>${it.svg}</svg>`;
+  return `<svg viewBox="${it.vb}" aria-hidden="true"><defs><radialGradient id="den-pearl" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#fff"/><stop offset=".45" stop-color="#f1e8ff"/><stop offset=".75" stop-color="#d2f2ee"/><stop offset="1" stop-color="#c6b8d6"/></radialGradient></defs>${furnitureArt(id, it)}</svg>`;
 }

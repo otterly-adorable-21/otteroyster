@@ -3,6 +3,8 @@
 // sleepy closed-eye smile, big glossy nose, holding an open oyster with a pearl.
 import { ITEMS } from './data.js';
 import { mood } from './core.js';
+import { stageOf } from './growth.js';
+import { artUrl, firstArt, otterImage } from './art.js';
 
 export { mood };
 
@@ -26,7 +28,18 @@ const DEFS = `<defs>
   <radialGradient id="oo-nacre" cx="50%" cy="80%" r="80%"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#e9f6f4"/><stop offset="1" stop-color="#d9cbe8"/></radialGradient>
 </defs>`;
 
-const layer = (id) => (id && ITEMS[id] ? ITEMS[id].svg : '');
+const layer = (id) => {
+  if (!id || !ITEMS[id]) return '';
+  const url = artUrl(`clothes/${id}`);
+  return url ? otterImage(url) : ITEMS[id].svg;
+};
+
+// Uploaded otter art for this mood/stage, most specific first (see js/art.js).
+function otterArt(state, m) {
+  const st = stageOf(state.level || 1).id;
+  const keys = state.sleeping ? [`otter/${st}-sleeping`, 'otter/sleeping'] : [`otter/${st}-${m}`, `otter/${m}`, `otter/${st}`, 'otter/base'];
+  return firstArt(keys);
+}
 
 function eyes(m, asleep) {
   const closed = (lift) => `<path d="M74,${77 + lift} Q83,${69 + lift} 92,${77 + lift} M108,${77 + lift} Q117,${69 + lift} 126,${77 + lift}" stroke="${C.eye}" stroke-width="3.2" fill="none" stroke-linecap="round"/>
@@ -84,9 +97,22 @@ export function otterSVG(state, { idPrefix = 'oo' } = {}) {
   const m = mood(state);
   const asleep = state.sleeping;
   const eq = state.equipped;
+  const P = (x) => x.replace(/oo-/g, `${idPrefix}-`);
+  const art = otterArt(state, m);
+  const body = art
+    ? otterImage(artUrl(art)) + (state.stats.clean < 40 && artUrl('otter/dirty') ? otterImage(artUrl('otter/dirty')) : '')
+    : P(drawnBody(state, m, asleep));
+  return `${P(DEFS)}
+  <g class="o-back">${P(layer(eq.back))}</g>
+  ${body}
+  <g class="o-neck">${P(layer(eq.neck))}</g>
+  <g class="o-eyes">${asleep ? '' : P(layer(eq.eyes))}</g>
+  <g class="o-hat">${P(layer(eq.hat))}</g>`;
+}
+
+function drawnBody(state, m, asleep) {
   const blush = !asleep && m !== 'sad' ? '<ellipse cx="70" cy="91" rx="7" ry="4" fill="#f2a5a0" opacity=".45"/><ellipse cx="130" cy="91" rx="7" ry="4" fill="#f2a5a0" opacity=".45"/>' : '';
-  return `${DEFS}
-  <g class="o-back">${layer(eq.back)}</g>
+  return `
   <path d="M136,196 Q192,212 186,168 Q180,150 170,160 Q176,186 134,180Z" fill="${C.furDark}"/>
   <ellipse cx="74" cy="214" rx="19" ry="10" fill="${C.furDark}"/>
   <ellipse cx="126" cy="214" rx="19" ry="10" fill="${C.furDark}"/>
@@ -111,15 +137,12 @@ export function otterSVG(state, { idPrefix = 'oo' } = {}) {
     <path d="M80,98 Q62,92 44,90"/><path d="M80,102 Q60,102 42,106"/><path d="M82,105 Q64,110 50,118"/>
     <path d="M120,98 Q138,92 156,90"/><path d="M120,102 Q140,102 158,106"/><path d="M118,105 Q136,110 150,118"/>
   </g>
-  ${dirt(state.stats.clean)}
-  <g class="o-neck">${layer(eq.neck)}</g>
-  <g class="o-eyes">${asleep ? '' : layer(eq.eyes)}</g>
-  <g class="o-hat">${layer(eq.hat)}</g>`.replace(/oo-/g, `${idPrefix}-`);
+  ${dirt(state.stats.clean)}`;
 }
 
 // A small standalone preview of a single item (for shop/wardrobe cards).
 export function itemPreviewSVG(id) {
   const it = ITEMS[id];
   const boxes = { hat: '40 -24 120 80', eyes: '50 50 100 50', neck: '50 96 100 80', back: '20 -10 170 240' };
-  return `<svg viewBox="${it.view || boxes[it.slot]}" aria-hidden="true">${it.svg}</svg>`;
+  return `<svg viewBox="${it.view || boxes[it.slot]}" aria-hidden="true">${layer(id)}</svg>`;
 }

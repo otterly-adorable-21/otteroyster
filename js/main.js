@@ -5,12 +5,13 @@ import { LOADERS } from './games/index.js';
 import { sync } from './sync.js';
 import { detectArt, art } from './assets.js';
 import { playCare, setSleeping } from './animations.js';
+import { ic, artUrl, loadArtManifest } from './art.js';
 import { STAGES, stageOf, nextStage, TRICKS, isBirthday, nextBirthday, birthdayLabel } from './growth.js';
 import { FURNITURE, WALLPAPERS, FLOORS, DEN_CATS } from './den-data.js';
 import { denSVG, furniturePreviewSVG } from './den.js';
 import { LOCATIONS, LOC, RARITY, FINDS, TOTAL_FINDS, EXPLORE_ENERGY, SET_REWARD } from './world.js';
 import { mapSVG } from './map.js';
-import { heartsText, friendLevel, GIFT_PEARL_OPTIONS, GIFT_PEARLS_PER_DAY } from './social.js';
+import { heartsText, friendLevel, GIFT_PEARL_OPTIONS, GIFT_PEARLS_PER_DAY, POSTCARD_ART } from './social.js';
 import { EVENTS, EVENT, EVENT_FINDS, eventEndsAt, nextEvent, setEventPreview, isPreview } from './events.js';
 import { PHASES, timeOfDay, WEATHER, weatherAt, forecast, tideAt, TIDE_NAMES, LOW_TIDE_PLACES, exploreLuck, MOODS, dailyMood, SLEEP_POSES, sleepPose, thoughtFor } from './ambience.js';
 
@@ -225,6 +226,7 @@ function act(res) {
 }
 
 function levelUp() {
+  playCare('levelup');
   toast(`⭐ Level up! ${state.name} is now level ${state.level}`);
   burst(['⭐', '✨', '🎉'], 10);
 }
@@ -248,6 +250,7 @@ function showReports() {
   const r = reports[reports.length - 1];
   const m = MISSIONS.find((x) => x.id === r.id);
   if (r.ups) levelUp();
+  playCare('mission-return');
   showModal(`
     <div class="result">
       <div class="result-icon">${m.icon}</div>
@@ -258,7 +261,7 @@ function showReports() {
         <span class="chip">⭐ +${r.xp} XP</span>
       </div>
       ${r.found ? `<div class="loot"><div class="loot-art">${itemPreviewSVG(r.found)}</div><p>Found a rare item: <b>${ITEMS[r.found].name}</b>! Check your closet.</p></div>` : ''}
-      ${r.discovery && FINDS[r.discovery] ? `<div class="loot"><div class="loot-art big-find">${FINDS[r.discovery].icon}</div><p>Brought back a <b>${FINDS[r.discovery].name}</b> for your collection!</p></div>` : ''}
+      ${r.discovery && FINDS[r.discovery] ? `<div class="loot"><div class="loot-art big-find">${ic(`finds/${r.discovery}`, FINDS[r.discovery].icon)}</div><p>Brought back a <b>${FINDS[r.discovery].name}</b> for your collection!</p></div>` : ''}
       ${reports.length > 1 ? `<p class="muted">+${reports.length - 1} more mission report${reports.length > 2 ? 's' : ''} in the journal.</p>` : ''}
       <button class="btn primary" data-close>Yay!</button>
     </div>`);
@@ -271,7 +274,7 @@ async function playGame(id) {
   if (!res.ok) return toast(res.msg);
   commit();
   gameOpen = true;
-  showModal(`<div class="game-wrap"><div class="game-top"><h2>${g.icon} ${g.name}</h2>
+  showModal(`<div class="game-wrap"><div class="game-top"><h2>${ic(`games/${g.id}`, g.icon)} ${g.name}</h2>
     <button class="icon-btn" data-quit aria-label="Quit game">✕</button></div><div class="game-root"><p class="hint">Loading…</p></div></div>`, { wide: true });
   const root = $('#modal .game-root');
   try {
@@ -305,7 +308,7 @@ function endGame(g, r) {
   }
   $('#modal-card').innerHTML = `
     <div class="result">
-      <div class="result-icon">${g.icon}</div>
+      <div class="result-icon">${ic(`games/${g.id}`, g.icon)}</div>
       <h2>${res.record ? 'New record! 🏆' : 'Nice job!'}</h2>
       ${res.favGame ? `<p>${esc(state.name)} loves this game! 💕 (+10% pearls)</p>` : ''}
       <p>${r.summary}</p>
@@ -372,7 +375,7 @@ function renderScene() {
 
   if (away) {
     const m = MISSIONS.find((x) => x.id === state.mission.id);
-    $('#away').innerHTML = `<div class="away-icon">${m.icon}</div><p><b>${esc(state.name)}</b> is on <b>${m.name}</b></p><p class="countdown">${fmtTime(state.mission.endsAt - Date.now())}</p>`;
+    $('#away').innerHTML = `<div class="away-icon">${ic(`missions/${m.id}`, m.icon)}</div><p><b>${esc(state.name)}</b> is on <b>${m.name}</b></p><p class="countdown">${fmtTime(state.mission.endsAt - Date.now())}</p>`;
   } else {
     const svg = otterSVG(state);
     if (svg !== lastOtter) { $('#otter').innerHTML = svg; lastOtter = svg; }
@@ -406,7 +409,12 @@ function renderAmbience(scene, away) {
   const wIcon = phase === 'night' && w.nightIcon ? w.nightIcon : w.icon;
   $('#pond-status').innerHTML = `<span>${PHASES[phase].icon} ${PHASES[phase].name}</span><span>${wIcon} ${w.name}</span><span>${TIDE_NAMES[tide.state]}</span>`;
   const fx = $('#weather-fx');
+  const sceneArt = artUrl(`scene/${phase}`) || artUrl('scene/base');
+  scene.classList.toggle('has-scene-art', !!sceneArt);
+  scene.style.setProperty('--scene-art', sceneArt ? `url("${sceneArt}")` : 'none');
   const drops = { rainy: '', breezy: '🍃', misty: '', cloudy: '', sunny: '' }[weather];
+  const wArt = artUrl(`weather/${weather}`);
+  if (wArt) { fx.innerHTML = `<img class="weather-art" src="${wArt}" alt="">`; return; }
   fx.innerHTML = weather === 'rainy' ? '<i class="rain"></i>' : weather === 'misty' ? '<i class="mist"></i>' : weather === 'cloudy' ? '<i class="cloud c1"></i><i class="cloud c2"></i>'
     : weather === 'breezy' ? Array.from({ length: 6 }, (_, k) => `<i class="leaf" style="top:${10 + k * 14}%;animation-delay:${-k * 1.3}s">${drops}</i>`).join('') : '';
 }
@@ -538,9 +546,9 @@ function eventBanner() {
   const done = st.quests.filter((q) => q.claimed).length;
   const ready = st.quests.filter((q) => !q.claimed && q.p >= q.target).length;
   return `<button class="event-banner" data-tab="event" style="--tint:${ev.tint}">
-    <span class="event-icon">${ev.icon}</span>
+    <span class="event-icon">${ic(`events/${ev.id}`, ev.icon)}</span>
     <span class="event-text"><b>${ev.name}${isPreview() ? ' (preview)' : ''}</b>
-      <small>${isPreview() ? 'Preview mode' : daysLeft(eventEndsAt(ev))} · ${ev.token.icon} ${st.tokens} · quests ${done}/3${ready ? ` · <span class="ready">${ready} ready!</span>` : ''}</small></span>
+      <small>${isPreview() ? 'Preview mode' : daysLeft(eventEndsAt(ev))} · ${ic(`events/${ev.id}-token`, ev.token.icon)} ${st.tokens} · quests ${done}/3${ready ? ` · <span class="ready">${ready} ready!</span>` : ''}</small></span>
     <span class="event-go">›</span></button>`;
 }
 
@@ -558,22 +566,22 @@ function panelEvent() {
     const owned = isItem ? state.owned.includes(e.id) : false;
     return `<div class="card item"><div class="item-art ${isItem ? '' : 'den-art'}">${isItem ? itemPreviewSVG(e.id) : furniturePreviewSVG(e.id)}</div>
       <div class="item-name">${it.name}</div><small class="muted">${isItem ? 'Outfit' : `Den · ✨ +${it.cozy}`}</small>
-      ${owned ? '<button class="btn small" disabled>Owned ✓</button>' : `<div class="buy-row">${tryBtn(isItem ? 'evitem' : 'evfurn', e.id)}<button class="btn small primary" data-action="ev-buy" data-id="${e.id}" ${st.tokens < e.tokens ? 'disabled' : ''}>${ev.token.icon} ${e.tokens}</button></div>`}</div>`;
+      ${owned ? '<button class="btn small" disabled>Owned ✓</button>' : `<div class="buy-row">${tryBtn(isItem ? 'evitem' : 'evfurn', e.id)}<button class="btn small primary" data-action="ev-buy" data-id="${e.id}" ${st.tokens < e.tokens ? 'disabled' : ''}>${ic(`events/${ev.id}-token`, ev.token.icon)} ${e.tokens}</button></div>`}</div>`;
   };
   return `
     <div class="event-hero" style="--tint:${ev.tint}">
-      <div class="event-hero-icon">${ev.icon}</div>
+      <div class="event-hero-icon">${ic(`events/${ev.id}`, ev.icon)}</div>
       <h2>${ev.name}</h2>
       <p>${ev.desc}</p>
-      <div class="event-meta"><span class="chip">${ev.token.icon} <b>${st.tokens}</b> ${ev.token.name}</span><span class="chip">⏳ ${isPreview() ? 'preview' : daysLeft(eventEndsAt(ev))}</span></div>
+      <div class="event-meta"><span class="chip">${ic(`events/${ev.id}-token`, ev.token.icon)} <b>${st.tokens}</b> ${ev.token.name}</span><span class="chip">⏳ ${isPreview() ? 'preview' : daysLeft(eventEndsAt(ev))}</span></div>
     </div>
     <h2 class="section-title">Today's quests <small>new ones every day</small></h2>
     <div class="quests">${st.quests.map((q) => `<div class="card quest ${q.claimed ? 'done' : ''}">
       <div class="quest-info"><b>${q.text.replace('your otter', esc(state.name))}</b>
         <div class="bar"><div style="width:${(q.p / q.target) * 100}%"></div></div><small class="muted">${q.p}/${q.target}</small></div>
-      ${q.claimed ? '<span class="quest-done">✅</span>' : `<button class="btn small ${q.p >= q.target ? 'primary' : ''}" data-action="ev-claim" data-id="${q.kind}" ${q.p >= q.target ? '' : 'disabled'}>${ev.token.icon} ${q.reward}</button>`}
+      ${q.claimed ? '<span class="quest-done">✅</span>' : `<button class="btn small ${q.p >= q.target ? 'primary' : ''}" data-action="ev-claim" data-id="${q.kind}" ${q.p >= q.target ? '' : 'disabled'}>${ic(`events/${ev.id}-token`, ev.token.icon)} ${q.reward}</button>`}
     </div>`).join('')}</div>
-    <p class="note">Every arcade game and every explore also earns ${ev.token.icon} 1.</p>
+    <p class="note">Every arcade game and every explore also earns ${ic(`events/${ev.id}-token`, ev.token.icon)} 1.</p>
     <h2 class="section-title">Limited shop <small>yours forever</small></h2>
     <div class="grid">${ev.shop.map(item).join('')}</div>
     <h2 class="section-title">Limited discoveries <small>explore anywhere to find them</small></h2>
@@ -592,7 +600,7 @@ function achievementsCard() {
         const done = !!state.achievements[a.id];
         const [have, need] = core.achProgress(state, a);
         return `<div class="badge ${done ? 'got' : ''}" title="${a.name}: ${a.desc}${done ? ' ✓' : ` (${have}/${need})`}">
-          <span class="badge-icon">${a.icon}</span><b>${a.name}</b><small>${done ? `✓ +${a.reward}` : `${have}/${need}`}</small>
+          <span class="badge-icon">${ic(`badges/${a.id}`, a.icon)}</span><b>${a.name}</b><small>${done ? `✓ +${a.reward}` : `${have}/${need}`}</small>
           ${done ? '' : `<div class="bar"><div style="width:${(have / need) * 100}%"></div></div>`}</div>`;
       }).join('')}</div>
       <button class="link center-link" data-action="ach-toggle">${achOpen ? 'Show less' : `See all ${core.ACHIEVEMENTS.length}`}</button>
@@ -605,12 +613,12 @@ function personaCard() {
   const top = pi.ranked[0][1] || 1;
   return `<h2 class="section-title">Personality</h2>
     <div class="card persona">
-      <div class="persona-head"><span class="persona-icon">${pi.trait ? pi.trait.icon : '🌱'}</span>
+      <div class="persona-head"><span class="persona-icon">${pi.trait ? ic(`traits/${pi.trait.id}`, pi.trait.icon) : '🌱'}</span>
         <div><b>${pi.trait ? `${esc(state.name)} is ${pi.trait.name.toLowerCase()}` : `${esc(state.name)} is still discovering who they are`}</b>
         <div class="muted">${pi.trait ? `${pi.trait.desc}${pi.also ? ` Also a bit ${pi.also.name.toLowerCase()} ${pi.also.icon}.` : ''}` : 'Their personality grows from how you play together.'}</div>
         ${pi.trait ? `<div class="persona-perk">✨ ${pi.trait.perk}</div>` : ''}</div></div>
       <div class="persona-bars">${pi.ranked.map(([id, pts]) => `<div class="persona-bar" title="${core.TRAITS[id].name}: grows from ${core.TRAITS[id].from}">
-        <span>${core.TRAITS[id].icon}</span><div class="bar"><div style="width:${Math.min(100, (pts / Math.max(top, 6)) * 100)}%"></div></div></div>`).join('')}</div>
+        <span>${ic(`traits/${id}`, core.TRAITS[id].icon)}</span><div class="bar"><div style="width:${Math.min(100, (pts / Math.max(top, 6)) * 100)}%"></div></div></div>`).join('')}</div>
       <div class="persona-favs">
         <span>❤️ Favorites:</span>
         <span class="fav-chip">${pi.fav.snack.icon} ${pi.fav.snack.name}</span>
@@ -651,7 +659,7 @@ function panelHome() {
     </div>
     <div class="snacks">
       ${SNACKS.map((s) => `<button class="snack" data-action="feed" data-id="${s.id}" ${state.pearls < s.price ? 'disabled' : ''}>
-        <span class="snack-icon">${s.icon}</span>${state.persona?.fav.snack === s.id ? '<span class="fav-heart" title="Favorite!">❤️</span>' : ''}<span class="snack-name">${s.name}</span>
+        <span class="snack-icon">${ic(`snacks/${s.id}`, s.icon)}</span>${state.persona?.fav.snack === s.id ? '<span class="fav-heart" title="Favorite!">❤️</span>' : ''}<span class="snack-name">${s.name}</span>
         <span class="snack-price">${s.price ? `<span class="pearl-icon"></span> ${s.price}` : 'Free'}</span></button>`).join('')}
     </div>
     <h2 class="section-title">Today</h2>
@@ -687,11 +695,11 @@ function growthCard() {
   const bAt = nextBirthday(state);
   const bDays = bAt ? Math.round((bAt - Date.now()) / 86400000) : null;
   return `<div class="card growth">
-    <div class="persona-head"><span class="persona-icon">${st.icon}</span>
+    <div class="persona-head"><span class="persona-icon">${ic(`stages/${st.id}`, st.icon)}</span>
       <div><b>${esc(state.name)} is ${/^[AEIOU]/.test(st.name) ? 'an' : 'a'} ${st.name}</b>
       <div class="muted">${nx ? `Level ${state.level}. At level ${nx.level}, ${esc(state.name)} becomes ${/^[AEIOU]/.test(nx.name) ? 'an' : 'a'} ${nx.name}: ${nx.unlock.toLowerCase()}.` : 'Fully grown, and still loves to play!'}</div>
       ${nx ? `<div class="bar"><div style="width:${pct}%"></div></div>` : ''}</div></div>
-    <div class="stages">${STAGES.map((x) => `<span class="stage ${state.level >= x.level ? 'on' : ''}" title="${x.name}: ${x.unlock} (level ${x.level})">${x.icon}<small>${x.name}</small></span>`).join('')}</div>
+    <div class="stages">${STAGES.map((x) => `<span class="stage ${state.level >= x.level ? 'on' : ''}" title="${x.name}: ${x.unlock} (level ${x.level})">${ic(`stages/${x.id}`, x.icon)}<small>${x.name}</small></span>`).join('')}</div>
     <div class="together">
       <button class="btn small" data-action="story" ${young ? '' : 'disabled'}>📖 Tell a story${young ? '' : ' · Lv 5'}</button>
       <button class="btn small" data-action="teach" ${grown ? '' : 'disabled'}>🎓 Teach a trick${grown ? '' : ' · Lv 10'}</button>
@@ -763,7 +771,7 @@ function museumView() {
   const tile = (f) => {
     const ex = m.exhibits[f.id];
     return `<div class="find ${ex ? 'got' : ''}" style="--rar:${RARITY[f.rarity].color}" title="${ex ? `${f.name} · ${ex.count} donated` : 'Not in the museum yet'}">
-      <span class="find-icon">${ex ? f.icon : '❔'}</span><span class="find-name">${ex ? f.name : '???'}</span>
+      <span class="find-icon">${ex ? ic(`finds/${f.id}`, f.icon) : '❔'}</span><span class="find-name">${ex ? f.name : '???'}</span>
       <span class="find-rar">${ex ? `${ex.first?.mine ? '⭐ you!' : `1st: ${esc(ex.first?.by || '?')}`}` : 'needed'}</span></div>`;
   };
   return `<div class="explore-head"><h2 class="section-title">Pond Museum</h2>${back}</div>
@@ -776,7 +784,7 @@ function museumView() {
     <div class="milestones">${m.milestones.map((x) => `<div class="milestone ${x.reached ? 'on' : ''}"><b>${x.pct}%</b><small><span class="pearl-icon"></span> ${x.pearls}${x.item ? ' + display case' : ''}</small>
       ${x.reached && sync.linked && !x.claimed ? `<button class="btn small primary" data-action="museum-claim" data-id="${x.pct}">Claim</button>` : x.claimed ? '<small>✓ claimed</small>' : '<small>🔒</small>'}</div>`).join('')}</div>
     <h2 class="section-title">Your spares <small>+5 pearls each</small></h2>
-    ${!sync.linked ? '<p class="note">Sign in on the Friends tab to donate.</p>' : spares.length ? `<div class="spares">${spares.map(([id, n]) => { const f = FINDS[id] || EVENT_FINDS[id]; return `<div class="card spare"><span class="find-icon">${f.icon}</span><b>${f.name}</b><small class="muted">you have ${n}</small>${m.exhibits[id] ? '' : '<small class="new-tag">museum needs this!</small>'}<button class="btn small primary" data-action="museum-donate" data-id="${id}">Donate</button></div>`; }).join('')}</div>`
+    ${!sync.linked ? '<p class="note">Sign in on the Friends tab to donate.</p>' : spares.length ? `<div class="spares">${spares.map(([id, n]) => { const f = FINDS[id] || EVENT_FINDS[id]; return `<div class="card spare"><span class="find-icon">${ic(`finds/${id}`, f.icon)}</span><b>${f.name}</b><small class="muted">you have ${n}</small>${m.exhibits[id] ? '' : '<small class="new-tag">museum needs this!</small>'}<button class="btn small primary" data-action="museum-donate" data-id="${id}">Donate</button></div>`; }).join('')}</div>`
     : '<p class="note">No spares yet. When you find something twice, you can donate the extra copy here.</p>'}
     ${ALL_EXHIBITS().map((h) => `<div class="card journal-loc"><div class="journal-loc-head"><b>${h.icon} ${h.name}</b><span class="muted">${h.finds.filter((f) => m.exhibits[f.id]).length}/${h.finds.length}</span></div>
       <div class="finds">${h.finds.map(tile).join('')}</div></div>`).join('')}
@@ -787,14 +795,14 @@ function houseSVG(h, k, you = false) {
   const lvl = h.mood === 'sad' ? 20 : 80;
   const st = { ...core.defaultState(), stats: { hunger: lvl, happiness: 90, energy: 90, clean: 90 }, equipped: h.equipped || {}, sleeping: h.sleeping };
   return `<button class="house ${you ? 'you' : ''} ${h.friend ? 'friend' : ''}" data-action="lane-house" data-code="${h.code}" data-you="${you ? 1 : ''}" data-x="${k}" aria-label="${esc(h.name)}'s den">
-    <svg viewBox="0 0 120 130" aria-hidden="true">
+    ${artUrl('lane/house') ? `<img class="house-art" src="${artUrl('lane/house')}" alt="">` : `<svg viewBox="0 0 120 130" aria-hidden="true">
       <ellipse cx="60" cy="118" rx="58" ry="12" fill="#3f6a2a" opacity=".5"/>
       <path d="M6,118 Q6,30 60,26 Q114,30 114,118Z" fill="#6f9a3a"/><path d="M14,118 Q14,40 60,36 Q106,40 106,118Z" fill="#8a6644"/>
       <path d="M38,118 V82 Q38,62 60,62 Q82,62 82,82 V118Z" fill="${h.color}" stroke="#5a3f2a" stroke-width="4"/>
       <circle cx="74" cy="94" r="3" fill="#d9b45a"/>
       ${[[24, 40], [60, 28], [96, 40]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="6" fill="#a7c86a"/>`).join('')}
       ${h.cozy >= 15 ? '<text x="98" y="70" font-size="14">✨</text>' : ''}${h.birthday ? '<text x="8" y="70" font-size="14">🎈</text>' : ''}
-    </svg>
+    </svg>`}
     ${h.home && !h.sleeping ? `<svg class="porch-otter" viewBox="0 -24 200 254" aria-hidden="true">${otterSVG(st, { idPrefix: `ln${k}` })}</svg>` : ''}
     ${h.sleeping ? '<span class="house-zzz">z z</span>' : !h.home ? '<span class="house-zzz">🧭 out</span>' : ''}
     <span class="house-sign">${you ? '🏠 ' : h.friend ? '💗 ' : ''}${esc(h.name)} <small>${h.stage || ''} Lv ${h.level}</small></span>
@@ -809,7 +817,7 @@ function laneView() {
   const pub = state.publicDen !== false;
   return `<div class="explore-head"><h2 class="section-title">Otter Lane</h2>${back}</div>
     <p class="note lane-note">Stroll past everyone's dens. Tap a house to walk over and peek inside. 💗 = friend</p>
-    <div class="lane-wrap"><div class="lane" style="--n:${houses.length}">
+    <div class="lane-wrap"><div class="lane" style="--n:${houses.length}${artUrl('lane/street') ? `;background:url('${artUrl('lane/street')}') center bottom/cover` : ''}">
       <div class="lane-path"></div>
       ${houses.map((h, k) => houseSVG(h, k, k === 0)).join('')}
       <svg class="walker" id="walker" viewBox="0 -24 200 254" aria-hidden="true">${otterSVG({ ...state, sleeping: false }, { idPrefix: 'walker' })}</svg>
@@ -840,7 +848,7 @@ function missionCard(m) {
   const loot = m.loot.map(([id]) => ITEMS[id].icon).join(' ');
   const disabled = locked || !!state.mission || state.sleeping || state.stats.energy < m.energy;
   return `<div class="card mission ${locked ? 'locked' : ''}">
-    <div class="mission-head"><span class="mission-icon">${m.icon}</span>
+    <div class="mission-head"><span class="mission-icon">${ic(`missions/${m.id}`, m.icon)}</span>
       <div><b>${m.name}</b><div class="muted">⏱ ${fmtMinutes(m.minutes)} · ⚡ ${m.energy} energy</div>
       <div class="muted"><span class="pearl-icon"></span> ${m.pearls[0]}–${m.pearls[1]}${loot ? ` · rare: ${loot}` : ''} · 🔍 finds</div></div></div>
     <button class="btn small ${disabled ? '' : 'primary'}" data-action="mission" data-id="${m.id}" ${disabled ? 'disabled' : ''}>${locked ? `🔒 Lv ${m.level}` : 'Go!'}</button>
@@ -851,7 +859,7 @@ function findTile(f) {
   const n = state.collection[f.id] || 0;
   const r = RARITY[f.rarity];
   return `<div class="find ${n ? 'got' : ''}" style="--rar:${r.color}" title="${n ? f.name : 'Not found yet'} · ${r.name}">
-    <span class="find-icon">${n ? f.icon : '❔'}</span><span class="find-name">${n ? f.name : '???'}</span>
+    <span class="find-icon">${n ? ic(`finds/${f.id}`, f.icon) : '❔'}</span><span class="find-name">${n ? f.name : '???'}</span>
     <span class="find-rar">${r.stars}${n > 1 ? ` ×${n}` : ''}</span></div>`;
 }
 
@@ -861,7 +869,7 @@ function panelMissions() {
     const m = MISSIONS.find((x) => x.id === state.mission.id);
     const pct = clamp(((Date.now() - state.mission.start) / (state.mission.endsAt - state.mission.start)) * 100);
     head = `<div class="card mission-active">
-      <div class="mission-head"><span class="mission-icon">${m.icon}</span><div><b>${m.name}</b><div class="muted">Returns in <span data-live="mission-left">${fmtTime(state.mission.endsAt - Date.now())}</span></div></div></div>
+      <div class="mission-head"><span class="mission-icon">${ic(`missions/${m.id}`, m.icon)}</span><div><b>${m.name}</b><div class="muted">Returns in <span data-live="mission-left">${fmtTime(state.mission.endsAt - Date.now())}</span></div></div></div>
       <div class="bar big"><div data-live="mission-bar" style="width:${pct}%"></div></div>
       <button class="link" data-action="recall">Call ${esc(state.name)} home early (no rewards)</button></div>`;
   }
@@ -872,7 +880,7 @@ function panelMissions() {
     return `${head}<div class="explore-head"><h2 class="section-title">Collection journal</h2>
       <button class="btn small" data-action="journal">🗺️ Back to map</button></div>
       <p class="journal-total">📖 ${found} / ${TOTAL_FINDS} discovered · 🏅 ${state.sets.length} / ${LOCATIONS.length} sets</p>
-      ${LOCATIONS.map((l) => `<div class="card journal-loc"><div class="journal-loc-head"><b>${l.icon} ${l.name}</b>
+      ${LOCATIONS.map((l) => `<div class="card journal-loc"><div class="journal-loc-head"><b>${ic(`places/${l.id}`, l.icon)} ${l.name}</b>
         <span class="muted">${l.finds.filter((f) => state.collection[f.id]).length}/${l.finds.length}${state.sets.includes(l.id) ? ' 🏅' : ''}</span></div>
         <div class="finds">${l.finds.map(findTile).join('')}</div></div>`).join('')}
       ${(() => {
@@ -898,7 +906,7 @@ function panelMissions() {
       <button class="btn small" data-action="journal">📖 Journal ${found}/${TOTAL_FINDS}</button></div>
     <div class="map-wrap">${mapSVG(state, loc.id)}</div>
     <div class="card loc-card ${locked ? 'locked' : ''}">
-      <div class="loc-title"><span class="loc-icon">${loc.icon}</span><div><h3>${loc.name}${state.sets.includes(loc.id) ? ' 🏅' : ''}${state.persona?.fav.place === loc.id ? ` <span class="fav-tag">❤️ ${esc(state.name)}'s favorite</span>` : ''}</h3><p class="muted">${loc.desc}</p></div></div>
+      <div class="loc-title"><span class="loc-icon">${ic(`places/${loc.id}`, loc.icon)}</span><div><h3>${loc.name}${state.sets.includes(loc.id) ? ' 🏅' : ''}${state.persona?.fav.place === loc.id ? ` <span class="fav-tag">❤️ ${esc(state.name)}'s favorite</span>` : ''}</h3><p class="muted">${loc.desc}</p></div></div>
       ${loc.id === 'lilypond' ? '<div class="row"><button class="btn small" data-tab="home">🦦 Visit your otter</button><button class="btn small" data-tab="den">🏡 Go to the den</button></div>' : ''}
       ${(() => { const l = exploreLuck(loc.id); return l > 1.01 && !locked ? `<p class="luck-note">✨ ${tideAt().state === 'low' && LOW_TIDE_PLACES.includes(loc.id) ? 'Low tide' : WEATHER[weatherAt()].name + ' weather'}: finds here are luckier right now!</p>` : ''; })()}
       ${exploreBtn}
@@ -907,7 +915,7 @@ function panelMissions() {
       <div class="finds">${loc.finds.map(findTile).join('')}</div>
       ${missions.length ? `<h4 class="loc-sub">Missions here</h4><div class="missions">${missions.map(missionCard).join('')}</div>` : ''}
       <h4 class="loc-sub">Games here</h4>
-      <div class="loc-games">${games.map((g) => `<button class="loc-game" data-action="game" data-id="${g.id}"><span>${g.icon}</span><b>${g.name}</b><small>⚡${g.energy}</small></button>`).join('')}</div>
+      <div class="loc-games">${games.map((g) => `<button class="loc-game" data-action="game" data-id="${g.id}"><span>${ic(`games/${g.id}`, g.icon)}</span><b>${g.name}</b><small>⚡${g.energy}</small></button>`).join('')}</div>
     </div>
     <p class="note">Missions run in real time, even when this page is closed. Explore from Discord with <code>/explore</code>.</p>`;
 }
@@ -923,7 +931,7 @@ function panelArcade() {
     <div class="arcade">${GAME_LIST.filter((g) => g.category === cat.id).map((g) => `
       <div class="card arcade-card">
         <button class="arcade-play" data-action="game" data-id="${g.id}" aria-label="Play ${g.name}">
-          <span class="arcade-icon">${g.icon}</span>
+          <span class="arcade-icon">${ic(`games/${g.id}`, g.icon)}</span>
           <b>${g.name}${state.persona?.fav.game === g.id ? ' <span class="fav-tag">❤️ favorite</span>' : ''}</b>
           <span class="muted">${g.desc}</span>
         </button>
@@ -1063,12 +1071,6 @@ function panelFriends() {
     <div class="settings"><button class="link" data-action="unlink">Sign out on this device</button></div>`;
 }
 
-const POSTCARD_ART = {
-  pond: { name: 'Lily Pond', icon: '🪷' },
-  lighthouse: { name: 'Lighthouse', icon: '🗼' },
-  reef: { name: 'Pearl Reef', icon: '🐠' },
-  moon: { name: 'Moonlit Night', icon: '🌙' },
-};
 
 function socialSections() {
   const sd = socialData;
@@ -1099,7 +1101,8 @@ function socialSections() {
 
 function postcardHTML(m) {
   const art = POSTCARD_ART[m.design] || POSTCARD_ART.pond;
-  return `<div class="postcard pc-${m.design || 'pond'}"><div class="pc-stamp">${art.icon}</div><div class="pc-title">Greetings from ${art.name}!</div>
+  const bg = artUrl(`postcards/${m.design || 'pond'}`);
+  return `<div class="postcard pc-${m.design || 'pond'}"${bg ? ` style="background:url('${bg}') center/cover"` : ''}><div class="pc-stamp">${art.icon}</div><div class="pc-title">Greetings from ${art.name}!</div>
     <div class="pc-text">${esc(m.text)}</div><div class="pc-from">— ${esc(m.from)}</div></div>`;
 }
 
@@ -1305,8 +1308,20 @@ function celebrateAchievements() {
   }, 400);
 }
 
+// Growing up and birthdays get their own animation moments.
+let momentSnap = null;
+function watchMoments() {
+  const now = { stage: stageOf(state.level || 1).id, bdays: state.birthdaysClaimed?.length || 0, name: state.name };
+  const was = momentSnap;
+  momentSnap = now;
+  if (!was || was.name !== now.name) return;
+  if (now.bdays > was.bdays) playCare('birthday');
+  else if (now.stage !== was.stage) playCare('grow');
+}
+
 function commit({ push = true } = {}) {
   celebrateAchievements();
+  watchMoments();
   saveLocal();
   renderAll();
   renderPanel();
@@ -1441,11 +1456,11 @@ function askName(first) {
 
 async function showLeaderboard(id) {
   const g = GAME_LIST.find((x) => x.id === id);
-  showModal(`<div class="result"><div class="result-icon">${g.icon}</div><h2>${g.name}</h2><p>Loading top scores…</p></div>`);
+  showModal(`<div class="result"><div class="result-icon">${ic(`games/${g.id}`, g.icon)}</div><h2>${g.name}</h2><p>Loading top scores…</p></div>`);
   let top = null;
   try { top = await sync.leaderboard(id); } catch { /* offline */ }
   if ($('#modal').hidden) return;
-  $('#modal-card').innerHTML = `<div class="result"><div class="result-icon">${g.icon}</div><h2>${g.name} leaderboard</h2>
+  $('#modal-card').innerHTML = `<div class="result"><div class="result-icon">${ic(`games/${g.id}`, g.icon)}</div><h2>${g.name} leaderboard</h2>
     ${top && top.length ? `<ol class="board">${top.map((r) => `<li><span>${esc(r.name)}</span><b>${r.score} ${g.scoreLabel}</b></li>`).join('')}</ol>`
     : '<p>No scores yet. Link Discord and be the first!</p>'}
     <button class="btn primary" data-close>Close</button></div>`;
@@ -1518,7 +1533,7 @@ document.addEventListener('click', async (e) => {
       return r;
     }
     case 'confirm-on': setSkipConfirm(false); toast('Purchase confirmations are back on.'); return renderPanel();
-    case 'wear': bounce(); return act({ ...core.toggleWear(state, id), msg: '' });
+    case 'wear': { const was = state.equipped[ITEMS[id]?.slot] === id; const r = act({ ...core.toggleWear(state, id), msg: '' }); if (!was && r?.ok !== false) playCare('outfit').then((p) => { if (!p) bounce(); }); else bounce(); return r; }
     case 'hardreload': {
       try {
         const regs = await navigator.serviceWorker?.getRegistrations?.() || [];
@@ -1535,7 +1550,7 @@ document.addEventListener('click', async (e) => {
       const r = await sync.museumDonate(id);
       if (!r.ok) return toast(r.error || 'Could not donate right now.');
       adoptRemote(r.state, r.version, r.first ? '🏛️ A first for the museum! Your name is on the exhibit. +5 pearls' : '🏛️ Donated! +5 pearls');
-      burst(['🏛️', '✨'], 6);
+      if (!(await playCare('donate'))) burst(['🏛️', '✨'], 6);
       return loadMuseum();
     }
     case 'museum-claim': {
@@ -1662,7 +1677,7 @@ document.addEventListener('click', async (e) => {
     case 'fr-hug': {
       const r = await sync.hug(a.dataset.code);
       toast(r.ok ? r.msg : r.error || 'Could not hug right now.');
-      if (r.ok) { a.disabled = true; a.textContent = '🤗 Hugged today'; a.classList.remove('primary'); burst(['🤗', '💕'], 6); }
+      if (r.ok) { a.disabled = true; a.textContent = '🤗 Hugged today'; a.classList.remove('primary'); if (!(await playCare('hug'))) burst(['🤗', '💕'], 6); }
       return loadFriends();
     }
     case 'fr-gift': return giftDialog(a.dataset.code, a.dataset.name || 'your friend');
@@ -1682,8 +1697,9 @@ document.addEventListener('click', async (e) => {
       if (!r.ok) return toast(r.msg);
       act(r);
       if (r.find && (r.isNew || r.setDone)) {
+        playCare('discover');
         const rar = RARITY[r.find.rarity];
-        showModal(`<div class="result"><div class="result-icon big-find">${r.find.icon}</div>
+        showModal(`<div class="result"><div class="result-icon big-find">${ic(`finds/${r.find.id}`, r.find.icon)}</div>
           <h2>${r.setDone ? 'Collection complete! 🏅' : 'New discovery!'}</h2>
           <p><b>${r.find.name}</b> · <span style="color:${rar.color === '#9be8de' ? '#1f8f95' : rar.color}">${rar.stars} ${rar.name}</span></p>
           <p>Found at ${LOC[id].name}. It's in your collection journal.</p>
@@ -1838,8 +1854,21 @@ document.addEventListener('visibilitychange', () => {
   pullNow();
 });
 
+// Uploaded interface art: tab icons, the pearl, the pond scene.
+function applyArtChrome() {
+  document.querySelectorAll('.tabs button[data-tab]').forEach((b) => {
+    const url = artUrl(`icons/tab-${b.dataset.tab}`);
+    if (url) b.querySelector('span').innerHTML = ic(`icons/tab-${b.dataset.tab}`, '');
+  });
+  const pearl = artUrl('icons/pearl');
+  document.documentElement.classList.toggle('has-pearl-art', !!pearl);
+  if (pearl) document.documentElement.style.setProperty('--pearl-art', `url("${pearl}")`);
+}
+
 // ---------- boot ----------
 detectArt();
+await loadArtManifest();
+applyArtChrome();
 if (PANELS[location.hash.slice(1)]) tab = location.hash.slice(1);
 runTick();
 commit({ push: false });

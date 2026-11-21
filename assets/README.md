@@ -1,5 +1,9 @@
 # Brand art
 
+> Looking for the otter, clothes, furniture, icons and everything else? Those
+> go in [`art/`](art/) (see its README, or the checklist page at `/art.html`).
+> Animations go in [`animations/`](animations/).
+
 | File | What it is | Where it shows up |
 | --- | --- | --- |
 | `logo.png` | "Otter & Oyster" wordmark banner | Top of every page, adoption screen, link previews |

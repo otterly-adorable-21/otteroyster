@@ -10,6 +10,7 @@ import { createMuseum } from './museum.js';
 import { createNeighborhood } from './neighborhood.js';
 import { startHttp } from './http.js';
 import { createAuth } from './auth.js';
+import { loadServerArt } from './art.js';
 
 loadEnv();
 const here = dirname(fileURLToPath(import.meta.url));
@@ -17,6 +18,8 @@ const env = process.env;
 
 const db = openDb(resolve(here, '..', env.DB_PATH || './data/otteroyster.db'));
 console.log(`💾 Database: ${resolve(here, '..', env.DB_PATH || './data/otteroyster.db')}`);
+const artCount = loadServerArt(resolve(here, '../..'));
+if (artCount) console.log(`🎨 Custom art: ${artCount} pictures for Discord images`);
 const store = createStore(db);
 const social = createSocial(db, store);
 const social2 = createSocial2(db, store, social);
