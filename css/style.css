@@ -541,8 +541,8 @@ code { background: #e3f1ec; padding: 1px 6px; border-radius: 6px; font-size: 0.8
 }
 
 /* ---------- the den ---------- */
-body[data-view='den'] .scene, body[data-view='den'] .lily-divider { display: none; }
-body[data-view='den'] .stats { padding-top: 4px; }
+body[data-view='den'] .scene, body[data-view='den'] .lily-divider, body[data-view='missions'] .scene, body[data-view='missions'] .lily-divider { display: none; }
+body[data-view='den'] .stats, body[data-view='missions'] .stats { padding-top: 4px; }
 .den-stage { position: relative; border-radius: 26px; overflow: hidden; touch-action: pan-y; user-select: none;
   box-shadow: 0 0 0 2px rgba(217, 180, 90, 0.7), 0 0 0 6px rgba(12, 52, 64, 0.9), 0 0 0 7px rgba(217, 180, 90, 0.35), 0 18px 40px rgba(0, 0, 0, 0.45); }
 .den-stage.editing { touch-action: none; }
@@ -575,3 +575,39 @@ body[data-view='den'] .stats { padding-top: 4px; }
 .tabs button { font-size: 0.66rem; }
 
 .err-detail { font-family: ui-monospace, monospace; font-size: 0.75rem !important; background: #f1ece0; padding: 6px 8px; border-radius: 8px; word-break: break-word; }
+
+/* ---------- explore / world map ---------- */
+.explore-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.map-wrap { border-radius: 26px; overflow: hidden; box-shadow: 0 0 0 2px rgba(217, 180, 90, 0.7), 0 0 0 6px rgba(12, 52, 64, 0.9), 0 0 0 7px rgba(217, 180, 90, 0.35), 0 18px 40px rgba(0, 0, 0, 0.45); }
+.map-svg { display: block; width: 100%; height: auto; }
+.map-pin { cursor: pointer; transition: transform .15s; }
+.map-pin:hover > circle:nth-of-type(2), .map-pin:focus > circle:nth-of-type(2) { stroke: #f3d98c; }
+.map-pin:focus { outline: none; }
+.map-pin.locked text:first-of-type { filter: grayscale(1); }
+.pin-ring { animation: spin 8s linear infinite; transform-origin: center; transform-box: fill-box; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loc-card { margin-top: 14px; display: grid; gap: 10px; }
+.loc-card.locked { opacity: .8; }
+.loc-title { display: flex; gap: 12px; align-items: flex-start; }
+.loc-title h3 { font-size: 1.5rem; color: var(--deep); }
+.loc-title p { margin: 2px 0 0; }
+.loc-icon { font-size: 2rem; width: 54px; height: 54px; flex: none; display: grid; place-items: center; border-radius: 50%; background: radial-gradient(circle at 50% 35%, #fff, #d6f1eb 60%, #b9e3da); box-shadow: 0 0 0 2px var(--gold); }
+.loc-sub { font-family: var(--display); font-size: 1.15rem; color: var(--deep); margin: 6px 0 0; }
+.small-note { font-size: .8rem; margin: -4px 0 0; }
+.finds { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.find { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 8px 2px 6px; border-radius: 12px; background: #eef3ef; box-shadow: inset 0 0 0 1px rgba(0,0,0,.05); text-align: center; }
+.find.got { background: #fff; box-shadow: inset 0 0 0 2px var(--rar), 0 2px 6px rgba(7,31,38,.08); }
+.find-icon { font-size: 1.6rem; }
+.find:not(.got) .find-icon { opacity: .35; }
+.find-name { font-size: .62rem; font-weight: 800; line-height: 1.1; min-height: 2.2em; display: grid; place-items: center; }
+.find-rar { font-size: .6rem; color: var(--muted); letter-spacing: -1px; }
+.loc-games { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.loc-game { display: flex; align-items: center; gap: 8px; padding: 10px; border: 0; border-radius: 14px; background: #eef7f4; color: var(--ink); box-shadow: inset 0 0 0 1px rgba(31,143,149,.25); text-align: left; }
+.loc-game span { font-size: 1.5rem; }
+.loc-game b { flex: 1; font-size: .85rem; }
+.loc-game small { color: var(--muted); font-weight: 700; }
+.journal-total { color: var(--cream); font-weight: 800; margin: 0 2px 10px; }
+.journal-loc { margin-bottom: 10px; }
+.journal-loc-head { display: flex; justify-content: space-between; margin-bottom: 8px; }
+.big-find { font-size: 4rem !important; display: grid; place-items: center; }
+@media (max-width: 370px) { .finds { grid-template-columns: repeat(3, 1fr); } }

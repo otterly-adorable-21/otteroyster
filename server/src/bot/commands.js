@@ -6,6 +6,7 @@ import { SOLO } from './games/solo.js';
 import { DUELS } from './games/duel.js';
 import { PARTY } from './games/party.js';
 import { BOT_BOARDS } from '../players.js';
+import { LOCATIONS } from '../../../js/world.js';
 
 const everywhere = (b) => b
   .setContexts(InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel)
@@ -18,6 +19,11 @@ export const commands = [
   everywhere(new SlashCommandBuilder().setName('den').setDescription("Peek inside your otter's cozy den")),
   everywhere(new SlashCommandBuilder().setName('visit').setDescription("Visit a friend's den")
     .addUserOption((o) => o.setName('friend').setDescription('Whose den?').setRequired(true))),
+  everywhere(new SlashCommandBuilder().setName('explore').setDescription('Explore a place around the pond and discover creatures and treasures')
+    .addStringOption((o) => o.setName('place').setDescription('Where to?').setRequired(true)
+      .addChoices(...LOCATIONS.map((l) => ({ name: `${l.icon} ${l.name}${l.level > 1 ? ` (Lv ${l.level})` : ''}`, value: l.id }))))),
+  everywhere(new SlashCommandBuilder().setName('collection').setDescription('Your collection journal of discoveries')
+    .addUserOption((o) => o.setName('user').setDescription("Peek at a friend's journal"))),
   everywhere(new SlashCommandBuilder().setName('daily').setDescription('Open your daily treasure chest')),
   everywhere(new SlashCommandBuilder().setName('mission').setDescription('Send your otter on an adventure, or check on them')),
   everywhere(new SlashCommandBuilder().setName('play').setDescription('Play a solo game for pearls')

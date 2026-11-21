@@ -113,6 +113,14 @@ test('pet care, adoption, daily chest, missions', async () => {
   i = await cmd(users.ana, 'visit', { friend: { id: '999', username: 'nobody' } });
   assert.match(JSON.stringify(i.out), /hasn't adopted/);
   await cmd(users.cy, 'adopt', { name: 'Clamsy' });
+  await cmd(users.cy, 'explore', { place: 'tidepools' });
+  assert.match(text(), /Exploring Tide Pools/);
+  i = await cmd(users.cy, 'explore', { place: 'tidepools' });
+  assert.match(JSON.stringify(i.out), /just explored here/);
+  i = await cmd(users.cy, 'explore', { place: 'trench' });
+  assert.match(JSON.stringify(i.out), /Reach level 5/);
+  await cmd(users.ana, 'collection', { user: users.cy });
+  assert.match(text(), /Clamsy's collection journal/);
   await cmd(users.ana, 'profile');
   await cmd(users.ana, 'help');
   i = await cmd(users.ana, 'link');

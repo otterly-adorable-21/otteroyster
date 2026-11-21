@@ -69,6 +69,8 @@ volume.
 | `/link` | Get a one-time code to connect with the website |
 | `/den` | A picture of your decorated den and its coziness |
 | `/visit @friend` | Peek inside a friend's den |
+| `/explore place` | Explore a place on the map and discover creatures and treasures |
+| `/collection [@user]` | The collection journal |
 | `/daily` | Pick one of three treasure chests (once a day) |
 | `/mission` | Start, check or recall an expedition |
 | `/play` | Solo: Trivia, Emoji Mystery, Word Scramble, Raft Rescue (hangman), Number Hunt, Higher or Lower, Rock Paper Scissors, Urchin Sweeper (minesweeper), Fishing |

@@ -9,7 +9,9 @@ minigames, and bring them along to Discord, where friends can play together.
 - **Pet care:** four needs (Full, Happy, Energy, Clean) that drift down gently in real time. Snacks, cuddles, bubble baths and naps. Your otter's face changes with their mood.
 - **Otter's Den:** a cozy burrow you decorate. Buy furniture, plushies, rugs, wallpaper and floors, then drag everything into place. A cozier den makes happiness drop slower and naps more restful. Friends can `/visit` it from Discord.
 - **Closet & shop:** hats, eyewear, neckwear and extras layered onto your otter. Rare pieces only come from missions.
-- **Missions:** real-time expeditions (1 minute to 3 hours) that run while you're away and bring back pearls, stories and rare finds.
+- **Explore:** an illustrated map with 7 places around the pond. Each has its own missions, games and an Explore button for finding creatures and treasures.
+- **Collection journal:** 35 discoveries in four rarities. Complete a place's set for a 🏅 badge and pearls.
+- **Missions:** real-time expeditions (1 minute to 3 hours) that run while you're away and bring back pearls, stories, rare clothes and discoveries.
 - **Arcade, 10 games:**
   - Arcade: Oyster Dive, Fish Frenzy, Bubble Hop
   - Skill: Tide Fishing, Bubble Burst, Crab Catcher
@@ -35,6 +37,7 @@ js/core.js            game rules (shared with the Discord bot!)
 js/data.js            items, snacks, missions, arcade catalog
 js/otter.js           the otter drawing + outfit layering
 js/den.js, den-data.js  the den drawing + furniture catalog (shared with the bot)
+js/world.js, map.js   places, discoveries and the world map
 js/main.js            website UI
 js/sync.js            talks to the server for Discord linking/sync
 js/assets.js          detects brand art in /assets

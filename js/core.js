@@ -2,6 +2,7 @@
 // the Discord bot (server/) use exactly the same rules on the same save data.
 import { ITEMS, SNACKS, MISSIONS, GAME_LIST } from './data.js';
 import { FURNITURE, WALLPAPERS, FLOORS, STARTER_DEN, ZONES, zoneOf, clampPos } from './den-data.js';
+import { LOC, FINDS, RARITY, MISSION_LOC, EXPLORE_ENERGY, EXPLORE_COOLDOWN_MIN, SET_REWARD } from './world.js';
 
 export const SAVE_VERSION = 2;
 
@@ -25,6 +26,9 @@ export function defaultState(now = Date.now()) {
     furniture: Object.fromEntries(STARTER_DEN.map((p) => [p.id, 1])),
     wallpapers: ['moss'],
     floors: ['earth'],
+    collection: {},
+    explored: {},
+    sets: [],
     best: {},
     plays: {},
     log: [],
@@ -61,6 +65,9 @@ export function normalize(saved) {
     s.furniture = { ...(saved.furniture || {}) };
   }
   s.wallpapers = Array.isArray(saved.wallpapers) ? saved.wallpapers : ['moss'];
+  s.collection = { ...(saved.collection || {}) };
+  s.explored = { ...(saved.explored || {}) };
+  s.sets = Array.isArray(saved.sets) ? saved.sets : [];
   s.floors = Array.isArray(saved.floors) ? saved.floors : ['earth'];
   // v1 stored memory best as `null` when unplayed
   for (const k of Object.keys(s.best)) if (s.best[k] == null) delete s.best[k];
@@ -268,8 +275,16 @@ function finishMission(s, now) {
   if (found) s.owned.push(found);
   const story = m.stories[rand(0, m.stories.length - 1)];
   log(s, `${s.name} returned from ${m.name} with ${pearls} pearls${found ? ` and a ${ITEMS[found].name}` : ''}.`, now);
-  const ups = addXP(s, m.xp);
-  const report = { id: m.id, t: now, pearls, found, story, xp: m.xp, ups };
+  let ups = addXP(s, m.xp);
+  // Missions usually bring back a discovery from where they went.
+  let discovery = null;
+  const locId = MISSION_LOC[m.id];
+  if (locId && Math.random() < 0.7) {
+    const d = discover(s, locId, 1.5);
+    discovery = d.find.id;
+    ups += d.ups;
+  }
+  const report = { id: m.id, t: now, pearls, found, story, xp: m.xp, ups, discovery };
   s.reports.push(report);
   s.reports = s.reports.slice(-5);
   return report;
@@ -424,4 +439,70 @@ export function setFloor(s, id) {
   }
   s.den.floor = id;
   return ok(`🪵 ${f.name} floor!`);
+}
+
+// ---------- exploring + collection ----------
+export const locUnlocked = (s, locId) => s.level >= (LOC[locId]?.level ?? 99);
+
+export function exploreReadyAt(s, locId) {
+  return (s.explored[locId] || 0) + EXPLORE_COOLDOWN_MIN * 60000;
+}
+
+// Roll a discovery at a place. `luck` > 1 favors rarer finds.
+function discover(s, locId, luck = 1) {
+  const pool = LOC[locId].finds.map((f) => {
+    let w = RARITY[f.rarity].weight;
+    if (f.rarity !== 'common') w *= luck;
+    if (!s.collection[f.id]) w *= 1.4; // new things are a little easier to stumble on
+    return { f, w };
+  });
+  let r = Math.random() * pool.reduce((a, x) => a + x.w, 0);
+  const find = (pool.find((x) => (r -= x.w) < 0) || pool[0]).f;
+  const isNew = !s.collection[find.id];
+  s.collection[find.id] = (s.collection[find.id] || 0) + 1;
+  let ups = 0;
+  let setDone = false;
+  if (isNew) {
+    ups += addXP(s, find.rarity === 'legendary' ? 20 : find.rarity === 'rare' ? 10 : 4);
+    log(s, `Discovered a ${find.name} at ${LOC[locId].name}!`);
+    const all = LOC[locId].finds.every((f) => s.collection[f.id]);
+    if (all && !s.sets.includes(locId)) {
+      s.sets.push(locId);
+      s.pearls += SET_REWARD.pearls;
+      ups += addXP(s, SET_REWARD.xp);
+      setDone = true;
+      log(s, `Completed the ${LOC[locId].name} collection! 🏅`);
+    }
+  }
+  return { find, isNew, setDone, ups };
+}
+
+export function explore(s, locId, now = Date.now()) {
+  const loc = LOC[locId];
+  if (!loc) return no('Unknown place.');
+  const b = busy(s);
+  if (b) return no(b);
+  if (!locUnlocked(s, locId)) return no(`Reach level ${loc.level} to explore ${loc.name}.`);
+  const ready = exploreReadyAt(s, locId);
+  if (now < ready) return no(`You just explored here! Try again in ${Math.ceil((ready - now) / 60000)} min, or explore somewhere else.`);
+  if (s.stats.energy < EXPLORE_ENERGY) return no(`${s.name} is too tired to explore. Try a nap!`);
+  stat(s, 'energy', -EXPLORE_ENERGY);
+  stat(s, 'happiness', 3);
+  s.explored[locId] = now;
+  if (Math.random() < 0.18) {
+    const p = rand(4, 12);
+    s.pearls += p;
+    const ups = addXP(s, 2);
+    return ok(`${s.name} poked around ${loc.name} and found ${p} loose pearls.`, { pearls: p, ups, find: null });
+  }
+  const d = discover(s, locId);
+  const r = RARITY[d.find.rarity];
+  const msg = d.isNew
+    ? `${d.find.icon} New discovery! ${s.name} found a ${d.find.name} (${r.name})!`
+    : `${d.find.icon} ${s.name} found another ${d.find.name}.`;
+  return ok(msg + (d.setDone ? ` 🏅 ${loc.name} collection complete! +${SET_REWARD.pearls} pearls` : ''), { find: d.find, isNew: d.isNew, setDone: d.setDone, ups: d.ups, fx: [d.find.icon, '✨'] });
+}
+
+export function collectionCount(s) {
+  return Object.keys(s.collection || {}).filter((id) => FINDS[id]).length;
 }

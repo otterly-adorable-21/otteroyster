@@ -9,6 +9,7 @@ import { DUELS, inviteMessage, handleInvite } from './games/duel.js';
 import { PARTY, lobbyMessage, handleLobby } from './games/party.js';
 import { whisper, EPHEMERAL, shuffle } from './games/_util.js';
 import { BOT_BOARDS, BOT_DAILY_CAP } from '../players.js';
+import { LOCATIONS, LOC, RARITY, FINDS, TOTAL_FINDS, SET_REWARD } from '../../../js/world.js';
 
 const solo = Object.fromEntries(SOLO.map((g) => [g.id, g]));
 const duels = Object.fromEntries(DUELS.map((g) => [g.id, g]));
@@ -38,7 +39,7 @@ export function createBot({ store, siteUrl }) {
   function reportText(state, reports) {
     return reports.map((r) => {
       const m = MISSIONS.find((x) => x.id === r.id);
-      return `${m.icon} **${state.name} is back from ${m.name}!** ${state.name} ${r.story} **+${r.pearls}** ⚪${r.found ? ` and found a **${ITEMS[r.found].name}** ${ITEMS[r.found].icon}!` : ''}`;
+      return `${m.icon} **${state.name} is back from ${m.name}!** ${state.name} ${r.story} **+${r.pearls}** ⚪${r.found ? ` and found a **${ITEMS[r.found].name}** ${ITEMS[r.found].icon}!` : ''}${r.discovery && FINDS[r.discovery] ? ` Also brought back a ${FINDS[r.discovery].icon} **${FINDS[r.discovery].name}** for the journal!` : ''}`;
     }).join('\n');
   }
 
@@ -154,6 +155,33 @@ export function createBot({ store, siteUrl }) {
         card.embeds[0].setFooter({ text: `${state.name} belongs to ${friend.displayName || friend.username}` });
         return i.reply(card);
       }
+      case 'explore': {
+        const locId = i.options.getString('place');
+        const loc = LOC[locId];
+        const { state, res } = load(user, (s) => (s.name ? core.explore(s, locId) : null));
+        if (!state.name) return i.reply({ ...adoptPrompt(user.id), flags: EPHEMERAL });
+        if (!res.ok) return whisper(i, `${loc.icon} ${res.msg}`);
+        const e = embed(`${loc.icon} Exploring ${loc.name}`, `*${loc.desc}*\n\n${res.msg}${res.ups ? `\n⭐ **Level up!** ${state.name} is now level ${state.level}!` : ''}`, res.find?.rarity === 'legendary' ? GOLD : res.isNew ? GREEN : COLOR);
+        if (res.find) {
+          const r = RARITY[res.find.rarity];
+          e.addFields({ name: res.isNew ? '✨ New for your journal' : 'Found again', value: `${res.find.icon} **${res.find.name}** · ${r.stars} ${r.name}`, inline: true },
+            { name: `${loc.name} set`, value: `${loc.finds.filter((f) => state.collection[f.id]).length}/${loc.finds.length}${state.sets.includes(loc.id) ? ' 🏅' : ''}`, inline: true });
+        }
+        e.setFooter({ text: `⚡ ${Math.round(state.stats.energy)} energy left · explore here again in 20 min` });
+        return i.reply({ embeds: [e] });
+      }
+      case 'collection': {
+        const target = i.options.getUser('user') || user;
+        const p = target.id === user.id ? load(user).player && store.getByDiscord(user.id) : store.getByDiscord(target.id);
+        if (!p?.state.name) return whisper(i, target.id === user.id ? "You don't have an otter yet. Try `/pet`!" : `${target.username} hasn't adopted an otter yet.`);
+        const s = p.state;
+        const n = Object.keys(s.collection).filter((id) => FINDS[id]).length;
+        const e = embed(`📖 ${s.name}'s collection journal`, `**${n}/${TOTAL_FINDS}** discovered · 🏅 **${s.sets.length}/${LOCATIONS.length}** sets complete\nFinish a place's set for a badge and ${SET_REWARD.pearls} pearls.`, GOLD);
+        for (const l of LOCATIONS) {
+          e.addFields({ name: `${l.icon} ${l.name} ${l.finds.filter((f) => s.collection[f.id]).length}/${l.finds.length}${s.sets.includes(l.id) ? ' 🏅' : ''}`, value: l.finds.map((f) => (s.collection[f.id] ? f.icon : '❔')).join(' '), inline: true });
+        }
+        return i.reply({ embeds: [e] });
+      }
       case 'daily': {
         const { state } = load(user);
         if (!state.name) return i.reply({ ...adoptPrompt(user.id), flags: EPHEMERAL });
@@ -221,6 +249,7 @@ export function createBot({ store, siteUrl }) {
           '`/pet` care for your otter · `/adopt` get one · `/link` connect the website',
           '`/daily` daily treasure chest · `/mission` send your otter exploring',
           '`/den` show off your den · `/visit @friend` peek inside a friend\'s den',
+          '`/explore` discover creatures and treasures · `/collection` your journal',
           '',
           `**Solo games** \`/play\`: ${SOLO.map((g) => `${g.emoji} ${g.name}`).join(', ')}`,
           `**Challenges** \`/challenge @friend\`: ${DUELS.map((g) => `${g.emoji} ${g.name}`).join(', ')}`,

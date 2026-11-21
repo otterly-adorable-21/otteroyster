@@ -6,6 +6,8 @@ import { sync } from './sync.js';
 import { detectArt, art } from './assets.js';
 import { FURNITURE, WALLPAPERS, FLOORS, DEN_CATS } from './den-data.js';
 import { denSVG, furniturePreviewSVG } from './den.js';
+import { LOCATIONS, LOC, RARITY, FINDS, TOTAL_FINDS, EXPLORE_ENERGY, SET_REWARD } from './world.js';
+import { mapSVG } from './map.js';
 
 // ---------- helpers ----------
 const $ = (s) => document.querySelector(s);
@@ -88,6 +90,7 @@ function showReports() {
         <span class="chip">⭐ +${r.xp} XP</span>
       </div>
       ${r.found ? `<div class="loot"><div class="loot-art">${itemPreviewSVG(r.found)}</div><p>Found a rare item: <b>${ITEMS[r.found].name}</b>! Check your closet.</p></div>` : ''}
+      ${r.discovery && FINDS[r.discovery] ? `<div class="loot"><div class="loot-art big-find">${FINDS[r.discovery].icon}</div><p>Brought back a <b>${FINDS[r.discovery].name}</b> for your collection!</p></div>` : ''}
       ${reports.length > 1 ? `<p class="muted">+${reports.length - 1} more mission report${reports.length > 2 ? 's' : ''} in the journal.</p>` : ''}
       <button class="btn primary" data-close>Yay!</button>
     </div>`);
@@ -243,13 +246,36 @@ function panelCloset() {
     }).join('') + '<p class="note">✨ Some rare items can only be found on missions.</p>';
   }
   if (!state.owned.length) {
-    return `${toggle}<div class="empty"><div class="empty-icon">👗</div><p>No clothes yet! Buy some in the <button class="link" data-closet="shop">shop</button> or find rare items on <button class="link" data-tab="missions">missions</button>.</p></div>`;
+    return `${toggle}<div class="empty"><div class="empty-icon">👗</div><p>No clothes yet! Buy some in the <button class="link" data-closet="shop">shop</button> or find rare items on <button class="link" data-tab="missions">expeditions</button>.</p></div>`;
   }
   return toggle + SLOTS.map((slot) => {
     const ids = state.owned.filter((id) => ITEMS[id].slot === slot.id);
     if (!ids.length) return '';
     return `<h2 class="section-title">${slot.name}</h2><div class="grid">${ids.map((id) => itemCard(id, 'wardrobe')).join('')}</div>`;
   }).join('') + '<div class="settings"><button class="link" data-action="undress">Take everything off</button></div>';
+}
+
+let mapSel = 'lilypond';
+let journalOpen = false;
+
+function missionCard(m) {
+  const locked = state.level < m.level;
+  const loot = m.loot.map(([id]) => ITEMS[id].icon).join(' ');
+  const disabled = locked || !!state.mission || state.sleeping || state.stats.energy < m.energy;
+  return `<div class="card mission ${locked ? 'locked' : ''}">
+    <div class="mission-head"><span class="mission-icon">${m.icon}</span>
+      <div><b>${m.name}</b><div class="muted">⏱ ${fmtMinutes(m.minutes)} · ⚡ ${m.energy} energy</div>
+      <div class="muted"><span class="pearl-icon"></span> ${m.pearls[0]}–${m.pearls[1]}${loot ? ` · rare: ${loot}` : ''} · 🔍 finds</div></div></div>
+    <button class="btn small ${disabled ? '' : 'primary'}" data-action="mission" data-id="${m.id}" ${disabled ? 'disabled' : ''}>${locked ? `🔒 Lv ${m.level}` : 'Go!'}</button>
+  </div>`;
+}
+
+function findTile(f) {
+  const n = state.collection[f.id] || 0;
+  const r = RARITY[f.rarity];
+  return `<div class="find ${n ? 'got' : ''}" style="--rar:${r.color}" title="${n ? f.name : 'Not found yet'} · ${r.name}">
+    <span class="find-icon">${n ? f.icon : '❔'}</span><span class="find-name">${n ? f.name : '???'}</span>
+    <span class="find-rar">${r.stars}${n > 1 ? ` ×${n}` : ''}</span></div>`;
 }
 
 function panelMissions() {
@@ -262,19 +288,42 @@ function panelMissions() {
       <div class="bar big"><div data-live="mission-bar" style="width:${pct}%"></div></div>
       <button class="link" data-action="recall">Call ${esc(state.name)} home early (no rewards)</button></div>`;
   }
-  const list = MISSIONS.map((m) => {
-    const locked = state.level < m.level;
-    const loot = m.loot.map(([id]) => ITEMS[id].icon).join(' ');
-    const disabled = locked || !!state.mission || state.sleeping || state.stats.energy < m.energy;
-    return `<div class="card mission ${locked ? 'locked' : ''}">
-      <div class="mission-head"><span class="mission-icon">${m.icon}</span>
-        <div><b>${m.name}</b><div class="muted">⏱ ${fmtMinutes(m.minutes)} · ⚡ ${m.energy} energy</div>
-        <div class="muted"><span class="pearl-icon"></span> ${m.pearls[0]}–${m.pearls[1]}${loot ? ` · rare: ${loot}` : ''}</div></div></div>
-      <button class="btn small ${disabled ? '' : 'primary'}" data-action="mission" data-id="${m.id}" ${disabled ? 'disabled' : ''}>${locked ? `🔒 Lv ${m.level}` : 'Go!'}</button>
-    </div>`;
-  }).join('');
-  return `${head}<h2 class="section-title">Missions</h2><div class="missions">${list}</div>
-    <p class="note">Missions run in real time, even when this page is closed. You can also start them from Discord with <code>/mission</code>.</p>`;
+  const found = core.collectionCount(state);
+  if (journalOpen) {
+    return `${head}<div class="explore-head"><h2 class="section-title">Collection journal</h2>
+      <button class="btn small" data-action="journal">🗺️ Back to map</button></div>
+      <p class="journal-total">📖 ${found} / ${TOTAL_FINDS} discovered · 🏅 ${state.sets.length} / ${LOCATIONS.length} sets</p>
+      ${LOCATIONS.map((l) => `<div class="card journal-loc"><div class="journal-loc-head"><b>${l.icon} ${l.name}</b>
+        <span class="muted">${l.finds.filter((f) => state.collection[f.id]).length}/${l.finds.length}${state.sets.includes(l.id) ? ' 🏅' : ''}</span></div>
+        <div class="finds">${l.finds.map(findTile).join('')}</div></div>`).join('')}
+      <p class="note">Complete a place's set for a 🏅 badge and ${SET_REWARD.pearls} pearls.</p>`;
+  }
+  const loc = LOC[mapSel] || LOCATIONS[0];
+  const locked = !core.locUnlocked(state, loc.id);
+  const ready = core.exploreReadyAt(state, loc.id);
+  const wait = ready - Date.now();
+  const busyMsg = state.mission ? 'away' : state.sleeping ? 'asleep' : '';
+  const exploreBtn = locked ? `<button class="btn" disabled>🔒 Unlocks at level ${loc.level}</button>`
+    : wait > 0 ? `<button class="btn" disabled>🔍 Explore again in <span data-live="explore-wait" data-ready="${ready}">${fmtTime(wait)}</span></button>`
+      : `<button class="btn primary" data-action="explore" data-id="${loc.id}" ${busyMsg || state.stats.energy < EXPLORE_ENERGY ? 'disabled' : ''}>🔍 Explore here · ⚡${EXPLORE_ENERGY}</button>`;
+  const missions = loc.missions.map((id) => MISSIONS.find((m) => m.id === id));
+  const games = loc.games.map((id) => GAME_LIST.find((g) => g.id === id));
+  return `${head}
+    <div class="explore-head"><h2 class="section-title">Explore</h2>
+      <button class="btn small" data-action="journal">📖 Journal ${found}/${TOTAL_FINDS}</button></div>
+    <div class="map-wrap">${mapSVG(state, loc.id)}</div>
+    <div class="card loc-card ${locked ? 'locked' : ''}">
+      <div class="loc-title"><span class="loc-icon">${loc.icon}</span><div><h3>${loc.name}${state.sets.includes(loc.id) ? ' 🏅' : ''}</h3><p class="muted">${loc.desc}</p></div></div>
+      ${loc.id === 'lilypond' ? '<div class="row"><button class="btn small" data-tab="home">🦦 Visit your otter</button><button class="btn small" data-tab="den">🏡 Go to the den</button></div>' : ''}
+      ${exploreBtn}
+      ${busyMsg ? `<p class="muted small-note">${esc(state.name)} is ${busyMsg === 'away' ? 'out on a mission' : 'napping'} right now.</p>` : ''}
+      <h4 class="loc-sub">Discoveries · ${loc.finds.filter((f) => state.collection[f.id]).length}/${loc.finds.length}</h4>
+      <div class="finds">${loc.finds.map(findTile).join('')}</div>
+      ${missions.length ? `<h4 class="loc-sub">Missions here</h4><div class="missions">${missions.map(missionCard).join('')}</div>` : ''}
+      <h4 class="loc-sub">Games here</h4>
+      <div class="loc-games">${games.map((g) => `<button class="loc-game" data-action="game" data-id="${g.id}"><span>${g.icon}</span><b>${g.name}</b><small>⚡${g.energy}</small></button>`).join('')}</div>
+    </div>
+    <p class="note">Missions run in real time, even when this page is closed. Explore from Discord with <code>/explore</code>.</p>`;
 }
 
 function bestLabel(g) {
@@ -306,6 +355,7 @@ function panelDiscord() {
       <div><code>/daily</code> Daily treasure chest</div>
       <div><code>/den</code> Show off your den · <code>/visit @friend</code> Peek inside a friend's den</div>
       <div><code>/mission</code> Send your otter on an adventure</div>
+      <div><code>/explore</code> Discover creatures and treasures · <code>/collection</code> Your journal</div>
       <div><code>/play</code> Solo games: trivia, fishing, hangman, minesweeper and more</div>
       <div><code>/challenge</code> Challenge a friend: Connect Four, Tic-Tac-Toe, Rock Paper Scissors</div>
       <div><code>/party</code> Group games for voice chats: Impostor, Trivia Battle, Categories and more</div>
@@ -471,6 +521,8 @@ function commit({ push = true } = {}) {
 }
 
 function updateLive() {
+  const ew = document.querySelector('[data-live="explore-wait"]');
+  if (ew) { const left = Number(ew.dataset.ready) - Date.now(); if (left <= 0) renderPanel(); else ew.textContent = fmtTime(left); }
   if (!state.mission) return;
   const left = document.querySelector('[data-live="mission-left"]');
   const bar = document.querySelector('[data-live="mission-bar"]');
@@ -610,6 +662,8 @@ document.addEventListener('click', async (e) => {
     if (tabBtn.closest('.tabs')) window.scrollTo({ top: 0 });
     return;
   }
+  const pin = e.target.closest('[data-loc]');
+  if (pin) { mapSel = pin.dataset.loc; renderPanel(); document.querySelector('.loc-card')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return; }
   const shopBtn = e.target.closest('[data-denshop]');
   if (shopBtn) { denShop = shopBtn.dataset.denshop; return renderPanel(); }
   const closetBtn = e.target.closest('[data-closet]');
@@ -638,6 +692,22 @@ document.addEventListener('click', async (e) => {
       location.reload();
       return null;
     }
+    case 'explore': {
+      const r = core.explore(state, id);
+      if (!r.ok) return toast(r.msg);
+      act(r);
+      if (r.find && (r.isNew || r.setDone)) {
+        const rar = RARITY[r.find.rarity];
+        showModal(`<div class="result"><div class="result-icon big-find">${r.find.icon}</div>
+          <h2>${r.setDone ? 'Collection complete! 🏅' : 'New discovery!'}</h2>
+          <p><b>${r.find.name}</b> · <span style="color:${rar.color === '#9be8de' ? '#1f8f95' : rar.color}">${rar.stars} ${rar.name}</span></p>
+          <p>Found at ${LOC[id].name}. It's in your collection journal.</p>
+          ${r.setDone ? `<div class="rewards"><span class="chip"><span class="pearl-icon"></span> +${SET_REWARD.pearls}</span><span class="chip">⭐ +${SET_REWARD.xp} XP</span></div>` : ''}
+          <button class="btn primary" data-close>Wonderful!</button></div>`);
+      }
+      return r;
+    }
+    case 'journal': journalOpen = !journalOpen; renderPanel(); window.scrollTo({ top: 0 }); return null;
     case 'den-edit': denEdit = !denEdit; denSel = null; return renderPanel();
     case 'den-buy': {
       const r = act(core.buyFurniture(state, id));
