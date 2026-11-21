@@ -110,6 +110,11 @@ export function denSVG(state, opts = {}) {
   const layer = (z) => items.filter((p) => zoneOf(p.id) === z).sort((a, b) => a.y - b.y);
   const pos = otterPos(state);
   const floorThings = layer('floor').map((p) => ({ y: p.y, html: itemSVG(p, { selected: opts.selected === p.uid, editable: opts.editable }) }));
+  for (const [k, g] of (opts.guests || []).entries()) {
+    const gx = Math.max(60, Math.min(340, pos.x + (k % 2 ? -1 : 1) * (70 + k * 20)));
+    const gstate = { ...state, name: g.name, equipped: g.equipped || {}, sleeping: state.sleeping, stats: { hunger: 90, happiness: 90, energy: 90, clean: 90 }, persona: state.persona };
+    floorThings.push({ y: 288, html: `<g class="den-guest">${otterInDen(gstate, { x: gx, y: 288 }, {}).replace('data-uid="otter"', 'data-uid="guest"').replace(/den-otter-/g, `den-guest${k}-`)}<text x="${gx}" y="296" text-anchor="middle" font-size="10" font-weight="800" fill="#fffaf0" stroke="#3b2a1e" stroke-width="3" paint-order="stroke" font-family="Nunito, sans-serif">${String(g.name).replace(/[<&>]/g, '')} 🌙</text></g>` });
+  }
   if (!state.mission) {
     floorThings.push({ y: pos.inBed ? pos.y + 30 : pos.y, html: otterInDen(state, pos, { selected: opts.selected === 'otter', editable: opts.editable && !pos.inBed }) });
   }

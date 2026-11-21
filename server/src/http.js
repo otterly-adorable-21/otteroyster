@@ -20,7 +20,7 @@ function limiter(max, windowMs) {
   };
 }
 
-export function startHttp({ store, social, auth, port, siteRoot, allowedOrigins, info }) {
+export function startHttp({ store, social, social2, auth, port, siteRoot, allowedOrigins, info }) {
   const linkLimit = limiter(10, 60_000);
   const registerLimit = limiter(20, 60_000);
   const apiLimit = limiter(240, 60_000);
@@ -168,7 +168,51 @@ export function startHttp({ store, social, auth, port, siteRoot, allowedOrigins,
       case 'GET /api/friends/visit': {
         const p = authed(req);
         if (!p) return send(res, 401, { error: 'Not signed in' });
-        const { status, ...rest } = social.visit(p.id, social.idByCode(url.searchParams.get('code')));
+        const other = social.idByCode(url.searchParams.get('code'));
+        const { status, ...rest } = social.visit(p.id, other);
+        if (status === 200) rest.guestbook = social2.guestbook(other).map((g) => ({ ...g, mine: g.authorCode === social.codeOf(p.id) }));
+        return send(res, status, rest);
+      }
+
+      case 'GET /api/inbox': {
+        const p = authed(req);
+        if (!p) return send(res, 401, { error: 'Not signed in' });
+        const { status, ...rest } = social2.inbox(p.id);
+        return send(res, status, rest);
+      }
+
+      case 'POST /api/guestbook/sign':
+      case 'POST /api/guestbook/delete':
+      case 'POST /api/mail/send':
+      case 'POST /api/mail/read':
+      case 'POST /api/emote':
+      case 'POST /api/sit':
+      case 'POST /api/sleepover/invite':
+      case 'POST /api/sleepover/respond':
+      case 'POST /api/penpal/join':
+      case 'POST /api/penpal/leave':
+      case 'POST /api/challenge/send':
+      case 'POST /api/challenge/answer': {
+        const p = authed(req);
+        if (!p) return send(res, 401, { error: 'Not signed in' });
+        const b = await body(req);
+        const other = b.code ? social.idByCode(b.code) : null;
+        const me = p.id;
+        const r = {
+          'POST /api/guestbook/sign': () => social2.sign(me, other, b.text),
+          'POST /api/guestbook/delete': () => social2.unsign(me, b.id),
+          'POST /api/mail/send': () => social2.sendMail(me, other, b.design, b.text),
+          'POST /api/mail/read': () => social2.readMail(me, b.id),
+          'POST /api/emote': () => social2.emote(me, other, b.emote),
+          'POST /api/sit': () => social2.sit(me, other, b.action),
+          'POST /api/sleepover/invite': () => social2.invite(me, other),
+          'POST /api/sleepover/respond': () => social2.respondSleepover(me, other, !!b.accept),
+          'POST /api/penpal/join': () => social2.joinPenpals(me),
+          'POST /api/penpal/leave': () => social2.leavePenpal(me, other),
+          'POST /api/challenge/send': () => social2.challenge(me, other, b.game, b.score),
+          'POST /api/challenge/answer': () => social2.answerChallenges(me, String(b.game || ''), Number(b.score)),
+        }[route]();
+        const { status, ...rest } = r;
         return send(res, status, rest);
       }
 

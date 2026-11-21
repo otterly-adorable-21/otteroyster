@@ -5,6 +5,7 @@ import { loadEnv } from './env.js';
 import { openDb } from './db.js';
 import { createStore } from './players.js';
 import { createSocial } from './social.js';
+import { createSocial2 } from './social2.js';
 import { startHttp } from './http.js';
 import { createAuth } from './auth.js';
 
@@ -16,6 +17,7 @@ const db = openDb(resolve(here, '..', env.DB_PATH || './data/otteroyster.db'));
 console.log(`💾 Database: ${resolve(here, '..', env.DB_PATH || './data/otteroyster.db')}`);
 const store = createStore(db);
 const social = createSocial(db, store);
+const social2 = createSocial2(db, store, social);
 const siteUrl = env.SITE_URL || 'https://otteroyster.online';
 const allowedOrigins = (env.ALLOWED_ORIGINS || 'https://otteroyster.online,https://www.otteroyster.online,https://otterly-adorable-21.github.io').split(',').map((s) => s.trim()).filter(Boolean);
 
@@ -37,6 +39,7 @@ const invite = env.DISCORD_APP_ID ? `https://discord.com/oauth2/authorize?client
 startHttp({
   store,
   social,
+  social2,
   auth,
   port: Number(env.PORT || 8787),
   siteRoot: resolve(here, '..', '..'),

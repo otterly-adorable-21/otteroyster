@@ -809,3 +809,52 @@ details.cmd-list[open] summary { margin-bottom: 6px; }
 .badge .bar { width: 80%; height: 5px; margin-top: 2px; background: #dde6e1; }
 .badge .bar > div { background: linear-gradient(90deg, var(--gold), var(--gold-light)); }
 .center-link { justify-self: center; }
+
+/* ---------- social part 2 ---------- */
+.tabs button { position: relative; }
+.tabs button[data-badge]:not([data-badge=''])::after { content: attr(data-badge); position: absolute; top: 2px; right: calc(50% - 22px); min-width: 17px; height: 17px; padding: 0 4px; border-radius: 99px; background: #e8590c; color: #fff; font-size: .65rem; font-weight: 800; display: grid; place-items: center; }
+.friend-mini { display: flex; gap: 4px; }
+.notices { display: grid; gap: 6px; }
+.notice { font-size: .88rem; padding: 6px 4px; border-bottom: 1px solid var(--line); }
+.notice:last-child { border-bottom: 0; }
+.sleep-invite, .challenge, .mail-card { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+.sleep-invite > div:nth-child(2), .challenge > div, .mail-card > div { flex: 1; }
+.penpals { display: grid; gap: 8px; }
+.pal-row { display: flex; gap: 8px; align-items: center; }
+.pal-row b { flex: 1; }
+.guestbook { display: grid; gap: 8px; }
+.gb-entry { background: #fff; border-radius: 12px; padding: 8px 10px; box-shadow: inset 0 0 0 1px var(--line); font-size: .9rem; }
+.gb-entry .link { float: right; }
+.gb-form { margin-top: 6px; }
+.gb-form input { letter-spacing: normal; text-transform: none; font-size: .95rem; text-align: left; font-weight: 600; }
+.emote-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.self-emotes { margin-top: 10px; justify-content: center; }
+.self-emotes .btn { font-size: 1.2rem; padding: 6px 12px; }
+.mailbox { display: grid; gap: 8px; }
+.mail-row { display: flex; gap: 10px; align-items: center; border: 0; text-align: left; background: #fff; border-radius: 12px; padding: 10px 12px; box-shadow: inset 0 0 0 1px var(--line); color: var(--ink); }
+.mail-row .muted { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mail-row.unread { box-shadow: inset 0 0 0 2px var(--gold); }
+.new-dot { background: #e8590c; color: #fff; font-size: .65rem; font-weight: 800; padding: 2px 6px; border-radius: 99px; }
+.postcard { position: relative; border-radius: 18px; padding: 22px 18px 16px; min-height: 220px; color: var(--ink); box-shadow: var(--gold-ring), var(--shadow); display: grid; gap: 10px; align-content: start; }
+.pc-pond { background: linear-gradient(160deg, #e6f7f3, #fff 60%), #fff; }
+.pc-lighthouse { background: linear-gradient(160deg, #fff1e6, #fff 60%); }
+.pc-reef { background: linear-gradient(160deg, #e7f5ff, #fff0f6 60%); }
+.pc-moon { background: linear-gradient(160deg, #1b2c4a, #2b3f66); color: #fff3bf; }
+.pc-stamp { position: absolute; top: 12px; right: 12px; width: 52px; height: 60px; display: grid; place-items: center; font-size: 1.8rem; background: #fffaf0; border: 3px dashed #d9b45a; border-radius: 6px; }
+.pc-title { font-family: var(--display); font-size: 1.5rem; font-weight: 700; font-style: italic; padding-right: 60px; }
+.pc-text { font-size: 1rem; line-height: 1.5; white-space: pre-wrap; }
+.pc-from { text-align: right; font-family: var(--display); font-size: 1.2rem; font-style: italic; }
+.pc-actions { margin-top: 10px; }
+.pc-form { display: grid; gap: 8px; }
+.pc-form h2 { font-size: 1.5rem; color: var(--deep); text-align: center; }
+textarea.note-input { resize: vertical; font: inherit; }
+.pick-list { display: grid; gap: 6px; width: 100%; }
+/* own emotes */
+#otter-wrap.emote-wave #otter { animation: em-wave .4s ease-in-out 4; transform-origin: 50% 90%; }
+@keyframes em-wave { 50% { transform: rotate(-8deg); } }
+#otter-wrap.emote-dance #otter { animation: em-dance .4s ease-in-out 4; }
+@keyframes em-dance { 25% { transform: translateY(-14px) rotate(-6deg); } 75% { transform: translateY(-14px) rotate(6deg); } }
+#otter-wrap.emote-splash #otter { animation: squish .5s ease 3; }
+#otter-wrap.emote-spin #otter { animation: em-spin 1.2s ease-in-out; }
+@keyframes em-spin { to { transform: rotate(360deg); } }
+#otter-wrap.emote-love #otter { animation: snug 1.2s ease; }

@@ -4,13 +4,15 @@ import { resolve } from 'node:path';
 import { openDb } from '../src/db.js';
 import { createStore } from '../src/players.js';
 import { createSocial } from '../src/social.js';
+import { createSocial2 } from '../src/social2.js';
 import { startHttp } from '../src/http.js';
 import * as core from '../../js/core.js';
 
 const db = openDb(':memory:');
 const store = createStore(db);
 const social = createSocial(db, store);
-const server = startHttp({ store, social, port: 0, siteRoot: resolve(import.meta.dirname, '..', '..'), allowedOrigins: [], info: () => ({ invite: null }) });
+const social2 = createSocial2(db, store, social);
+const server = startHttp({ store, social, social2, port: 0, siteRoot: resolve(import.meta.dirname, '..', '..'), allowedOrigins: [], info: () => ({ invite: null }) });
 await new Promise((r) => server.once('listening', r));
 const base = `http://localhost:${server.address().port}`;
 after(() => server.close());
@@ -198,6 +200,80 @@ test('merge: bring a website account into a Discord account', async () => {
   assert.equal(r.data.state.pearls, 77);
   // the old website token now opens the merged Discord account
   assert.equal(store.byToken(W.token).discordId, 'disc-merge-2');
+});
+
+test('social part 2: guestbook, mail, emotes, sitting, sleepovers, pen pals, challenges', async () => {
+  const reg = async (name) => (await call('/api/register', { method: 'POST', body: { state: { ...core.defaultState(), name, pearls: 100 } } })).data;
+  const A = await reg('Ada'); const B = await reg('Bea'); const C = await reg('Cal');
+  await call('/api/friends/add', { method: 'POST', token: A.token, body: { code: B.code } });
+  await call('/api/friends/respond', { method: 'POST', token: B.token, body: { code: A.code, accept: true } });
+
+  // guestbook: friends only, cleaned text, notice to owner, delete
+  assert.equal((await call('/api/guestbook/sign', { method: 'POST', token: C.token, body: { code: A.code, text: 'hi' } })).status, 403);
+  assert.equal((await call('/api/guestbook/sign', { method: 'POST', token: B.token, body: { code: A.code, text: 'You are <b>stupid</b> cute' } })).status, 200);
+  let inbox = (await call('/api/inbox', { token: A.token })).data;
+  assert.equal(inbox.guestbook[0].text, 'You are 🦦 cute');
+  assert.ok(inbox.notices.some((n) => n.kind === 'guestbook'));
+  assert.equal((await call('/api/inbox', { token: A.token })).data.notices.length, 0, 'notices are shown once');
+  const v = (await call('/api/friends/visit?code=' + A.code, { token: B.token })).data;
+  assert.equal(v.guestbook.length, 1);
+  assert.equal(v.guestbook[0].mine, true);
+  await call('/api/guestbook/delete', { method: 'POST', token: A.token, body: { id: inbox.guestbook[0].id } });
+  assert.equal((await call('/api/inbox', { token: A.token })).data.guestbook.length, 0);
+
+  // Shell Mail: arrives after the seagull flight
+  assert.equal((await call('/api/mail/send', { method: 'POST', token: C.token, body: { code: A.code, text: 'hey' } })).status, 403);
+  const sent = await call('/api/mail/send', { method: 'POST', token: B.token, body: { code: A.code, design: 'reef', text: 'Greetings from the reef!' } });
+  assert.equal(sent.status, 200);
+  inbox = (await call('/api/inbox', { token: A.token })).data;
+  assert.equal(inbox.mail.length, 0);
+  assert.equal(inbox.mailInFlight, 1);
+  db.prepare('UPDATE mail SET deliver_at = 0').run();
+  inbox = (await call('/api/inbox', { token: A.token })).data;
+  assert.equal(inbox.mail[0].text, 'Greetings from the reef!');
+  assert.equal(inbox.mailUnread, 1);
+  await call('/api/mail/read', { method: 'POST', token: A.token, body: { id: inbox.mail[0].id } });
+  assert.equal((await call('/api/inbox', { token: A.token })).data.mailUnread, 0);
+
+  // emotes: once per kind per day
+  assert.equal((await call('/api/emote', { method: 'POST', token: B.token, body: { code: A.code, emote: 'wave' } })).status, 200);
+  assert.equal((await call('/api/emote', { method: 'POST', token: B.token, body: { code: A.code, emote: 'wave' } })).status, 429);
+  assert.match((await call('/api/inbox', { token: A.token })).data.notices[0].text, /waved at you/);
+
+  // pet-sitting changes the friend's otter
+  const before = store.byToken(A.token).state.stats.clean;
+  store.mutate(store.byToken(A.token).id, (s) => { s.stats.clean = 20; });
+  assert.equal((await call('/api/sit', { method: 'POST', token: B.token, body: { code: A.code, action: 'bath' } })).status, 200);
+  assert.ok(store.byToken(A.token).state.stats.clean >= 50);
+  assert.equal((await call('/api/sit', { method: 'POST', token: B.token, body: { code: A.code, action: 'bath' } })).status, 429);
+  void before;
+
+  // sleepover: invite -> accept -> both happier, guest shows for host
+  assert.equal((await call('/api/sleepover/invite', { method: 'POST', token: A.token, body: { code: B.code } })).status, 200);
+  assert.equal((await call('/api/inbox', { token: B.token })).data.sleepovers[0].status, 'invited');
+  assert.equal((await call('/api/sleepover/respond', { method: 'POST', token: B.token, body: { code: A.code, accept: true } })).status, 200);
+  const hostView = (await call('/api/inbox', { token: A.token })).data.sleepovers[0];
+  assert.equal(hostView.hosting, true);
+  assert.equal(hostView.status, 'accepted');
+  assert.equal(hostView.name, 'Bea');
+
+  // pen pals: two strangers get matched and can mail each other
+  assert.equal((await call('/api/penpal/join', { method: 'POST', token: C.token, body: {} })).data.matched, false);
+  const D = await reg('Dot');
+  const m = (await call('/api/penpal/join', { method: 'POST', token: D.token, body: {} })).data;
+  assert.equal(m.matched, true);
+  assert.equal(m.pal, 'Cal');
+  assert.equal((await call('/api/mail/send', { method: 'POST', token: D.token, body: { code: C.code, text: 'Hi pen pal!' } })).status, 200);
+
+  // challenges: B dares A; A plays and wins; B hears about it
+  assert.equal((await call('/api/challenge/send', { method: 'POST', token: B.token, body: { code: A.code, game: 'dive', score: 20 } })).status, 200);
+  assert.equal((await call('/api/inbox', { token: A.token })).data.challenges.length, 1);
+  const ans = (await call('/api/challenge/answer', { method: 'POST', token: A.token, body: { game: 'dive', score: 31 } })).data;
+  assert.equal(ans.results[0].won, true);
+  assert.match((await call('/api/inbox', { token: B.token })).data.notices.map((n) => n.text).join(' '), /beat your 20/);
+  // lower-is-better games compare the other way
+  await call('/api/challenge/send', { method: 'POST', token: B.token, body: { code: A.code, game: 'memory', score: 12 } });
+  assert.equal((await call('/api/challenge/answer', { method: 'POST', token: A.token, body: { game: 'memory', score: 10 } })).data.results[0].won, true);
 });
 
 // Runs last: it deliberately uses up the link rate limit.

@@ -295,6 +295,12 @@ function endGame(g, r) {
   if (res.ups) levelUp();
   commit();
   sync.score(g.id, r.best);
+  if (sync.linked && sync.online && socialData?.challenges?.some((c) => c.game === g.id)) {
+    sync.challengeAnswer(g.id, r.best).then((ans) => {
+      for (const x of ans.results || []) toast(x.won ? `🏆 You beat ${x.from}'s ${x.target}! They'll hear about it.` : `So close! ${x.from}'s ${x.target} still stands.`);
+      refreshInbox();
+    });
+  }
   $('#modal-card').innerHTML = `
     <div class="result">
       <div class="result-icon">${g.icon}</div>
@@ -304,6 +310,7 @@ function endGame(g, r) {
       <div class="rewards"><span class="chip"><span class="pearl-icon"></span> +${res.pearls}</span><span class="chip">💛 +10</span></div>
       <div class="row">
         <button class="btn" data-action="game" data-id="${g.id}">Play again</button>
+        ${sync.linked && sync.online && friendsData?.friends?.length ? `<button class="btn" data-action="challenge-friend" data-game="${g.id}" data-score="${r.best}">🏆 Dare a friend</button>` : ''}
         <button class="btn primary" data-close>Done</button>
       </div>
     </div>`;
@@ -322,6 +329,11 @@ function renderHeader() {
   $('#xp-fill').style.width = `${(state.xp / core.xpNeed(state.level)) * 100}%`;
   $('#pearls').textContent = state.pearls;
   renderSaveChip();
+  const fb = document.querySelector('.tabs [data-tab=friends]');
+  if (fb) {
+    const n = (socialData?.mailUnread || 0) + (socialData?.challenges?.length || 0) + (socialData?.sleepovers || []).filter((x) => !x.hosting && x.status === 'invited').length + (friendsData?.incoming?.length || 0) + (giftsData?.length || 0);
+    fb.dataset.badge = n > 0 ? String(n) : '';
+  }
 }
 
 function renderStats() {
@@ -641,6 +653,7 @@ function panelHome() {
     </div>
     ${personaCard()}
     ${achievementsCard()}
+    <div class="emote-row self-emotes">${Object.entries(EMOTES).map(([id, [ic, label]]) => `<button class="btn small" data-action="emote-self" data-id="${id}" aria-label="${label}">${ic}</button>`).join('')}</div>
     <h2 class="section-title">Journal</h2>
     <ul class="journal">
       ${state.log.slice(0, 6).map((l) => `<li><time>${new Date(l.t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</time>${esc(l.msg)}</li>`).join('') || '<li>Nothing yet. Say hi to your otter!</li>'}
@@ -774,16 +787,35 @@ let friendsData = null; // last /api/friends response
 let giftsData = [];
 let friendsLoading = false;
 
+let socialData = null; // /api/inbox: notices, mail, guestbook, sleepovers, pen pals, challenges
+let recentNotices = [];
+
 async function loadFriends() {
   if (!sync.online || !sync.linked || friendsLoading) return;
   friendsLoading = true;
   try {
-    const [f, g] = await Promise.all([sync.friends(), sync.gifts()]);
+    const [f, g, ib] = await Promise.all([sync.friends(), sync.gifts(), sync.inbox()]);
     if (f.ok) friendsData = f;
     if (g.ok) giftsData = g.gifts;
+    if (ib.ok) applyInbox(ib);
   } catch { /* offline */ }
   friendsLoading = false;
   if (tab === 'friends') renderPanel();
+  if (tab === 'den') redrawDen();
+  renderHeader();
+}
+
+function applyInbox(ib) {
+  socialData = ib;
+  if (ib.notices?.length) {
+    recentNotices = [...ib.notices, ...recentNotices].slice(0, 8);
+    ib.notices.slice(0, 3).reverse().forEach((n, k) => setTimeout(() => toast(n.text), 600 + k * 2800));
+  }
+}
+
+async function refreshInbox() {
+  if (!sync.online || !sync.linked) return;
+  try { const ib = await sync.inbox(); if (ib.ok) { applyInbox(ib); if (tab === 'friends') renderPanel(); renderHeader(); } } catch { /* offline */ }
 }
 
 // A small otter portrait from a friend's public info.
@@ -801,7 +833,7 @@ function friendCard(f, k) {
       <div class="hearts" title="${f.points} friendship points">${heartsText(f.points)} <small>${f.friendship}</small></div></div>
     <div class="friend-actions">
       <button class="btn small primary" data-action="fr-visit" data-code="${f.code}">Visit</button>
-      <button class="btn small" data-action="fr-gift" data-code="${f.code}" data-name="${esc(f.name)}">🎁</button>
+      <div class="friend-mini"><button class="btn small" data-action="fr-gift" data-code="${f.code}" data-name="${esc(f.name)}" aria-label="Send a gift">🎁</button><button class="btn small" data-action="mail-write" data-code="${f.code}" data-name="${esc(f.name)}" aria-label="Send a postcard">✉️</button></div>
     </div></div>`;
 }
 
@@ -866,6 +898,7 @@ function panelFriends() {
       ${giftsData.map((g) => `<div class="gift-row"><span class="gift-icon">${g.kind === 'pearls' ? '<span class="pearl-icon"></span>' : '🎁'}</span>
         <div><b>${g.kind === 'pearls' ? `${g.amount} pearls` : esc(FURNITURE[g.item]?.name || 'A gift')}</b> <span class="muted">from ${esc(g.from)}</span>${g.note ? `<div class="gift-note">“${esc(g.note)}”</div>` : ''}</div></div>`).join('')}
       <button class="btn primary wide" data-action="gifts-open">Open ${giftsData.length > 1 ? `all ${giftsData.length} gifts` : 'gift'}</button></div>` : ''}
+    ${socialSections()}
     ${d.incoming.length ? `<h2 class="section-title">Friend requests</h2>${d.incoming.map((f, k) => `<div class="card friend">
       <div class="friend-art">${miniOtter(f, `in${k}`)}</div>
       <div class="friend-info"><b>${esc(f.name)}</b>${f.owner ? `<span class="muted"> · ${esc(f.owner)}</span>` : ''}<div class="muted">Lv ${f.level} wants to be friends!</div></div>
@@ -877,6 +910,66 @@ function panelFriends() {
     <p class="note">💗 Visit, hug, gift and play together to grow your friendship.</p>
     ${discordSection()}
     <div class="settings"><button class="link" data-action="unlink">Sign out on this device</button></div>`;
+}
+
+const POSTCARD_ART = {
+  pond: { name: 'Lily Pond', icon: '🪷' },
+  lighthouse: { name: 'Lighthouse', icon: '🗼' },
+  reef: { name: 'Pearl Reef', icon: '🐠' },
+  moon: { name: 'Moonlit Night', icon: '🌙' },
+};
+const EMOTES = { wave: ['👋', 'Wave'], dance: ['💃', 'Dance'], splash: ['💦', 'Splash'], spin: ['💫', 'Spin'], love: ['💖', 'Love'] };
+
+function socialSections() {
+  const sd = socialData;
+  if (!sd) return '';
+  const invites = sd.sleepovers.filter((x) => !x.hosting && x.status === 'invited');
+  const tonight = sd.sleepovers.filter((x) => x.status === 'accepted');
+  return `
+    ${recentNotices.length ? `<h2 class="section-title">What's new</h2><div class="card notices">${recentNotices.slice(0, 5).map((n) => `<div class="notice">${esc(n.text)}</div>`).join('')}</div>` : ''}
+    ${invites.map((x) => `<div class="card sleep-invite"><span class="big-emoji">🌙</span><div><b>${esc(x.name)} invited you to a sleepover tonight!</b><div class="muted">Both otters wake up happier and more rested.</div></div>
+      <div class="friend-actions"><button class="btn small primary" data-action="sleep-yes" data-code="${x.code}">Yes!</button><button class="btn small" data-action="sleep-no" data-code="${x.code}">Not tonight</button></div></div>`).join('')}
+    ${tonight.map((x) => `<div class="card sleep-invite"><span class="big-emoji">🛌</span><div><b>${x.hosting ? `${esc(x.name)} is sleeping over in your den tonight!` : `You're sleeping over at ${esc(x.name)}'s den tonight!`}</b>${x.hosting ? '<div class="muted"><button class="link" data-tab="den">Peek in the den</button></div>' : ''}</div></div>`).join('')}
+    ${sd.challenges.length ? `<h2 class="section-title">Challenges for you</h2>${sd.challenges.map((c) => `<div class="card challenge"><span class="big-emoji">${c.icon || '🏆'}</span>
+      <div><b>${esc(c.from)} dares you!</b><div class="muted">Beat ${c.score} ${esc(c.label || '')} in ${esc(c.gameName || c.game)}</div></div>
+      <button class="btn small primary" data-action="game" data-id="${c.game}">Play</button></div>`).join('')}` : ''}
+    <h2 class="section-title">Shell Mail <small>${sd.mailUnread ? `${sd.mailUnread} new` : ''}${sd.mailInFlight ? ` · ${sd.mailInFlight} on the way 🕊️` : ''}</small></h2>
+    <div class="card mail-card"><span class="big-emoji">📬</span><div><b>${sd.mail.length ? `${sd.mail.length} postcard${sd.mail.length > 1 ? 's' : ''} in your letter book` : 'No postcards yet'}</b>
+      <div class="muted">Send postcards with ✉️ on a friend. A seagull delivers them in about 30 minutes.</div></div>
+      <button class="btn small ${sd.mailUnread ? 'primary' : ''}" data-action="mailbox">Open</button></div>
+    <h2 class="section-title">Pen pals</h2>
+    <div class="card penpals">
+      ${sd.penpals.pals.length ? sd.penpals.pals.map((p) => `<div class="pal-row"><span>✉️</span><b>${esc(p.name)}</b><span class="muted">Lv ${p.level}${p.trait && core.TRAITS[p.trait] ? ` · ${core.TRAITS[p.trait].icon}` : ''}</span>
+        <button class="btn small" data-action="mail-write" data-code="${p.code}" data-name="${esc(p.name)}">Write</button></div>`).join('') : '<p class="muted flush-p">Get matched with another otter keeper to swap postcards. No friend code needed!</p>'}
+      ${sd.penpals.waiting ? '<p class="muted flush-p">🕊️ Looking for a pen pal for you… check back soon!</p>' : sd.penpals.pals.length < 3 ? `<button class="btn small" data-action="penpal-join">${sd.penpals.pals.length ? 'Find another pen pal' : 'Find me a pen pal'}</button>` : ''}
+    </div>
+    ${sd.guestbook.length ? `<h2 class="section-title">Your guestbook</h2><div class="card guestbook">${sd.guestbook.map((g) => `<div class="gb-entry"><b>${esc(g.author)}</b> <span class="muted">${new Date(g.created).toLocaleDateString()}</span>
+      <button class="link small" data-action="gb-delete" data-id="${g.id}" aria-label="Delete note">✕</button><div>${esc(g.text)}</div></div>`).join('')}</div>` : ''}`;
+}
+
+function postcardHTML(m) {
+  const art = POSTCARD_ART[m.design] || POSTCARD_ART.pond;
+  return `<div class="postcard pc-${m.design || 'pond'}"><div class="pc-stamp">${art.icon}</div><div class="pc-title">Greetings from ${art.name}!</div>
+    <div class="pc-text">${esc(m.text)}</div><div class="pc-from">— ${esc(m.from)}</div></div>`;
+}
+
+function openMailbox() {
+  const mail = socialData?.mail || [];
+  showModal(`<div class="mailbox"><div class="game-top"><h2>📖 Letter book</h2><button class="icon-btn" data-close aria-label="Close">✕</button></div>
+    ${mail.length ? mail.map((m) => `<button class="mail-row ${m.read ? '' : 'unread'}" data-action="mail-open" data-id="${m.id}"><span>${(POSTCARD_ART[m.design] || POSTCARD_ART.pond).icon}</span>
+      <b>${esc(m.from)}</b><span class="muted">${esc(m.text.slice(0, 40))}${m.text.length > 40 ? '…' : ''}</span>${m.read ? '' : '<span class="new-dot">new</span>'}</button>`).join('')
+    : '<p class="muted center">No postcards yet. Make some friends or find a pen pal!</p>'}
+    ${socialData?.mailInFlight ? `<p class="muted center">🕊️ ${socialData.mailInFlight} postcard${socialData.mailInFlight > 1 ? 's are' : ' is'} on the way…</p>` : ''}</div>`, { wide: true });
+}
+
+function writePostcard(code, name) {
+  showModal(`<form class="pc-form" data-form="postcard" data-code="${code}">
+    <h2>✉️ A postcard for ${esc(name)}</h2>
+    <div class="gift-options">${Object.entries(POSTCARD_ART).map(([id, a], k) => `<label class="gift-opt"><input type="radio" name="design" value="${id}" ${k === 0 ? 'checked' : ''}><span>${a.icon} ${a.name}</span></label>`).join('')}</div>
+    <textarea name="text" maxlength="280" rows="4" required placeholder="Dear ${esc(name)}, today ${esc(state.name)} found…" class="note-input"></textarea>
+    <p class="muted small-note">A seagull will deliver it in about 30 minutes. Be kind! 🦦</p>
+    <div class="row"><button class="btn" type="button" data-close>Cancel</button><button class="btn primary" type="submit">Send 🕊️</button></div>
+  </form>`);
 }
 
 async function visitFriend(code) {
@@ -897,8 +990,18 @@ async function visitFriend(code) {
     </div>
     <div class="row">
       <button class="btn ${r.huggedToday ? '' : 'primary'}" data-action="fr-hug" data-code="${code}" ${r.huggedToday ? 'disabled' : ''}>${r.huggedToday ? '🤗 Hugged today' : `🤗 Hug ${esc(o.name)}`}</button>
-      <button class="btn" data-action="fr-gift" data-code="${code}" data-name="${esc(o.name)}">🎁 Send a gift</button>
-    </div></div>`;
+      <button class="btn" data-action="fr-gift" data-code="${code}" data-name="${esc(o.name)}">🎁 Gift</button>
+      <button class="btn" data-action="mail-write" data-code="${code}" data-name="${esc(o.name)}">✉️ Postcard</button>
+    </div>
+    <h3 class="den-sub dark">Say hi</h3>
+    <div class="emote-row">${Object.entries(EMOTES).map(([id, [ic, label]]) => `<button class="btn small" data-action="emote-send" data-code="${code}" data-id="${id}">${ic} ${label}</button>`).join('')}</div>
+    <h3 class="den-sub dark">Pet-sit ${esc(o.name)}</h3>
+    <div class="emote-row"><button class="btn small" data-action="sit" data-code="${code}" data-id="feed">🐟 Snack</button><button class="btn small" data-action="sit" data-code="${code}" data-id="cuddle">🤗 Cuddle</button><button class="btn small" data-action="sit" data-code="${code}" data-id="bath">🛁 Bath</button>
+      <button class="btn small" data-action="sleep-invite" data-code="${code}">🌙 Sleepover</button></div>
+    <h3 class="den-sub dark">Guestbook</h3>
+    <div class="guestbook small">${(r.guestbook || []).length ? r.guestbook.slice(0, 6).map((g) => `<div class="gb-entry"><b>${esc(g.author)}</b> <span class="muted">${new Date(g.created).toLocaleDateString()}</span>${g.mine ? ` <button class="link small" data-action="gb-delete" data-id="${g.id}" aria-label="Delete my note">✕</button>` : ''}<div>${esc(g.text)}</div></div>`).join('') : `<p class="muted flush-p">Be the first to sign ${esc(o.name)}'s guestbook!</p>`}</div>
+    <form class="link-form gb-form" data-form="guestbook" data-code="${code}"><input name="text" maxlength="140" placeholder="Leave a kind note…" required aria-label="Guestbook note"><button class="btn primary" type="submit">Sign</button></form>
+    </div>`;
 }
 
 function giftDialog(code, name) {
@@ -921,7 +1024,8 @@ let denSel = null;
 let denShop = 'furniture';
 
 function denStageHTML() {
-  return denSVG(state, { editable: denEdit, selected: denEdit ? denSel : null, extraAttrs: 'class="den-svg" role="img" aria-label="Your otter\'s den"' });
+  const guests = (socialData?.sleepovers || []).filter((x) => x.hosting && x.status === 'accepted').map((x) => ({ name: x.name, equipped: x.equipped }));
+  return denSVG(state, { editable: denEdit, selected: denEdit ? denSel : null, guests, extraAttrs: 'class="den-svg" role="img" aria-label="Your otter\'s den"' });
 }
 
 function cozyLine() {
@@ -995,6 +1099,8 @@ document.addEventListener('pointerdown', (e) => {
   const g = e.target.closest('.den-item');
   if (!denEdit) {
     if (g?.dataset.uid === 'otter') act(core.cuddle(state));
+    const item = g && state.den.items.find((q) => q.uid === g.dataset.uid);
+    if (item?.id === 'bookshelf') { if (sync.linked && socialData) openMailbox(); else toast('📖 Your letter book. Sign in on the Friends tab to get Shell Mail!'); }
     return;
   }
   if (!g || !g.classList.contains('editable')) { denSel = null; renderPanel(); return; }
@@ -1265,6 +1371,71 @@ document.addEventListener('click', async (e) => {
       return null;
     }
     case 'save-panel': return showSavePanel();
+    case 'mailbox': return openMailbox();
+    case 'mail-open': {
+      const m = socialData?.mail.find((x) => String(x.id) === String(id));
+      if (!m) return null;
+      showModal(`${postcardHTML(m)}<div class="row pc-actions"><button class="btn" data-action="mailbox">← Letter book</button><button class="btn primary" data-action="mail-write" data-code="${m.fromCode}" data-name="${esc(m.from)}">Reply ✉️</button></div>`, { wide: true });
+      if (!m.read) { m.read = true; socialData.mailUnread = Math.max(0, socialData.mailUnread - 1); sync.readMail(m.id); renderHeader(); }
+      return null;
+    }
+    case 'mail-write': return writePostcard(a.dataset.code, a.dataset.name || 'your friend');
+    case 'emote-self': {
+      const [ic] = EMOTES[id];
+      if (tab !== 'home') { tab = 'home'; renderPanel(); }
+      animateOtter(`emote-${id}`, 1600);
+      burst([ic, ic, '✨'], 8);
+      return null;
+    }
+    case 'emote-send': {
+      const r = await sync.emote(a.dataset.code, id);
+      toast(r.ok ? `${EMOTES[id][0]} Sent!` : r.error || 'Could not send that.');
+      if (r.ok) { a.disabled = true; burst([EMOTES[id][0]], 5); }
+      return null;
+    }
+    case 'sit': {
+      const r = await sync.sit(a.dataset.code, id);
+      toast(r.ok ? r.msg : r.error || 'Could not do that right now.');
+      if (r.ok) { a.disabled = true; burst(['💕'], 5); }
+      return null;
+    }
+    case 'sleep-invite': {
+      const r = await sync.sleepInvite(a.dataset.code);
+      toast(r.ok ? '🌙 Sleepover invitation sent!' : r.error || 'Could not invite right now.');
+      if (r.ok) a.disabled = true;
+      return null;
+    }
+    case 'sleep-yes': case 'sleep-no': {
+      const r = await sync.sleepRespond(a.dataset.code, a.dataset.action === 'sleep-yes');
+      toast(r.ok ? (a.dataset.action === 'sleep-yes' ? '🌙 Pillow fort time! Both otters feel great.' : 'Maybe next time!') : r.error || 'Something went wrong.');
+      await pullNow();
+      return loadFriends();
+    }
+    case 'penpal-join': {
+      const r = await sync.penpalJoin();
+      toast(r.ok ? (r.matched ? `✉️ Your new pen pal is ${r.pal}!` : '🕊️ Looking for a pen pal… we will match you soon!') : r.error || 'Could not join right now.');
+      return loadFriends();
+    }
+    case 'gb-delete': {
+      if (!confirm('Delete this note?')) return null;
+      await sync.deleteGuestbook(id);
+      a.closest('.gb-entry')?.remove();
+      return loadFriends();
+    }
+    case 'challenge-pick': {
+      const r = await sync.challengeSend(a.dataset.code, a.dataset.game, Number(a.dataset.score));
+      toast(r.ok ? `🏆 Challenge sent to ${a.dataset.name}!` : r.error || 'Could not send the challenge.');
+      if (r.ok) closeModal();
+      return null;
+    }
+    case 'challenge-friend': {
+      const fr = friendsData?.friends || [];
+      if (!fr.length) return toast('Add some friends first, then challenge them!');
+      showModal(`<div class="result"><div class="result-icon">🏆</div><h2>Who should beat ${esc(a.dataset.score)}?</h2>
+        <div class="pick-list">${fr.map((f) => `<button class="btn" data-action="challenge-pick" data-code="${f.code}" data-name="${esc(f.name)}" data-game="${a.dataset.game}" data-score="${a.dataset.score}">${esc(f.name)}</button>`).join('')}</div>
+        <button class="btn" data-close>Cancel</button></div>`);
+      return null;
+    }
     case 'ach-toggle': achOpen = !achOpen; return renderPanel();
     case 'save-now':
       saveLocal();
@@ -1398,6 +1569,22 @@ document.addEventListener('submit', (e) => {
     if (first) burst(['💖', '🦦', '✨'], 10);
   } else if (form.dataset.form === 'link') {
     doLink(form.code.value);
+  } else if (form.dataset.form === 'postcard') {
+    const btnEl = form.querySelector('[type=submit]');
+    btnEl.disabled = true;
+    sync.sendMail(form.dataset.code, new FormData(form).get('design'), form.text.value).then((r) => {
+      if (!r.ok) { btnEl.disabled = false; return toast(r.error || 'Could not send the postcard.'); }
+      closeModal();
+      toast('🕊️ A seagull is carrying your postcard. It arrives in about 30 minutes!');
+      burst(['✉️', '🕊️'], 6);
+      return loadFriends();
+    });
+  } else if (form.dataset.form === 'guestbook') {
+    sync.signGuestbook(form.dataset.code, form.text.value).then((r) => {
+      if (!r.ok) return toast(r.error || 'Could not sign the guestbook.');
+      toast('📖 Signed!');
+      return visitFriend(form.dataset.code);
+    });
   } else if (form.dataset.form === 'addfriend') {
     sync.addFriend(form.code.value.trim().toUpperCase()).then((r) => {
       toast(r.ok ? (r.accepted ? `🤝 You and ${r.friend.name} are now friends!` : `📨 Friend request sent to ${r.friend.name}!`) : r.error || 'Could not add that friend.');
@@ -1452,7 +1639,7 @@ finishDiscordLogin();
 window.addEventListener('hashchange', () => { if (location.hash.startsWith('#login')) finishDiscordLogin(); });
 sync.check().then(async (online) => {
   if (!online) return renderAll();
-  if (sync.linked) await pullNow();
+  if (sync.linked) { await pullNow(); loadFriends(); }
   renderAll();
   renderPanel();
 });
@@ -1468,6 +1655,7 @@ setInterval(() => {
   if (ticks % 5 === 0) saveLocal();
   if (sync.linked && ticks % 20 === 0) pullNow();
   if (sync.linked && ticks % 60 === 0) pushNow();
+  if (sync.linked && ticks % 120 === 0) refreshInbox();
 }, 1000);
 
 // Small hook for automated tests and the curious.
