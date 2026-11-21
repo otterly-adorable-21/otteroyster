@@ -32,8 +32,8 @@
       }).catch(function () {});
     })();
   </script>
-  <link rel="stylesheet" href="css/style.css?v=17">
-  <script type="module" src="js/main.js?v=17"></script>
+  <link rel="stylesheet" href="css/style.css?v=18">
+  <script type="module" src="js/main.js?v=18"></script>
 </head>
 <body>
   <!-- Reusable drawings: water lily, lily pad, gold sparkle -->
@@ -79,6 +79,14 @@
   </div>
 
   <div id="app">
+    <nav class="tabs" aria-label="Sections">
+      <button data-tab="home"><span>🦦</span>Otter</button>
+      <button data-tab="den"><span>🏡</span>Den</button>
+      <button data-tab="closet"><span>👗</span>Closet</button>
+      <button data-tab="missions"><span>🗺️</span>Explore</button>
+      <button data-tab="arcade"><span>🎮</span>Arcade</button>
+      <button data-tab="friends"><span>💞</span>Friends</button>
+    </nav>
     <div class="brandbar">
       <h1 class="wordmark">
         <img src="assets/web/logo.webp" data-art="logo" alt="Otter &amp; Oyster" width="1000" height="563">
@@ -257,14 +265,6 @@
 
     <main id="panel" class="panel"></main>
 
-    <nav class="tabs" aria-label="Sections">
-      <button data-tab="home"><span>🦦</span>Otter</button>
-      <button data-tab="den"><span>🏡</span>Den</button>
-      <button data-tab="closet"><span>👗</span>Closet</button>
-      <button data-tab="missions"><span>🗺️</span>Explore</button>
-      <button data-tab="arcade"><span>🎮</span>Arcade</button>
-      <button data-tab="friends"><span>💞</span>Friends</button>
-    </nav>
   </div>
 
   <div id="modal" class="modal" hidden><div class="modal-card" id="modal-card" role="dialog" aria-modal="true"></div></div>
