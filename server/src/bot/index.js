@@ -2,6 +2,7 @@
 import { Client, GatewayIntentBits, Events, ActivityType } from 'discord.js';
 import * as core from '../../../js/core.js';
 import { ITEMS, SNACKS, MISSIONS, GAME_LIST } from '../../../js/data.js';
+import { FURNITURE } from '../../../js/den-data.js';
 import { embed, btn, row, select, linkBtn, textModal, petCard, denCard, ButtonStyle, GOLD, GREEN, COLOR } from './ui.js';
 import { createSession, getSession } from './sessions.js';
 import { SOLO } from './games/solo.js';
@@ -11,6 +12,7 @@ import { whisper, EPHEMERAL, shuffle } from './games/_util.js';
 import { BOT_BOARDS, BOT_DAILY_CAP } from '../players.js';
 import { LOCATIONS, LOC, RARITY, FINDS, TOTAL_FINDS, SET_REWARD } from '../../../js/world.js';
 import { heartsText, friendLevel } from '../../../js/social.js';
+import { eventEndsAt, nextEvent } from '../../../js/events.js';
 
 const solo = Object.fromEntries(SOLO.map((g) => [g.id, g]));
 const duels = Object.fromEntries(DUELS.map((g) => [g.id, g]));
@@ -137,6 +139,24 @@ export function createBot({ store, social, siteUrl }) {
     return { embeds: [e], components: rows.slice(0, 5) };
   }
 
+  // ---------- seasonal event ----------
+  function eventView(user, note = '') {
+    const { state } = load(user);
+    const st = core.eventStatus(state);
+    if (!st) {
+      const nx = nextEvent();
+      return { embeds: [embed('📅 No event right now', nx ? `Next up: ${nx.event.icon} **${nx.event.name}** <t:${Math.floor(nx.at / 1000)}:R>!` : 'Check back soon!')], components: [] };
+    }
+    const ev = st.event;
+    const e = embed(`${ev.icon} ${ev.name}`, `${note ? `${note}\n\n` : ''}*${ev.desc}*\nEnds <t:${Math.floor(eventEndsAt(ev) / 1000)}:R> · You have **${st.tokens}** ${ev.token.icon} ${ev.token.name}`, GOLD);
+    e.addFields({ name: "Today's quests", value: st.quests.map((q) => `${q.claimed ? '✅' : q.p >= q.target ? '🎁' : '▫️'} ${q.text} · ${q.p}/${q.target} · ${ev.token.icon}${q.reward}`).join('\n') });
+    e.addFields({ name: 'Limited shop (on the website)', value: ev.shop.map((x) => `${x.kind === 'item' ? ITEMS[x.id].icon : '🛋️'} ${x.kind === 'item' ? ITEMS[x.id].name : FURNITURE[x.id].name} · ${ev.token.icon}${x.tokens}`).join('\n') });
+    e.setFooter({ text: `Arcade games and /explore also earn ${ev.token.name}. Limited finds: ${ev.finds.map((f) => f.icon).join(' ')}` });
+    const ready = st.quests.filter((q) => !q.claimed && q.p >= q.target);
+    const rows = [row(...(ready.length ? ready.map((q) => btn(`ev:${user.id}:claim:${q.kind}`, `Claim ${q.reward}`, ButtonStyle.Success, { emoji: ev.token.icon })) : [btn(`ev:${user.id}:refresh:x`, 'Refresh', ButtonStyle.Secondary, { emoji: '🔄' })]), linkBtn(`${siteUrl}/#event`, 'Event shop'))];
+    return { embeds: [e], components: rows };
+  }
+
   // ---------- command handlers ----------
   async function onCommand(i) {
     const user = i.user;
@@ -216,6 +236,10 @@ export function createBot({ store, social, siteUrl }) {
         const r = social.gift(me.id, other.id, { kind: 'pearls', amount: i.options.getInteger('pearls'), note: i.options.getString('note') });
         if (r.error) return whisper(i, r.status === 403 ? `You need to be friends first! Try \`/friend add\` with <@${u.id}>.` : r.error);
         return i.reply({ content: `🎁 ${user.username} sent <@${u.id}> **${i.options.getInteger('pearls')} pearls**! Open it with \`/friend list\` or on the website.`, allowedMentions: { users: [u.id] } });
+      }
+      case 'event': {
+        if (!load(user).state.name) return i.reply({ ...adoptPrompt(user.id), flags: EPHEMERAL });
+        return i.reply(eventView(user));
       }
       case 'explore': {
         const locId = i.options.getString('place');
@@ -313,6 +337,7 @@ export function createBot({ store, social, siteUrl }) {
           '`/den` show off your den · `/visit @friend` peek inside a friend\'s den',
           '`/explore` discover creatures and treasures · `/collection` your journal',
           '`/friend` add and list friends · `/hug @friend` · `/gift @friend` pearls',
+          '`/event` this season\'s event: quests, tokens and limited items',
           '',
           `**Solo games** \`/play\`: ${SOLO.map((g) => `${g.emoji} ${g.name}`).join(', ')}`,
           `**Challenges** \`/challenge @friend\`: ${DUELS.map((g) => `${g.emoji} ${g.name}`).join(', ')}`,
@@ -390,8 +415,18 @@ export function createBot({ store, social, siteUrl }) {
 
     // Owner-only panels: pet / mission / chest / adopt
     const ownerId = parts[1];
-    if (['pet', 'mis', 'chest', 'adopt', 'adoptname', 'fr'].includes(kind) && ownerId !== user.id) {
+    if (['pet', 'mis', 'chest', 'adopt', 'adoptname', 'fr', 'ev'].includes(kind) && ownerId !== user.id) {
       return whisper(i, 'This otter belongs to someone else! Use `/pet` to see yours. 🦦');
+    }
+
+    if (kind === 'ev') {
+      const [, , action, quest] = parts;
+      let note = '';
+      if (action === 'claim') {
+        const { res } = load(user, (s) => core.claimQuest(s, quest));
+        note = res.ok ? `🎉 ${res.msg}` : `⚠️ ${res.msg}`;
+      }
+      return i.update(eventView(user, note));
     }
 
     if (kind === 'fr') {

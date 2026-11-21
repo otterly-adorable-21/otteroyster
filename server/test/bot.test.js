@@ -343,6 +343,12 @@ test('friends on Discord: add, accept, hug, gift, open', async () => {
   assert.match(text(), /Friendship/);
 });
 
+test('seasonal event on Discord', async () => {
+  const i = await cmd(users.ana, 'event');
+  const t = JSON.stringify(i.out);
+  assert.ok(/quests/.test(t) || /No event right now/.test(t));
+});
+
 test('no handler errors were logged', () => {
   assert.deepEqual(errors, []);
 });

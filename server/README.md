@@ -119,6 +119,7 @@ set the same variables, and point the domain at it.
 | `/friend add/list/remove` | Friends: add by @mention or friend code, accept requests, open gifts |
 | `/hug @friend` | Cheer up a friend's otter (once a day) |
 | `/gift @friend` | Send pearls (up to 100 a day) |
+| `/event` | This season's event: quests (with claim buttons), tokens and the limited shop |
 | `/daily` | Pick one of three treasure chests (once a day) |
 | `/mission` | Start, check or recall an expedition |
 | `/play` | Solo: Trivia, Emoji Mystery, Word Scramble, Raft Rescue (hangman), Number Hunt, Higher or Lower, Rock Paper Scissors, Urchin Sweeper (minesweeper), Fishing |

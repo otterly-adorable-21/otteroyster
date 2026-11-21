@@ -165,6 +165,7 @@ export function createStore(db) {
         const p = Math.min(room, Math.max(0, Math.round(pearls)));
         s.botEarn.amount += p;
         core.grantPearls(s, p, p ? reason : null);
+        core.trackQuest(s, 'dgame');
         return p;
       }).result;
     },

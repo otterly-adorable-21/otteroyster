@@ -186,6 +186,40 @@ export const FURNITURE = {
       ${Array.from({ length: 14 }, (_, k) => { const a = (k / 14) * Math.PI * 2; return `<circle cx="${(30 + Math.cos(a) * 27).toFixed(1)}" cy="${(40 + Math.sin(a) * 37).toFixed(1)}" r="3" fill="url(#den-pearl)"/>`; }).join('')}
       <ellipse cx="30" cy="40" rx="21" ry="31" fill="#cfeee9"/><path d="M18,24 Q22,16 30,14" stroke="#fff" stroke-width="3" fill="none" opacity=".8"/>`,
   },
+  // ----- seasonal event furniture (bought with event tokens; see js/events.js) -----
+  pumpkinlamp: {
+    name: 'Harvest Pumpkin Lamp', cat: 'decor', price: null, level: 1, cozy: 3, event: 'harvest', vb: '0 0 70 64', w: 44,
+    svg: `${glow(35, 38, 30, '#ffd8a8')}<ellipse cx="35" cy="40" rx="32" ry="22" fill="#f08c00"/><path d="M20,22 Q16,40 20,60 M35,18 V62 M50,22 Q54,40 50,60" stroke="#d9480f" stroke-width="2" fill="none"/>
+      <path d="M35,18 Q34,8 40,4" stroke="#5a7a2a" stroke-width="5" stroke-linecap="round" fill="none"/><path d="M40,8 Q52,2 54,12 Q46,14 40,8Z" fill="#6f9a3a"/>`,
+  },
+  lanterntree: {
+    name: 'Lantern Pine', cat: 'decor', price: null, level: 1, cozy: 3, event: 'lantern', vb: '0 0 70 100', w: 50,
+    svg: `<rect x="30" y="80" width="10" height="16" fill="#6b4d34"/><path d="M35,4 L60,40 H48 L66,66 H52 L68,86 H2 L18,66 H4 L22,40 H10Z" fill="#2f6b3a"/>
+      ${[[24, 50, '#ff6b6b'], [46, 36, '#ffd43b'], [44, 70, '#74c0fc'], [22, 76, '#ffd43b'], [35, 58, '#ff6b6b']].map(([x, y, c]) => `${glow(x, y, 7, c)}<rect x="${x - 3}" y="${y - 4}" width="6" height="8" rx="2" fill="${c}"/>`).join('')}
+      <path d="M35,0 l2.5,5 l5,.6 l-3.8,3.5 l1,5 l-4.7,-2.5 l-4.7,2.5 l1,-5 l-3.8,-3.5 l5,-.6Z" fill="#f3d98c"/>`,
+  },
+  heartpillow: {
+    name: 'Heart Cushion', cat: 'furniture', price: null, level: 1, cozy: 3, event: 'sweetheart', vb: '0 0 70 56', w: 40,
+    svg: `<path d="M35,16 C24,0 2,6 6,26 C9,40 26,48 35,54 C44,48 61,40 64,26 C68,6 46,0 35,16Z" fill="#f783ac" stroke="#d6336c" stroke-width="2"/>
+      <path d="M18,16 q6,-6 12,0" stroke="#fff" stroke-width="3" fill="none" opacity=".6"/><path d="M35,22 V48" stroke="#d6336c" stroke-width="1.5" stroke-dasharray="3 3"/>`,
+  },
+  flowerpot: {
+    name: 'Tulip Planter', cat: 'decor', price: null, level: 1, cozy: 3, event: 'spring', vb: '0 0 80 72', w: 50,
+    svg: `<rect x="6" y="44" width="68" height="26" rx="4" fill="#b5653f"/><rect x="2" y="40" width="76" height="8" rx="3" fill="#c97b52"/>
+      ${[[18, '#ff6b6b'], [32, '#ffd43b'], [46, '#f783ac'], [60, '#b197fc']].map(([x, c], k) => `<path d="M${x},40 Q${x - 2},${26 - k % 2 * 4} ${x},${18 - k % 2 * 4}" stroke="#6f9a3a" stroke-width="3" fill="none"/><path d="M${x - 6},${18 - k % 2 * 4} Q${x - 6},${6 - k % 2 * 4} ${x},${8 - k % 2 * 4} Q${x + 6},${6 - k % 2 * 4} ${x + 6},${18 - k % 2 * 4} Q${x},${24 - k % 2 * 4} ${x - 6},${18 - k % 2 * 4}Z" fill="${c}"/>`).join('')}`,
+  },
+  beachchair: {
+    name: 'Striped Beach Chair', cat: 'furniture', price: null, level: 1, cozy: 3, event: 'summer', vb: '0 0 80 76', w: 54,
+    svg: `<path d="M14,74 L30,40 M66,74 L50,40 M20,60 H60" stroke="#a8865f" stroke-width="4" stroke-linecap="round"/>
+      <path d="M18,8 L62,8 L56,52 L24,52Z" fill="#fffaf0" stroke="#a8865f" stroke-width="2"/>
+      <path d="M26,8 L28,52 M40,8 V52 M54,8 L52,52" stroke="#3cc7c0" stroke-width="7"/>`,
+  },
+  jackolantern: {
+    name: "Jack-o'-Lantern", cat: 'decor', price: null, level: 1, cozy: 3, event: 'spooky', vb: '0 0 70 64', w: 42,
+    svg: `${glow(35, 40, 30, '#ffd8a8')}<ellipse cx="35" cy="40" rx="32" ry="22" fill="#e8590c"/><path d="M20,22 Q16,40 20,60 M50,22 Q54,40 50,60" stroke="#c2410c" stroke-width="2" fill="none"/>
+      <path d="M35,18 Q34,8 40,4" stroke="#5a7a2a" stroke-width="5" stroke-linecap="round" fill="none"/>
+      <path d="M18,34 L26,28 L28,38Z M52,34 L44,28 L42,38Z" fill="#ffe066"/><path d="M18,46 Q35,58 52,46 L46,48 L42,44 L38,49 L32,44 L28,49 L24,45Z" fill="#ffe066"/>`,
+  },
 };
 
 export const WALLPAPERS = {

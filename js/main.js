@@ -9,6 +9,10 @@ import { denSVG, furniturePreviewSVG } from './den.js';
 import { LOCATIONS, LOC, RARITY, FINDS, TOTAL_FINDS, EXPLORE_ENERGY, SET_REWARD } from './world.js';
 import { mapSVG } from './map.js';
 import { heartsText, friendLevel, GIFT_PEARL_OPTIONS, GIFT_PEARLS_PER_DAY } from './social.js';
+import { EVENTS, EVENT, EVENT_FINDS, eventEndsAt, nextEvent, setEventPreview, isPreview } from './events.js';
+
+// Preview another seasonal event with ?event=spooky (website only).
+try { const ev = new URLSearchParams(location.search).get('event'); if (ev) setEventPreview(ev); } catch { /* ignore */ }
 
 // ---------- helpers ----------
 const $ = (s) => document.querySelector(s);
@@ -170,7 +174,19 @@ function renderStats() {
   }).join('');
 }
 
+let fxEvent = null;
+function renderEventFx() {
+  const ev = state.name ? core.eventStatus(state)?.event : null;
+  const id = ev?.id || null;
+  if (id === fxEvent) return;
+  fxEvent = id;
+  const box = $('#event-fx');
+  if (!box) return;
+  box.innerHTML = ev ? Array.from({ length: 12 }, (_, k) => `<i style="left:${(k * 83) % 100}%;animation-delay:${-(k * 1.7).toFixed(1)}s;animation-duration:${9 + (k % 4) * 2}s;font-size:${14 + (k % 3) * 5}px">${ev.fx[k % ev.fx.length]}</i>`).join('') : '';
+}
+
 function renderScene() {
+  renderEventFx();
   const away = !!state.mission;
   const scene = $('#scene');
   scene.classList.toggle('night', state.sleeping);
@@ -210,10 +226,65 @@ function itemCard(id, mode) {
   return `<div class="card item ${worn ? 'worn' : ''}"><div class="item-art">${itemPreviewSVG(id)}</div><div class="item-name">${it.name}</div>${action}</div>`;
 }
 
+function daysLeft(ms) {
+  const d = Math.ceil((ms - Date.now()) / 86400000);
+  return d <= 1 ? 'ends today' : `${d} days left`;
+}
+
+function eventBanner() {
+  const st = core.eventStatus(state);
+  if (!st || !state.name) return '';
+  const ev = st.event;
+  const done = st.quests.filter((q) => q.claimed).length;
+  const ready = st.quests.filter((q) => !q.claimed && q.p >= q.target).length;
+  return `<button class="event-banner" data-tab="event" style="--tint:${ev.tint}">
+    <span class="event-icon">${ev.icon}</span>
+    <span class="event-text"><b>${ev.name}${isPreview() ? ' (preview)' : ''}</b>
+      <small>${isPreview() ? 'Preview mode' : daysLeft(eventEndsAt(ev))} · ${ev.token.icon} ${st.tokens} · quests ${done}/3${ready ? ` · <span class="ready">${ready} ready!</span>` : ''}</small></span>
+    <span class="event-go">›</span></button>`;
+}
+
+function panelEvent() {
+  const st = core.eventStatus(state);
+  if (!st) {
+    const nx = nextEvent();
+    return `<div class="empty"><div class="empty-icon">${nx ? nx.event.icon : '📅'}</div><p>No event right now.${nx ? ` Next up: <b>${nx.event.name}</b> in ${Math.ceil((nx.at - Date.now()) / 86400000)} days!` : ''}</p>
+      <button class="btn" data-tab="home">Back</button></div>`;
+  }
+  const ev = st.event;
+  const item = (e) => {
+    const isItem = e.kind === 'item';
+    const it = isItem ? ITEMS[e.id] : FURNITURE[e.id];
+    const owned = isItem ? state.owned.includes(e.id) : false;
+    return `<div class="card item"><div class="item-art ${isItem ? '' : 'den-art'}">${isItem ? itemPreviewSVG(e.id) : furniturePreviewSVG(e.id)}</div>
+      <div class="item-name">${it.name}</div><small class="muted">${isItem ? 'Outfit' : `Den · ✨ +${it.cozy}`}</small>
+      ${owned ? '<button class="btn small" disabled>Owned ✓</button>' : `<button class="btn small primary" data-action="ev-buy" data-id="${e.id}" ${st.tokens < e.tokens ? 'disabled' : ''}>${ev.token.icon} ${e.tokens}</button>`}</div>`;
+  };
+  return `
+    <div class="event-hero" style="--tint:${ev.tint}">
+      <div class="event-hero-icon">${ev.icon}</div>
+      <h2>${ev.name}</h2>
+      <p>${ev.desc}</p>
+      <div class="event-meta"><span class="chip">${ev.token.icon} <b>${st.tokens}</b> ${ev.token.name}</span><span class="chip">⏳ ${isPreview() ? 'preview' : daysLeft(eventEndsAt(ev))}</span></div>
+    </div>
+    <h2 class="section-title">Today's quests <small>new ones every day</small></h2>
+    <div class="quests">${st.quests.map((q) => `<div class="card quest ${q.claimed ? 'done' : ''}">
+      <div class="quest-info"><b>${q.text.replace('your otter', esc(state.name))}</b>
+        <div class="bar"><div style="width:${(q.p / q.target) * 100}%"></div></div><small class="muted">${q.p}/${q.target}</small></div>
+      ${q.claimed ? '<span class="quest-done">✅</span>' : `<button class="btn small ${q.p >= q.target ? 'primary' : ''}" data-action="ev-claim" data-id="${q.kind}" ${q.p >= q.target ? '' : 'disabled'}>${ev.token.icon} ${q.reward}</button>`}
+    </div>`).join('')}</div>
+    <p class="note">Every arcade game and every explore also earns ${ev.token.icon} 1.</p>
+    <h2 class="section-title">Limited shop <small>yours forever</small></h2>
+    <div class="grid">${ev.shop.map(item).join('')}</div>
+    <h2 class="section-title">Limited discoveries <small>explore anywhere to find them</small></h2>
+    <div class="finds two">${ev.finds.map((f) => findTile(f)).join('')}</div>
+    <div class="settings"><button class="link" data-tab="home">← Back to ${esc(state.name)}</button></div>`;
+}
+
 function panelHome() {
   const claimed = state.lastDaily === core.dayKey();
   const asleep = state.sleeping;
-  return `
+  return `${eventBanner()}
     <h2 class="section-title">Snacks</h2>
     <div class="snacks">
       ${SNACKS.map((s) => `<button class="snack" data-action="feed" data-id="${s.id}" ${state.pearls < s.price ? 'disabled' : ''}>
@@ -297,6 +368,12 @@ function panelMissions() {
       ${LOCATIONS.map((l) => `<div class="card journal-loc"><div class="journal-loc-head"><b>${l.icon} ${l.name}</b>
         <span class="muted">${l.finds.filter((f) => state.collection[f.id]).length}/${l.finds.length}${state.sets.includes(l.id) ? ' 🏅' : ''}</span></div>
         <div class="finds">${l.finds.map(findTile).join('')}</div></div>`).join('')}
+      ${(() => {
+        const cur = core.eventStatus(state)?.event;
+        const evs = EVENTS.filter((e) => e === cur || e.finds.some((f) => state.collection[f.id]));
+        return evs.length ? `<h2 class="section-title">Limited discoveries <small>only during events</small></h2>${evs.map((e) => `<div class="card journal-loc"><div class="journal-loc-head"><b>${e.icon} ${e.name}</b>
+          <span class="muted">${e.finds.filter((f) => state.collection[f.id]).length}/${e.finds.length}</span></div><div class="finds two">${e.finds.map(findTile).join('')}</div></div>`).join('')}` : '';
+      })()}
       <p class="note">Complete a place's set for a 🏅 badge and ${SET_REWARD.pearls} pearls.</p>`;
   }
   const loc = LOC[mapSel] || LOCATIONS[0];
@@ -529,7 +606,7 @@ function panelDen() {
     shop = `<h3 class="den-sub">Wallpaper</h3><div class="swatches">${Object.entries(WALLPAPERS).map(([id, it]) => sw('wall', id, it, state.wallpapers.includes(id), state.den.wallpaper === id)).join('')}</div>
       <h3 class="den-sub">Floors</h3><div class="swatches">${Object.entries(FLOORS).map(([id, it]) => sw('floor', id, it, state.floors.includes(id), state.den.floor === id)).join('')}</div>`;
   } else {
-    shop = `<div class="grid">${Object.entries(FURNITURE).filter(([, it]) => it.cat === denShop).map(([id, it]) => {
+    shop = `<div class="grid">${Object.entries(FURNITURE).filter(([, it]) => it.cat === denShop && !it.event).map(([id, it]) => {
       const owned = state.furniture[id] || 0;
       const locked = state.level < it.level;
       return `<div class="card item"><div class="item-art den-art">${furniturePreviewSVG(id)}</div><div class="item-name">${it.name}</div>
@@ -598,7 +675,7 @@ document.addEventListener('pointerup', () => {
   if (moved) commit();
 });
 
-const PANELS = { home: panelHome, den: panelDen, closet: panelCloset, missions: panelMissions, arcade: panelArcade, friends: panelFriends };
+const PANELS = { event: panelEvent, home: panelHome, den: panelDen, closet: panelCloset, missions: panelMissions, arcade: panelArcade, friends: panelFriends };
 
 function renderPanel() {
   $('#panel').innerHTML = PANELS[tab]();
@@ -831,6 +908,8 @@ document.addEventListener('click', async (e) => {
       giftsData = [];
       return loadFriends();
     }
+    case 'ev-claim': return act(core.claimQuest(state, id));
+    case 'ev-buy': return act(core.buyEventItem(state, id));
     case 'explore': {
       const r = core.explore(state, id);
       if (!r.ok) return toast(r.msg);

@@ -1,6 +1,6 @@
 // Arcade registry: game id -> lazy loader. Metadata lives in data.js (GAME_LIST).
 // Bump V when games change so browsers never mix old and new files.
-const V = '7';
+const V = '8';
 export const LOADERS = {
   dive: () => import(`./dive.js?v=${V}`),
   frenzy: () => import(`./frenzy.js?v=${V}`),

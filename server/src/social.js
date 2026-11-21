@@ -154,6 +154,7 @@ export function createSocial(db, store) {
       if (!otherId || !areFriends(me, otherId)) return err(403, 'You can only hug friends\' otters.');
       if (!onceToday(me, otherId, 'hug')) return err(429, "You've already hugged their otter today. Come back tomorrow!");
       addPoints(me, otherId, FRIEND_POINTS.hug);
+      store.mutate(me, (s) => core.trackQuest(s, 'hug'));
       const { state } = store.mutate(otherId, (s) => {
         if (!s.name) return;
         s.stats.happiness = core.clamp(s.stats.happiness + HUG_HAPPINESS);

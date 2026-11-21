@@ -650,3 +650,36 @@ details.cmd-list[open] summary { margin-bottom: 6px; }
 .gift-opt input:focus-visible + span { outline: 2px dashed var(--teal); outline-offset: 2px; }
 .gift-furn .den-art { width: 34px; height: 28px; }
 .note-input { font: inherit; padding: 10px 12px; border-radius: 12px; border: 2px solid var(--line); background: #fff; color: var(--ink); }
+
+/* ---------- seasonal events ---------- */
+.event-fx { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.event-fx i { position: absolute; top: -30px; font-style: normal; opacity: .85; animation: drift-down linear infinite; filter: drop-shadow(0 2px 2px rgba(0,0,0,.2)); }
+@keyframes drift-down {
+  0% { transform: translate(0, -20px) rotate(0deg); }
+  25% { transform: translate(18px, 90px) rotate(40deg); }
+  50% { transform: translate(-10px, 180px) rotate(90deg); }
+  75% { transform: translate(14px, 270px) rotate(140deg); }
+  100% { transform: translate(-6px, 380px) rotate(200deg); opacity: 0; }
+}
+.event-banner { width: 100%; display: flex; align-items: center; gap: 12px; margin-top: 16px; padding: 12px 14px; border: 0; border-radius: 18px; text-align: left; color: var(--ink);
+  background: linear-gradient(120deg, var(--tint), #fffaf0 70%); box-shadow: 0 0 0 2px var(--gold), 0 0 22px rgba(243, 217, 140, .35), var(--shadow); }
+.event-icon { font-size: 2rem; animation: bob 2.6s ease-in-out infinite; }
+.event-text { flex: 1; display: flex; flex-direction: column; }
+.event-text b { font-family: var(--display); font-size: 1.25rem; }
+.event-text small { color: var(--muted); font-weight: 700; }
+.event-text .ready { color: #d9480f; }
+.event-go { font-size: 1.8rem; color: var(--muted); }
+.event-hero { margin-top: 14px; text-align: center; padding: 20px 16px; border-radius: 24px; color: var(--ink);
+  background: radial-gradient(circle at 50% 0%, var(--tint), #fffaf0 75%); box-shadow: 0 0 0 2px var(--gold), var(--shadow); }
+.event-hero-icon { font-size: 3.4rem; animation: bob 3s ease-in-out infinite; }
+.event-hero h2 { font-size: 2rem; color: var(--deep); }
+.event-hero p { margin: 6px 0 10px; color: var(--muted); }
+.event-meta { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.quests { display: grid; gap: 8px; }
+.quest { display: flex; align-items: center; gap: 12px; }
+.quest-info { flex: 1; }
+.quest-info .bar { background: #e8efe9; }
+.quest-info .bar > div { background: linear-gradient(90deg, var(--gold), var(--gold-light)); }
+.quest.done { opacity: .7; }
+.quest-done { font-size: 1.4rem; }
+.finds.two { grid-template-columns: repeat(2, 1fr); }

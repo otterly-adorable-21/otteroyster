@@ -135,6 +135,85 @@ export const ITEMS = {
     svg: `<path d="M64,110 Q26,170 30,226 L170,226 Q174,170 136,110 Z" fill="#1b2a6b"/>${stars()}
       <path d="M64,110 Q100,122 136,110" stroke="#ffd43b" stroke-width="4" fill="none"/>`,
   },
+  // ----- seasonal event items (bought with event tokens; see js/events.js) -----
+  acornhat: {
+    name: 'Acorn Cap', icon: '🌰', slot: 'hat', price: null, level: 1, event: 'harvest',
+    svg: `<path d="M56,58 Q56,14 100,12 Q144,14 144,58 Q100,46 56,58Z" fill="#8a5a3b" stroke="#5a3a24" stroke-width="2"/>
+      <path d="M66,46 L82,20 M80,50 L96,16 M96,48 L110,16 M112,48 L124,20 M126,50 L136,32 M70,30 L134,46 M64,42 L140,40 M80,18 L124,30" stroke="#6b4329" stroke-width="2" opacity=".7"/>
+      <path d="M100,12 Q98,2 106,-4" stroke="#5a3a24" stroke-width="5" stroke-linecap="round" fill="none"/>`,
+  },
+  leafscarf: {
+    name: 'Autumn Leaf Scarf', icon: '🍂', slot: 'neck', price: null, level: 1, event: 'harvest',
+    svg: `<path d="M60,110 Q100,130 140,110 L140,124 Q100,144 60,124 Z" fill="#c2552d"/>
+      <path d="M116,128 L124,166 L110,168 L104,132 Z" fill="#a8441f"/>
+      ${[[72, 118, -20, '#f2a530'], [96, 126, 10, '#e8590c'], [122, 120, 30, '#f2c14e'], [117, 154, 0, '#f2a530']].map(([x, y, r, c]) => `<path transform="translate(${x} ${y}) rotate(${r})" d="M0,-7 L2,-2 L7,-3 L4,1 L6,6 L0,3 L-6,6 L-4,1 L-7,-3 L-2,-2Z" fill="${c}"/>`).join('')}`,
+  },
+  earmuffs: {
+    name: 'Snowflake Earmuffs', icon: '❄️', slot: 'hat', price: null, level: 1, event: 'lantern',
+    svg: `<path d="M60,54 Q60,18 100,16 Q140,18 140,54" stroke="#e03131" stroke-width="7" fill="none" stroke-linecap="round"/>
+      <circle cx="60" cy="58" r="17" fill="#fffaf0" stroke="#e3d8c2" stroke-width="2"/><circle cx="140" cy="58" r="17" fill="#fffaf0" stroke="#e3d8c2" stroke-width="2"/>
+      ${[60, 140].map((x) => `<path d="M${x},48 V68 M${x - 9},53 L${x + 9},63 M${x + 9},53 L${x - 9},63" stroke="#74c0fc" stroke-width="2" stroke-linecap="round"/>`).join('')}`,
+  },
+  woolscarf: {
+    name: 'Candy-Stripe Scarf', icon: '🧣', slot: 'neck', price: null, level: 1, event: 'lantern',
+    svg: `<path d="M60,110 Q100,130 140,110 L140,124 Q100,144 60,124 Z" fill="#fffaf0"/>
+      <path d="M70,114 L74,130 M86,119 L88,136 M102,121 L102,138 M118,118 L116,135 M132,113 L129,129" stroke="#e03131" stroke-width="5"/>
+      <path d="M116,128 L126,170 L112,172 L104,132 Z" fill="#fffaf0"/><path d="M110,140 L121,139 M112,152 L123,151 M114,164 L125,163" stroke="#e03131" stroke-width="4"/>`,
+  },
+  heartband: {
+    name: 'Heart Headband', icon: '💗', slot: 'hat', price: null, level: 1, event: 'sweetheart',
+    svg: `<path d="M58,56 Q60,20 100,18 Q140,20 142,56" stroke="#f06595" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M100,24 C86,10 74,22 86,34 L100,46 L114,34 C126,22 114,10 100,24Z" fill="#f06595" stroke="#c2255c" stroke-width="2"/>
+      <path d="M90,22 q3,-4 7,-2" stroke="#fff" stroke-width="2" fill="none" opacity=".7"/>`,
+  },
+  rosebow: {
+    name: 'Rosy Ribbon', icon: '🎀', slot: 'neck', price: null, level: 1, event: 'sweetheart',
+    svg: `<path d="M100,122 Q80,104 74,116 Q70,132 100,122Z" fill="#faa2c1" stroke="#e64980" stroke-width="2"/>
+      <path d="M100,122 Q120,104 126,116 Q130,132 100,122Z" fill="#faa2c1" stroke="#e64980" stroke-width="2"/>
+      <path d="M96,124 L88,146 M104,124 L112,146" stroke="#e64980" stroke-width="5" stroke-linecap="round"/>
+      <path d="M100,118 C96,114 92,118 96,122 L100,126 L104,122 C108,118 104,114 100,118Z" fill="#c2255c"/>`,
+  },
+  flowercrown: {
+    name: 'Flower Crown', icon: '🌼', slot: 'hat', price: null, level: 1, event: 'spring',
+    svg: `<path d="M58,50 Q100,30 142,50" stroke="#6f9a3a" stroke-width="5" fill="none"/>
+      ${[[62, 48, '#ff8fab'], [80, 40, '#ffd43b'], [100, 37, '#b197fc'], [120, 40, '#ff8fab'], [138, 48, '#ffd43b']].map(([x, y, c]) => [0, 72, 144, 216, 288].map((a) => `<circle cx="${(x + Math.cos(a * Math.PI / 180) * 5).toFixed(1)}" cy="${(y + Math.sin(a * Math.PI / 180) * 5).toFixed(1)}" r="4.4" fill="${c}"/>`).join('') + `<circle cx="${x}" cy="${y}" r="3" fill="#fff3bf"/>`).join('')}`,
+  },
+  butterflywings: {
+    name: 'Butterfly Wings', icon: '🦋', slot: 'back', price: null, level: 1, event: 'spring', view: '0 60 200 140',
+    svg: `<g opacity=".92"><path d="M98,130 Q40,70 20,100 Q8,130 60,138 Q30,160 50,180 Q74,190 98,140Z" fill="#b197fc" stroke="#7048e8" stroke-width="2"/>
+      <path d="M102,130 Q160,70 180,100 Q192,130 140,138 Q170,160 150,180 Q126,190 102,140Z" fill="#b197fc" stroke="#7048e8" stroke-width="2"/>
+      <circle cx="44" cy="106" r="8" fill="#fff3bf" opacity=".8"/><circle cx="156" cy="106" r="8" fill="#fff3bf" opacity=".8"/>
+      <circle cx="62" cy="164" r="6" fill="#faa2c1"/><circle cx="138" cy="164" r="6" fill="#faa2c1"/></g>`,
+  },
+  sunhat: {
+    name: 'Straw Sun Hat', icon: '👒', slot: 'hat', price: null, level: 1, event: 'summer', view: '20 -10 160 80',
+    svg: `<ellipse cx="100" cy="48" rx="72" ry="14" fill="#f2d48a" stroke="#c9a44c" stroke-width="2"/>
+      <path d="M66,46 Q66,10 100,8 Q134,10 134,46Z" fill="#f2d48a" stroke="#c9a44c" stroke-width="2"/>
+      <path d="M66,38 Q100,46 134,38 L134,46 Q100,54 66,46Z" fill="#3cc7c0"/>
+      <path d="M40,48 q10,-4 20,0 M140,48 q10,-4 20,0 M80,22 q10,-4 20,0" stroke="#c9a44c" stroke-width="1.5" fill="none" opacity=".7"/>`,
+  },
+  lei: {
+    name: 'Island Flower Lei', icon: '🌺', slot: 'neck', price: null, level: 1, event: 'summer',
+    svg: Array.from({ length: 9 }, (_, i) => {
+      const t = i / 8;
+      const x = (1 - t) ** 2 * 64 + 2 * (1 - t) * t * 100 + t ** 2 * 136;
+      const y = (1 - t) ** 2 * 112 + 2 * (1 - t) * t * 140 + t ** 2 * 112;
+      const c = ['#ff6b6b', '#ffd43b', '#f783ac'][i % 3];
+      return [0, 72, 144, 216, 288].map((a) => `<circle cx="${(x + Math.cos(a * Math.PI / 180) * 4.5).toFixed(1)}" cy="${(y + Math.sin(a * Math.PI / 180) * 4.5).toFixed(1)}" r="4" fill="${c}"/>`).join('') + `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.5" fill="#fff3bf"/>`;
+    }).join(''),
+  },
+  witchhat: {
+    name: 'Starry Witch Hat', icon: '🎃', slot: 'hat', price: null, level: 1, event: 'spooky', view: '30 -40 140 100',
+    svg: `<ellipse cx="100" cy="46" rx="56" ry="11" fill="#3b2a5a" stroke="#241838" stroke-width="2"/>
+      <path d="M72,44 Q84,10 98,-10 Q104,-26 122,-30 Q112,-14 116,4 L128,44Z" fill="#4c3a73" stroke="#241838" stroke-width="2"/>
+      <path d="M74,36 Q100,44 126,36 L128,44 Q100,52 72,44Z" fill="#f2a530"/>
+      <path d="M100,10 l2,4 l4,1 l-3,3 l1,4 l-4,-2 l-4,2 l1,-4 l-3,-3 l4,-1Z" fill="#f3d98c"/>`,
+  },
+  batwings: {
+    name: 'Little Bat Wings', icon: '🦇', slot: 'back', price: null, level: 1, event: 'spooky', view: '0 60 200 120',
+    svg: `<path d="M96,120 Q60,84 14,96 Q26,104 22,114 Q34,110 40,122 Q50,114 58,126 Q68,118 74,132 Q84,124 96,134Z" fill="#3b2a5a" stroke="#241838" stroke-width="2"/>
+      <path d="M104,120 Q140,84 186,96 Q174,104 178,114 Q166,110 160,122 Q150,114 142,126 Q132,118 126,132 Q116,124 104,134Z" fill="#3b2a5a" stroke="#241838" stroke-width="2"/>`,
+  },
 };
 
 export const SNACKS = [

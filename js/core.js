@@ -3,6 +3,7 @@
 import { ITEMS, SNACKS, MISSIONS, GAME_LIST } from './data.js';
 import { FURNITURE, WALLPAPERS, FLOORS, STARTER_DEN, ZONES, zoneOf, clampPos } from './den-data.js';
 import { LOC, FINDS, RARITY, MISSION_LOC, EXPLORE_ENERGY, EXPLORE_COOLDOWN_MIN, SET_REWARD } from './world.js';
+import { activeEvent, questsFor, EVENT, EVENT_FIND_CHANCE, TOKENS_PER_ACTIVITY } from './events.js';
 
 export const SAVE_VERSION = 2;
 
@@ -27,6 +28,7 @@ export function defaultState(now = Date.now()) {
     wallpapers: ['moss'],
     floors: ['earth'],
     collection: {},
+    events: {},
     explored: {},
     sets: [],
     best: {},
@@ -66,6 +68,7 @@ export function normalize(saved) {
   }
   s.wallpapers = Array.isArray(saved.wallpapers) ? saved.wallpapers : ['moss'];
   s.collection = { ...(saved.collection || {}) };
+  s.events = { ...(saved.events || {}) };
   s.explored = { ...(saved.explored || {}) };
   s.sets = Array.isArray(saved.sets) ? saved.sets : [];
   s.floors = Array.isArray(saved.floors) ? saved.floors : ['earth'];
@@ -174,6 +177,7 @@ export function feed(s, id) {
   stat(s, 'happiness', snack.happiness);
   const ups = addXP(s, 2);
   log(s, `${s.name} ate ${snack.name.toLowerCase()}.`);
+  trackQuest(s, 'feed');
   return ok(`${s.name} munched the ${snack.name.toLowerCase()}! 😋`, { fx: [snack.icon, '😋'], ups });
 }
 
@@ -184,6 +188,7 @@ export function cuddle(s) {
   stat(s, 'happiness', 8);
   stat(s, 'energy', -3);
   const ups = addXP(s, 2);
+  trackQuest(s, 'care');
   return ok(`${s.name} squeaks happily! 💖`, { fx: ['💖', '💕', '✨'], ups });
 }
 
@@ -195,6 +200,7 @@ export function bath(s) {
   stat(s, 'happiness', 4);
   const ups = addXP(s, 2);
   log(s, `${s.name} had a bubble bath.`);
+  trackQuest(s, 'care');
   return ok(`${s.name} splashes around in the bubbles! 🫧`, { fx: ['🫧', '🫧', '💧'], ups });
 }
 
@@ -284,6 +290,7 @@ function finishMission(s, now) {
     discovery = d.find.id;
     ups += d.ups;
   }
+  trackQuest(s, 'mission', 1, now);
   const report = { id: m.id, t: now, pearls, found, story, xp: m.xp, ups, discovery };
   s.reports.push(report);
   s.reports = s.reports.slice(-5);
@@ -333,6 +340,8 @@ export function rewardGame(s, gameId, pearls, best, lowerIsBetter = false) {
   }
   const ups = addXP(s, 6);
   log(s, `${s.name} played ${g ? g.name : gameId} and earned ${p} pearls.`);
+  trackQuest(s, 'game');
+  eventTokens(s, TOKENS_PER_ACTIVITY.game);
   return { pearls: p, record, ups };
 }
 
@@ -376,6 +385,7 @@ export function buyFurniture(s, id) {
   const placed = placeFurniture(s, id);
   const ups = addXP(s, 4);
   log(s, `Bought a ${it.name} for the den.`);
+  trackQuest(s, 'decorate');
   return ok(`🛋️ ${it.name} is in your den! Drag it wherever you like.`, { ups, uid: placed.uid });
 }
 
@@ -489,6 +499,17 @@ export function explore(s, locId, now = Date.now()) {
   stat(s, 'energy', -EXPLORE_ENERGY);
   stat(s, 'happiness', 3);
   s.explored[locId] = now;
+  trackQuest(s, 'explore', 1, now);
+  const tokens = eventTokens(s, TOKENS_PER_ACTIVITY.explore, now);
+  const ev = activeEvent(now);
+  if (ev && Math.random() < EVENT_FIND_CHANCE) {
+    const f = Math.random() < 0.7 ? ev.finds[0] : ev.finds[1];
+    const isNew = !s.collection[f.id];
+    s.collection[f.id] = (s.collection[f.id] || 0) + 1;
+    const ups = addXP(s, isNew ? 8 : 2);
+    if (isNew) log(s, `Found a limited ${f.name} during ${ev.name}!`, now);
+    return ok(`${f.icon} ${isNew ? 'Limited discovery!' : 'Found another'} ${s.name} found a ${f.name} (${ev.name} only)!`, { find: { ...f, event: ev.id }, isNew, ups, tokens, fx: [f.icon, ev.icon] });
+  }
   if (Math.random() < 0.18) {
     const p = rand(4, 12);
     s.pearls += p;
@@ -505,4 +526,76 @@ export function explore(s, locId, now = Date.now()) {
 
 export function collectionCount(s) {
   return Object.keys(s.collection || {}).filter((id) => FINDS[id]).length;
+}
+
+// ---------- seasonal events ----------
+// Per-event progress: s.events[id] = { tokens, day, quests: { kind: { p, claimed } }, bought: [] }
+function eventState(s, ev, now = Date.now()) {
+  const es = s.events[ev.id] || (s.events[ev.id] = { tokens: 0, day: null, quests: {}, bought: [] });
+  const day = dayKey(now);
+  if (es.day !== day) { es.day = day; es.quests = {}; }
+  return es;
+}
+
+export function eventStatus(s, now = Date.now()) {
+  const ev = activeEvent(now);
+  if (!ev) return null;
+  const es = eventState(s, ev, now);
+  const quests = questsFor(ev.id, es.day).map((q) => ({ ...q, p: Math.min(q.target, es.quests[q.kind]?.p || 0), claimed: !!es.quests[q.kind]?.claimed }));
+  return { event: ev, tokens: es.tokens, quests, bought: es.bought };
+}
+
+export function trackQuest(s, kind, n = 1, now = Date.now()) {
+  const ev = activeEvent(now);
+  if (!ev || !s.name) return;
+  const es = eventState(s, ev, now);
+  const q = questsFor(ev.id, es.day).find((x) => x.kind === kind);
+  if (!q) return;
+  const cur = es.quests[kind] || (es.quests[kind] = { p: 0, claimed: false });
+  cur.p = Math.min(q.target, cur.p + n);
+}
+
+function eventTokens(s, n, now = Date.now()) {
+  const ev = activeEvent(now);
+  if (!ev || !s.name || !n) return 0;
+  eventState(s, ev, now).tokens += n;
+  return n;
+}
+
+export function claimQuest(s, kind, now = Date.now()) {
+  const st = eventStatus(s, now);
+  if (!st) return no('There is no event right now.');
+  const q = st.quests.find((x) => x.kind === kind);
+  if (!q) return no('That quest is not on today\'s list.');
+  if (q.claimed) return no('Already claimed!');
+  if (q.p < q.target) return no('Not finished yet!');
+  const es = s.events[st.event.id];
+  es.quests[kind].claimed = true;
+  es.tokens += q.reward;
+  const ups = addXP(s, 5);
+  log(s, `Finished a ${st.event.name} quest: ${q.text}.`, now);
+  return ok(`${st.event.token.icon} +${q.reward} ${st.event.token.name}!`, { ups, fx: [st.event.token.icon, '✨'] });
+}
+
+export function buyEventItem(s, id, now = Date.now()) {
+  const st = eventStatus(s, now);
+  if (!st) return no('There is no event right now.');
+  const entry = st.event.shop.find((x) => x.id === id);
+  if (!entry) return no('That is not in the event shop.');
+  const es = s.events[st.event.id];
+  const name = entry.kind === 'item' ? ITEMS[id].name : FURNITURE[id].name;
+  if (entry.kind === 'item' && s.owned.includes(id)) return no(`You already have the ${name}.`);
+  if (es.tokens < entry.tokens) return no(`You need ${entry.tokens} ${st.event.token.name}.`);
+  es.tokens -= entry.tokens;
+  es.bought.push(id);
+  if (entry.kind === 'item') {
+    s.owned.push(id);
+    s.equipped[ITEMS[id].slot] = id;
+  } else {
+    s.furniture[id] = (s.furniture[id] || 0) + 1;
+    placeFurniture(s, id);
+    trackQuest(s, 'decorate', 1, now);
+  }
+  log(s, `Got the limited ${name} from ${st.event.name}! ✨`, now);
+  return ok(`✨ ${name} is yours to keep forever!`, { fx: [st.event.icon, '✨'] });
 }
