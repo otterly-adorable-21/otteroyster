@@ -5,6 +5,7 @@ import { FURNITURE, WALLPAPERS, FLOORS, STARTER_DEN, ZONES, zoneOf, clampPos } f
 import { LOC, FINDS, RARITY, MISSION_LOC, EXPLORE_ENERGY, EXPLORE_COOLDOWN_MIN, SET_REWARD } from './world.js';
 import { activeEvent, questsFor, EVENT, EVENT_FIND_CHANCE, TOKENS_PER_ACTIVITY } from './events.js';
 import { TRAITS, TRAIT_IDS, blankPersona, favoritesFor, traitOf, hasTrait } from './personality.js';
+import { dailyMood, exploreLuck } from './ambience.js';
 
 export const SAVE_VERSION = 2;
 
@@ -147,7 +148,7 @@ export function tick(s, now = Date.now()) {
     if (s.mission) {
       stat(s, 'hunger', RATES.hunger * 0.5 * mins);
     } else if (s.sleeping) {
-      stat(s, 'energy', 2.5 * (1 + coziness(s) / 60) * (hasTrait(s, 'sleepy') ? 1.3 : 1) * mins);
+      stat(s, 'energy', 2.5 * (1 + coziness(s) / 60) * (hasTrait(s, 'sleepy') ? 1.3 : 1) * (dailyMood(s, now) === 'dreamy' ? 1.25 : 1) * mins);
       stat(s, 'hunger', RATES.hunger * 0.5 * mins);
       stat(s, 'clean', RATES.clean * 0.5 * mins);
       if (s.stats.energy >= 100) {
@@ -160,7 +161,7 @@ export function tick(s, now = Date.now()) {
       stat(s, 'hunger', RATES.hunger * mins);
       stat(s, 'energy', RATES.energy * mins);
       stat(s, 'clean', RATES.clean * (hasTrait(s, 'tidy') ? 0.7 : 1) * mins);
-      stat(s, 'happiness', RATES.happiness * grumpy * (1 - coziness(s) / 60) * mins);
+      stat(s, 'happiness', RATES.happiness * grumpy * (1 - coziness(s) / 60) * (dailyMood(s, now) === 'cheerful' ? 0.75 : 1) * mins);
     }
   }
   if (s.mission && now >= s.mission.endsAt) {
@@ -182,7 +183,7 @@ export function feed(s, id) {
   const foodie = hasTrait(s, 'foodie');
   const fav = s.persona.fav.snack === id;
   stat(s, 'hunger', snack.hunger);
-  stat(s, 'happiness', snack.happiness + (foodie ? 5 : 0) + (fav ? (foodie ? 20 : 10) : 0));
+  stat(s, 'happiness', snack.happiness + (foodie ? 5 : 0) + (fav ? (foodie ? 20 : 10) : 0) + (dailyMood(s) === 'peckish' ? 5 : 0));
   grow(s, 'foodie');
   const ups = addXP(s, 2);
   log(s, `${s.name} ate ${snack.name.toLowerCase()}.`);
@@ -195,7 +196,7 @@ export function cuddle(s) {
   const b = busy(s);
   if (b) return no(b);
   if (s.stats.energy < 5) return no(`${s.name} is too tired to play.`);
-  stat(s, 'happiness', 8);
+  stat(s, 'happiness', 8 + (dailyMood(s) === 'cuddly' ? 6 : 0));
   stat(s, 'energy', -3);
   const ups = addXP(s, 2);
   trackQuest(s, 'care');
@@ -340,7 +341,7 @@ export function rewardGame(s, gameId, pearls, best, lowerIsBetter = false) {
   const cap = g?.maxPearls ?? 60;
   const favGame = s.persona.fav.game === gameId;
   const boost = (hasTrait(s, 'competitive') ? 1.15 : 1) * (favGame ? 1.1 : 1);
-  const p = Math.max(0, Math.min(Math.round(cap * boost), Math.round(pearls * boost)));
+  const p = Math.max(0, Math.min(Math.round(cap * boost), Math.round(pearls * boost))) + (dailyMood(s) === 'playful' ? 3 : 0);
   s.pearls += p;
   stat(s, 'happiness', 10 + (favGame ? 5 : 0));
   grow(s, 'competitive');
@@ -536,7 +537,7 @@ export function explore(s, locId, now = Date.now()) {
     const ups = addXP(s, 2);
     return ok(`${loves}${s.name} poked around ${loc.name} and found ${p} loose pearls.`, { pearls: p, ups, find: null });
   }
-  const d = discover(s, locId, (hasTrait(s, 'adventurous') ? 1.3 : 1) * (favPlace ? 1.2 : 1));
+  const d = discover(s, locId, (hasTrait(s, 'adventurous') ? 1.3 : 1) * (favPlace ? 1.2 : 1) * exploreLuck(locId, now) * (dailyMood(s, now) === 'curious' ? 1.2 : 1));
   const r = RARITY[d.find.rarity];
   const msg = loves + (d.isNew
     ? `${d.find.icon} New discovery! ${s.name} found a ${d.find.name} (${r.name})!`

@@ -738,3 +738,61 @@ details.cmd-list[open] summary { margin-bottom: 6px; }
 .try-name { text-align: center; margin: 0; font-size: 1.05rem; }
 .skip-check { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: .85rem; color: var(--muted); cursor: pointer; }
 .skip-check input { width: 18px; height: 18px; accent-color: var(--teal); }
+
+/* ---------- living pond: time of day, weather, tides ---------- */
+.phase-sky { position: absolute; inset: 0; pointer-events: none; transition: background 2s; }
+.phase-sky i { position: absolute; opacity: 0; transition: opacity 2s; }
+.scene[data-phase='dawn'] .phase-sky { background: linear-gradient(180deg, rgba(255, 160, 140, .55), rgba(255, 210, 160, .22) 50%, rgba(255, 220, 180, .08) 80%); }
+.scene[data-phase='dusk'] .phase-sky { background: linear-gradient(180deg, rgba(170, 90, 160, .55), rgba(255, 140, 80, .3) 50%, rgba(255, 150, 90, .12) 85%); }
+.scene[data-phase='night'] .phase-sky { background: linear-gradient(180deg, rgba(10, 20, 60, .6), rgba(10, 30, 70, .35) 60%, rgba(5, 20, 40, .3)); }
+.phase-sky .moon { top: 14px; right: 24%; width: 26px; height: 26px; border-radius: 50%; background: #fff3bf; box-shadow: 0 0 18px #fff3bf, inset -7px -3px 0 rgba(0,0,0,.08); }
+.phase-sky .star { width: 3px; height: 3px; border-radius: 50%; background: #fff; box-shadow: 0 0 6px #fff; animation: twinkle 3s ease-in-out infinite; }
+.phase-sky .s1 { top: 20px; left: 30%; } .phase-sky .s2 { top: 44px; left: 56%; animation-delay: -1s; } .phase-sky .s3 { top: 70px; left: 20%; animation-delay: -2s; }
+.phase-sky .s4 { top: 30px; left: 78%; animation-delay: -.5s; } .phase-sky .s5 { top: 90px; left: 66%; animation-delay: -1.6s; }
+.scene[data-phase='night'] .phase-sky .moon, .scene[data-phase='night'] .phase-sky .star { opacity: 1; }
+.phase-sky .sun { top: -30px; left: 50%; width: 160px; height: 160px; margin-left: -80px; border-radius: 50%; background: radial-gradient(circle, rgba(255, 240, 180, .55), transparent 65%); }
+.scene[data-phase='day'] .phase-sky .sun, .scene[data-phase='dawn'] .phase-sky .sun { opacity: 1; }
+.scene[data-phase='night'] .firefly { animation-duration: 2.5s; }
+.weather-fx { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.weather-fx .rain { position: absolute; inset: -40px; background: repeating-linear-gradient(105deg, transparent 0 14px, rgba(220, 240, 255, .35) 14px 15px); animation: rain .45s linear infinite; }
+@keyframes rain { to { transform: translate(-10px, 40px); } }
+.scene[data-weather='rainy'] .caustics { opacity: .5; }
+.scene[data-weather='rainy'] .phase-sky::after, .scene[data-weather='cloudy'] .phase-sky::after { content: ''; position: absolute; inset: 0; background: rgba(40, 60, 80, .18); }
+.weather-fx .mist { position: absolute; inset: -20% -50%; background: radial-gradient(ellipse 45% 28% at 30% 62%, rgba(255,255,255,.62), transparent 70%), radial-gradient(ellipse 40% 24% at 75% 40%, rgba(255,255,255,.5), transparent 70%), linear-gradient(rgba(255,255,255,.12), rgba(255,255,255,.12)); animation: mist 16s ease-in-out infinite alternate; }
+@keyframes mist { to { transform: translateX(15%); } }
+.weather-fx .cloud { position: absolute; top: 14px; width: 120px; height: 34px; border-radius: 40px; background: rgba(255, 255, 255, .55); filter: blur(2px); animation: cloud 40s linear infinite; }
+.weather-fx .cloud::before { content: ''; position: absolute; left: 24px; top: -18px; width: 56px; height: 44px; border-radius: 50%; background: inherit; }
+.weather-fx .c2 { top: 50px; transform: scale(.7); animation-duration: 55s; animation-delay: -25s; }
+@keyframes cloud { from { left: -140px; } to { left: 110%; } }
+.weather-fx .leaf { position: absolute; left: -30px; font-style: normal; font-size: 18px; animation: leaf 7s linear infinite; }
+@keyframes leaf { 0% { transform: translate(0, 0) rotate(0); } 50% { transform: translate(220px, 30px) rotate(180deg); } 100% { transform: translate(460px, -10px) rotate(360deg); } }
+.tide-sand { position: absolute; left: 18%; right: 18%; bottom: -30px; height: 60px; border-radius: 50%; background: radial-gradient(ellipse at 50% 30%, #f3e3b8, #e2cc92 70%); opacity: 0; transition: opacity 2s, transform 2s; transform: translateY(20px); }
+.scene[data-tide='low'] .tide-sand { opacity: .85; transform: none; }
+.scene[data-tide='falling'] .tide-sand { opacity: .35; transform: translateY(10px); }
+.pond-status { position: absolute; left: 12px; top: 10px; display: flex; gap: 4px; flex-wrap: wrap; max-width: 62%; pointer-events: none; }
+.pond-status span { background: rgba(7, 31, 38, .55); color: var(--cream); font-size: .68rem; font-weight: 800; padding: 3px 8px; border-radius: 99px; backdrop-filter: blur(3px); }
+.speech { position: absolute; top: 46px; left: 50%; transform: translateX(-10%); max-width: 62%; background: var(--pearl); color: var(--ink); font-size: .82rem; font-weight: 700; padding: 8px 12px; border-radius: 16px; box-shadow: var(--gold-ring), var(--shadow); z-index: 3; }
+.speech::after { content: ''; position: absolute; left: 18px; bottom: -8px; border: 8px solid transparent; border-top-color: var(--pearl); border-bottom: 0; }
+.speech.pop { animation: popin .3s ease; }
+/* sleeping positions */
+#otter-wrap[data-pose='float'] #otter { transform: rotate(-78deg) scale(.82) translate(-30px, 10px); }
+#otter-wrap[data-pose='curl'] #otter { transform: rotate(-14deg) scale(.88) translateY(12px); }
+#otter-wrap[data-pose='hug'] #otter { transform: rotate(9deg) scale(.95) translateY(6px); }
+#otter-wrap[data-pose='sprawl'] #otter { transform: rotate(84deg) scale(.82) translate(30px, -6px); }
+#otter { transition: transform 1.2s ease; }
+/* bath + cuddle animations */
+#otter-wrap.bathing #otter { animation: scrub .28s ease-in-out 8; }
+@keyframes scrub { 25% { transform: rotate(-5deg) translateX(-3px); } 75% { transform: rotate(5deg) translateX(3px); } }
+#otter-wrap.bathing::after { content: '🫧 🫧 🫧'; position: absolute; left: 0; right: 0; top: 18%; text-align: center; font-size: 26px; letter-spacing: 6px; animation: foam 2.6s ease-out forwards; }
+@keyframes foam { 0% { opacity: 0; transform: translateY(20px) scale(.6); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-50px) scale(1.2); } }
+#otter-wrap.cuddling #otter { animation: snug 1.2s ease; }
+@keyframes snug { 30% { transform: scale(1.06, .95); } 60% { transform: scale(.97, 1.04) rotate(-3deg); } }
+/* today card */
+.today { display: grid; gap: 10px; margin-top: 16px; }
+.today-row { display: flex; gap: 10px; align-items: flex-start; }
+.today-icon { font-size: 1.5rem; width: 34px; text-align: center; }
+.today-row .muted { font-size: .82rem; }
+.forecast { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; font-size: 1.2rem; }
+.forecast span { display: grid; background: #eef7f4; border-radius: 12px; padding: 4px 0; }
+.forecast small { font-size: .65rem; color: var(--muted); font-weight: 700; }
+.luck-note { margin: 0; font-size: .85rem; font-weight: 800; color: #b8860b; }

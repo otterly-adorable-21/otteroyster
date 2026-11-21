@@ -10,6 +10,7 @@ import { LOCATIONS, LOC, RARITY, FINDS, TOTAL_FINDS, EXPLORE_ENERGY, SET_REWARD 
 import { mapSVG } from './map.js';
 import { heartsText, friendLevel, GIFT_PEARL_OPTIONS, GIFT_PEARLS_PER_DAY } from './social.js';
 import { EVENTS, EVENT, EVENT_FINDS, eventEndsAt, nextEvent, setEventPreview, isPreview } from './events.js';
+import { PHASES, timeOfDay, WEATHER, weatherAt, forecast, tideAt, TIDE_NAMES, LOW_TIDE_PLACES, exploreLuck, MOODS, dailyMood, SLEEP_POSES, sleepPose, thoughtFor } from './ambience.js';
 
 // Preview another seasonal event with ?event=spooky (website only).
 try { const ev = new URLSearchParams(location.search).get('event'); if (ev) setEventPreview(ev); } catch { /* ignore */ }
@@ -367,7 +368,51 @@ function renderScene() {
   const low = Object.entries(state.stats).filter(([, v]) => v < 35).sort((a, b) => a[1] - b[1])[0];
   thought.hidden = !(!away && !state.sleeping && low);
   if (!thought.hidden) thought.textContent = NEEDS[low[0]];
+  renderAmbience(scene, away);
 }
+
+// ---------- the living pond ----------
+let lastAmbience = '';
+function renderAmbience(scene, away) {
+  const now = Date.now();
+  const phase = timeOfDay(new Date(now));
+  const weather = weatherAt(now);
+  const tide = tideAt(now);
+  scene.dataset.phase = phase;
+  scene.dataset.weather = weather;
+  scene.dataset.tide = tide.state;
+  $('#otter-wrap').dataset.pose = state.sleeping ? sleepPose(state) : '';
+  const key = `${phase}|${weather}|${tide.state}|${state.name ? dailyMood(state) : ''}`;
+  if (key === lastAmbience) return;
+  lastAmbience = key;
+  const w = WEATHER[weather];
+  const wIcon = phase === 'night' && w.nightIcon ? w.nightIcon : w.icon;
+  $('#pond-status').innerHTML = `<span>${PHASES[phase].icon} ${PHASES[phase].name}</span><span>${wIcon} ${w.name}</span><span>${TIDE_NAMES[tide.state]}</span>`;
+  const fx = $('#weather-fx');
+  const drops = { rainy: '', breezy: '🍃', misty: '', cloudy: '', sunny: '' }[weather];
+  fx.innerHTML = weather === 'rainy' ? '<i class="rain"></i>' : weather === 'misty' ? '<i class="mist"></i>' : weather === 'cloudy' ? '<i class="cloud c1"></i><i class="cloud c2"></i>'
+    : weather === 'breezy' ? Array.from({ length: 6 }, (_, k) => `<i class="leaf" style="top:${10 + k * 14}%;animation-delay:${-k * 1.3}s">${drops}</i>`).join('') : '';
+}
+
+// Little thoughts: a speech bubble now and then when nothing is urgent.
+let speechTimer = 0;
+function speak(text, ms = 6000) {
+  const el = $('#speech');
+  if (!el) return;
+  el.textContent = text;
+  el.hidden = false;
+  el.classList.remove('pop');
+  void el.offsetWidth;
+  el.classList.add('pop');
+  clearTimeout(speechTimer);
+  speechTimer = setTimeout(() => { el.hidden = true; }, ms);
+}
+let thoughtSeed = 0;
+setInterval(() => {
+  if (!state.name || state.mission || state.sleeping || gameOpen || document.hidden || tab !== 'home') return;
+  if (!$('#thought').hidden) return;
+  speak(thoughtFor(state, { seed: thoughtSeed++ }));
+}, 22000);
 
 function itemCard(id, mode) {
   const it = ITEMS[id];
@@ -536,14 +581,33 @@ function personaCard() {
         <span class="fav-chip">${pi.fav.snack.icon} ${pi.fav.snack.name}</span>
         <span class="fav-chip">${pi.fav.place.icon} ${pi.fav.place.name}</span>
         <span class="fav-chip">${pi.fav.game.icon} ${pi.fav.game.name}</span>
+        <span class="fav-chip">😴 ${SLEEP_POSES[sleepPose(state)]}</span>
       </div>
     </div>`;
+}
+
+function todayCard() {
+  if (!state.name) return '';
+  const now = Date.now();
+  const phase = timeOfDay(new Date(now));
+  const w = WEATHER[weatherAt(now)];
+  const tide = tideAt(now);
+  const mood = MOODS[dailyMood(state, now)];
+  const lowIn = Math.max(0, tide.nextLow - now);
+  const fc = forecast(now);
+  return `<div class="card today">
+    <div class="today-row"><span class="today-icon">${mood.icon}</span><div><b>${esc(state.name)} feels ${mood.name.toLowerCase()} today</b><div class="muted">${mood.effect}</div></div></div>
+    <div class="today-row"><span class="today-icon">${phase === 'night' && w.nightIcon ? w.nightIcon : w.icon}</span><div><b>${w.name}</b> · ${PHASES[phase].name.toLowerCase()}<div class="muted">${w.hint}</div></div></div>
+    <div class="today-row"><span class="today-icon">${tide.state === 'low' ? '🏖️' : '🌊'}</span><div><b>${TIDE_NAMES[tide.state].replace(/^\S+ /, '')}</b><div class="muted">${tide.state === 'low' ? 'Tide Pools and Shipwreck Cove finds are 50% luckier right now!' : `Next low tide in ${fmtTime(lowIn)}. Tide Pools and Shipwreck Cove get luckier.`}</div></div></div>
+    <div class="forecast">${fc.map((f) => `<span title="${new Date(f.at).toLocaleTimeString([], { hour: 'numeric' })}"><small>${new Date(f.at).toLocaleTimeString([], { hour: 'numeric' })}</small>${WEATHER[f.weather].icon}</span>`).join('')}</div>
+  </div>`;
 }
 
 function panelHome() {
   const claimed = state.lastDaily === core.dayKey();
   const asleep = state.sleeping;
   return `${eventBanner()}
+    ${todayCard()}
     <h2 class="section-title">Snacks</h2>
     <div class="snacks">
       ${SNACKS.map((s) => `<button class="snack" data-action="feed" data-id="${s.id}" ${state.pearls < s.price ? 'disabled' : ''}>
@@ -653,6 +717,7 @@ function panelMissions() {
     <div class="card loc-card ${locked ? 'locked' : ''}">
       <div class="loc-title"><span class="loc-icon">${loc.icon}</span><div><h3>${loc.name}${state.sets.includes(loc.id) ? ' 🏅' : ''}${state.persona?.fav.place === loc.id ? ` <span class="fav-tag">❤️ ${esc(state.name)}'s favorite</span>` : ''}</h3><p class="muted">${loc.desc}</p></div></div>
       ${loc.id === 'lilypond' ? '<div class="row"><button class="btn small" data-tab="home">🦦 Visit your otter</button><button class="btn small" data-tab="den">🏡 Go to the den</button></div>' : ''}
+      ${(() => { const l = exploreLuck(loc.id); return l > 1.01 && !locked ? `<p class="luck-note">✨ ${tideAt().state === 'low' && LOW_TIDE_PLACES.includes(loc.id) ? 'Low tide' : WEATHER[weatherAt()].name + ' weather'}: finds here are luckier right now!</p>` : ''; })()}
       ${exploreBtn}
       ${busyMsg ? `<p class="muted small-note">${esc(state.name)} is ${busyMsg === 'away' ? 'out on a mission' : 'napping'} right now.</p>` : ''}
       <h4 class="loc-sub">Discoveries · ${loc.finds.filter((f) => state.collection[f.id]).length}/${loc.finds.length}</h4>
@@ -1028,6 +1093,14 @@ function burst(icons, n) {
   }
 }
 
+function animateOtter(cls, ms) {
+  const w = $('#otter-wrap');
+  w.classList.remove('bathing', 'cuddling');
+  void w.offsetWidth;
+  w.classList.add(cls);
+  setTimeout(() => w.classList.remove(cls), ms);
+}
+
 function bounce() {
   const w = $('#otter-wrap');
   w.classList.remove('bounce');
@@ -1134,8 +1207,8 @@ document.addEventListener('click', async (e) => {
   const id = a.dataset.id;
   switch (a.dataset.action) {
     case 'feed': return act(core.feed(state, id));
-    case 'pet': return act(core.cuddle(state));
-    case 'bath': return act(core.bath(state));
+    case 'pet': { const r = act(core.cuddle(state)); if (r.ok) animateOtter('cuddling', 1200); return r; }
+    case 'bath': { const r = act(core.bath(state)); if (r.ok) { animateOtter('bathing', 2600); burst(['🫧', '🫧', '🫧', '💧', '🧼'], 14); } return r; }
     case 'sleep': return act(core.toggleSleep(state));
     case 'daily': return act(core.claimDaily(state));
     case 'buy': return requestPurchase('item', id);
