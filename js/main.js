@@ -493,6 +493,7 @@ function shopEntry(kind, id) {
     case 'evfurn': return { name: FURNITURE[id].name, price: evPrice(id), cur: 'tokens', have: ev?.tokens || 0, token: ev?.event.token };
     case 'door': return { name: DOOR_ITEMS[id].name, price: DOOR_ITEMS[id].price, cur: 'pearls', have: state.pearls };
     case 'comp': return { name: COMPANIONS[id].name, price: COMPANIONS[id].price, cur: 'pearls', have: state.pearls };
+    case 'compacc': return { name: COMP_ACCS[id].name, price: COMP_ACCS[id].price, cur: 'pearls', have: state.pearls };
     default: return null;
   }
 }
@@ -510,6 +511,11 @@ function doPurchase(kind, id) {
     case 'evitem': case 'evfurn': return act(core.buyEventItem(state, id));
     case 'door': return act(core.buyDoorItem(state, id));
     case 'comp': { const r = act(core.adoptCompanion(state, id)); if (r.ok) closeModal?.(); return r; }
+    case 'compacc': {
+      const r = act(core.buyCompanionAcc(state, id));
+      if (r.ok && styleComp && state.companions.owned[styleComp]) { core.styleCompanion(state, styleComp, { acc: id }); commit(); openCompanionStyle(styleComp); }
+      return r;
+    }
     default: return null;
   }
 }
@@ -525,9 +531,15 @@ function previewArt(kind, id) {
     const it = DOOR_ITEMS[id];
     return `<div class="try-stage door-try"><svg viewBox="0 0 120 130" aria-label="Your front door with the ${esc(it.name)}">${houseFrontSVG({ ...state.door, [it.kind]: id })}</svg></div>`;
   }
+  if (kind === 'compacc') {
+    const cid = styleComp && state.companions.owned[styleComp] ? styleComp : state.companions.active;
+    const c = state.companions.owned[cid];
+    return `<div class="try-stage comp-try"><svg viewBox="-10 -30 330 270" aria-label="${esc(c?.name || 'Your companion')} wearing the ${esc(COMP_ACCS[id].name)}">${otterSVG({ ...state, sleeping: false }, { idPrefix: 'try' })}${cid ? `<g transform="translate(196 110) scale(1.15)">${companionSVG(cid, { look: { ...core.companionLook(c), acc: id } })}</g>` : ''}</svg></div>
+      <p class="muted center try-note">${esc(c?.name || 'Your companion')} in the ${esc(COMP_ACCS[id].name)}. Buy it once and any of your companions can wear it.</p>`;
+  }
   if (kind === 'comp') {
-    return `<div class="try-stage comp-try"><svg viewBox="-10 -30 330 270" aria-label="${esc(state.name)} with a ${esc(COMPANIONS[id].name)}">${otterSVG({ ...state, sleeping: false }, { idPrefix: 'try' })}<g transform="translate(200 130)">${companionSVG(id)}</g></svg>
-      <p class="muted center">${esc(COMPANIONS[id].desc)}<br><b>Perk once bonded:</b> ${esc(COMPANIONS[id].perk)}</p></div>`;
+    return `<div class="try-stage comp-try"><svg viewBox="-10 -30 330 270" aria-label="${esc(state.name)} with a ${esc(COMPANIONS[id].name)}">${otterSVG({ ...state, sleeping: false }, { idPrefix: 'try' })}<g transform="translate(200 130)">${companionSVG(id)}</g></svg></div>
+      <p class="muted center try-note">${esc(COMPANIONS[id].desc)}<br><b>Perk once bonded:</b> ${esc(COMPANIONS[id].perk)}</p>`;
   }
   const trial = JSON.parse(JSON.stringify(state));
   trial.sleeping = false;
@@ -741,7 +753,9 @@ function companionCard() {
       </div></div></div>`;
 }
 
+let styleComp = null; // the companion being styled (for accessory try-ons)
 function openCompanionStyle(id) {
+  styleComp = id;
   const c = state.companions.owned[id];
   if (!c) return;
   const look = core.companionLook(c);
@@ -752,7 +766,7 @@ function openCompanionStyle(id) {
     <h3 class="den-sub dark">Accessory <small class="muted">buy once, any companion can wear it</small></h3><div class="chips">
       <button class="chip-btn" data-action="comp-look" data-id="${id}" data-k="acc" data-v="" aria-pressed="${!look.acc}">None</button>
       ${Object.entries(COMP_ACCS).map(([k, v]) => (state.companions.accs.includes(k) ? `<button class="chip-btn" data-action="comp-look" data-id="${id}" data-k="acc" data-v="${k}" aria-pressed="${look.acc === k}">${v.icon} ${v.name}</button>`
-    : `<button class="chip-btn" data-action="comp-acc-buy" data-id="${k}" data-comp="${id}" ${state.pearls < v.price ? 'disabled' : ''}>${v.icon} ${v.name} · <span class="pearl-icon"></span> ${v.price}</button>`)).join('')}</div>
+    : `<span class="acc-buy">${tryBtn('compacc', k)}<button class="chip-btn" data-action="comp-acc-buy" data-id="${k}" ${state.pearls < v.price ? 'disabled' : ''}>${v.icon} ${v.name} · <span class="pearl-icon"></span> ${v.price}</button></span>`)).join('')}</div>
     <p class="muted">${COMP_TRAITS[c.trait] ? `${COMP_TRAITS[c.trait].icon} ${esc(c.name)} is ${COMP_TRAITS[c.trait].name.toLowerCase()}.` : ''} 💕 Bond ${Math.round(c.bond)}/100</p>
   </div>`, { wide: true });
 }
@@ -2188,7 +2202,7 @@ document.addEventListener('click', async (e) => {
     case 'closet-slot': closetSlot = id; return renderPanel();
     case 'comp-style': return openCompanionStyle(id);
     case 'comp-look': { const r = act(core.styleCompanion(state, id, { [a.dataset.k]: a.dataset.v })); if (r.ok) openCompanionStyle(id); return r; }
-    case 'comp-acc-buy': { const r = act(core.buyCompanionAcc(state, id)); if (r.ok && a.dataset.comp) { core.styleCompanion(state, a.dataset.comp, { acc: id }); commit(); openCompanionStyle(a.dataset.comp); } return r; }
+    case 'comp-acc-buy': return requestPurchase('compacc', id);
     case 'treasures': return openSub('treasures');
     case 'sub-back': subView = null; renderPanel(); window.scrollTo({ top: 0 }); return null;
     case 'library': return openLibrary();

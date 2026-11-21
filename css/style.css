@@ -1111,3 +1111,6 @@ svg.swatch-chip { display: block; }
 .chips.rooms { margin: 6px 0 2px; }
 .add-room { background: rgba(217, 180, 90, .18) !important; }
 .room-rename { display: block; margin: 0 2px 8px auto; color: var(--aqua-light); }
+.acc-buy { display: inline-flex; gap: 4px; align-items: center; flex: none; }
+.acc-buy .try-btn { padding: 6px 8px; }
+.try-note { margin: 8px 4px 0; font-size: .85rem; }
