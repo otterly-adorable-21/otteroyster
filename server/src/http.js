@@ -194,6 +194,12 @@ export function startHttp({ store, social, port, siteRoot, allowedOrigins, info 
 
   const server = createServer(async (req, res) => {
     const url = new URL(req.url, 'http://localhost');
+    // www.otteroyster.online -> otteroyster.online
+    const host = String(req.headers.host || '');
+    if (host.startsWith('www.')) {
+      res.writeHead(301, { Location: `https://${host.slice(4)}${req.url}` });
+      return res.end();
+    }
     cors(req, res);
     if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
     try {

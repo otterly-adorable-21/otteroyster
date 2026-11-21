@@ -46,7 +46,6 @@ js/assets.js          detects brand art in /assets
 js/games/*.js         one file per arcade game (kit.js = shared helpers)
 server/               API + Discord bot (Node 22)
 assets/               brand artwork
-CNAME                 custom domain for GitHub Pages
 ```
 
 ### Adding a game
@@ -66,5 +65,9 @@ Then open http://localhost:8787 (website + API). For the website alone, any stat
 
 ## Deploying
 
-- **Website** → GitHub Pages: Settings → Pages → deploy from `main` / root. `CNAME` sets otteroyster.online. At your registrar, add `A` records for `@` → `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`, and a `CNAME` for `www` → `<github-username>.github.io`. Then tick **Enforce HTTPS**.
-- **Server + bot** → any Docker host with a persistent volume (the repo has a `Dockerfile`), at `api.otteroyster.online`. A click-by-click Railway guide is in [`server/README.md`](server/README.md#host-it).
+Everything (website, API and Discord bot) runs as one server at **otteroyster.online**, on any Docker host with a
+persistent volume (the repo has a `Dockerfile`). A click-by-click Railway guide, including moving the domain over from
+GitHub Pages, is in [`server/README.md`](server/README.md#host-it).
+
+The website also still works as a plain static site (e.g. GitHub Pages). It then runs in offline mode: everything
+except Friends, Discord linking and leaderboards.
