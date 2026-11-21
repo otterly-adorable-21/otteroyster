@@ -8,7 +8,7 @@ COPY . .
 ENV NODE_ENV=production \
     PORT=8787 \
     DB_PATH=/data/otteroyster.db
-# Mount a persistent volume at /data so otters survive restarts.
-VOLUME ["/data"]
+# Attach a persistent volume at /data in your host's settings (e.g. Railway
+# Volumes) so otters survive restarts. No VOLUME line: Railway rejects it.
 EXPOSE 8787
 CMD ["node", "--disable-warning=ExperimentalWarning", "server/src/index.js"]
