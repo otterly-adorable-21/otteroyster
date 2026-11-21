@@ -12,7 +12,7 @@ import { TRICKS } from '../js/growth.js';
 
 // ---------- hand-written parts ----------
 const BRAND = [
-  ['logo.png', '1672 × 941 (any wide banner)', 'Top of every page, adoption screen, link previews'],
+  ['logo.png', '1672 × 941 (any wide banner)', 'Small in the top bar, large at the bottom of every page, adoption screen, link previews'],
   ['emblem.png', '1254 × 1254 (square)', 'Header badge, browser tab and phone icon; also Shelly\'s Discord avatar'],
   ['lily-border.png', '2172 × 724', 'Section dividers'],
   ['pond.png', '1344 × 896', 'Faded page background'],

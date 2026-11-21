@@ -6,7 +6,7 @@
 
 | File | What it is | Where it shows up |
 | --- | --- | --- |
-| `logo.png` | "Otter & Oyster" wordmark banner | Top of every page, adoption screen, link previews |
+| `logo.png` | "Otter & Oyster" wordmark banner | Small in the top bar, large at the bottom of every page, adoption screen, link previews |
 | `emblem.png` | Round emblem (otter hugging the oyster) | Browser tab icon, phone home-screen icon, header badge. Also upload it as the Discord bot's avatar |
 | `lily-border.png` | Three water lilies border | Section dividers |
 | `pond.png` | Willow pond painting | Faded page background |

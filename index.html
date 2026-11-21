@@ -32,8 +32,8 @@
       }).catch(function () {});
     })();
   </script>
-  <link rel="stylesheet" href="css/style.css?v=29">
-  <script type="module" src="js/main.js?v=29"></script>
+  <link rel="stylesheet" href="css/style.css?v=30">
+  <script type="module" src="js/main.js?v=30"></script>
 </head>
 <body>
   <!-- Reusable drawings: water lily, lily pad, gold sparkle -->
@@ -78,21 +78,21 @@
     <i class="spark" style="left:4%;top:78%;animation-delay:-2.5s;width:12px;height:12px"><svg><use href="#sym-sparkle"/></svg></i>
   </div>
 
-  <div id="app">
-    <nav class="tabs" aria-label="Sections">
-      <button data-tab="home"><span>🦦</span>Otter</button>
-      <button data-tab="den"><span>🏡</span>Den</button>
-      <button data-tab="closet"><span>👗</span>Closet</button>
-      <button data-tab="missions"><span>🗺️</span>Explore</button>
-      <button data-tab="arcade"><span>🎮</span>Arcade</button>
-      <button data-tab="friends"><span>💞</span>Friends</button>
-    </nav>
-    <div class="brandbar">
-      <h1 class="wordmark">
-        <img src="assets/web/logo.webp" data-art="logo" alt="Otter &amp; Oyster" width="1000" height="563">
-        <span class="wordmark-text"><svg class="spark-i" aria-hidden="true"><use href="#sym-sparkle"/></svg>Otter<span class="amp">&amp;</span>Oyster<svg class="spark-i" aria-hidden="true"><use href="#sym-sparkle"/></svg></span>
-      </h1>
+  <header class="topnav">
+    <div class="topnav-inner">
+      <a class="nav-logo" href="#home" data-tab="home" aria-label="Otter &amp; Oyster home"><img src="assets/web/logo.webp" data-art="logo" alt="Otter &amp; Oyster" width="1000" height="563"><span class="nav-logo-text">O&amp;O</span></a>
+      <nav class="tabs" aria-label="Sections">
+        <button data-tab="home"><span>🦦</span>Otter</button>
+        <button data-tab="den"><span>🏡</span>Den</button>
+        <button data-tab="closet"><span>👗</span>Closet</button>
+        <button data-tab="missions"><span>🗺️</span>Explore</button>
+        <button data-tab="arcade"><span>🎮</span>Arcade</button>
+        <button data-tab="friends"><span>💞</span>Friends</button>
+      </nav>
     </div>
+  </header>
+
+  <div id="app">
 
     <header class="topbar">
       <div class="brand">
@@ -265,6 +265,13 @@
     </div>
 
     <main id="panel" class="panel"></main>
+
+    <div class="brandbar brand-bottom">
+      <h1 class="wordmark">
+        <img src="assets/web/logo.webp" data-art="logo" alt="Otter &amp; Oyster" width="1000" height="563">
+        <span class="wordmark-text"><svg class="spark-i" aria-hidden="true"><use href="#sym-sparkle"/></svg>Otter<span class="amp">&amp;</span>Oyster<svg class="spark-i" aria-hidden="true"><use href="#sym-sparkle"/></svg></span>
+      </h1>
+    </div>
 
   </div>
 
