@@ -4,11 +4,11 @@
 
 export const EVENTS = [
   {
-    id: 'lantern', name: 'Winter Lantern Festival', icon: '🏮', start: [12, 1], end: [1, 6],
+    id: 'lantern', name: 'Winterfest Lanterns', icon: '🏮', start: [12, 1], end: [12, 19],
     token: { name: 'Lantern Lights', icon: '🏮' },
     desc: 'Snow on the lily pads and paper lanterns floating on the pond. Bundle up!',
     fx: ['❄️', '✨', '❄️'], tint: '#9bd1ff',
-    shop: [{ kind: 'item', id: 'earmuffs', tokens: 30 }, { kind: 'item', id: 'woolscarf', tokens: 25 }, { kind: 'furniture', id: 'lanterntree', tokens: 35 }],
+    shop: [{ kind: 'item', id: 'earmuffs', tokens: 30 }, { kind: 'item', id: 'woolscarf', tokens: 25 }, { kind: 'item', id: 'snowhat', tokens: 25 }, { kind: 'furniture', id: 'lanterntree', tokens: 35 }, { kind: 'furniture', id: 'snowglobe', tokens: 25 }, { kind: 'furniture', id: 'icechair', tokens: 35 }],
     finds: [{ id: 'snowflake', name: 'Perfect Snowflake', icon: '❄️', rarity: 'uncommon' }, { id: 'snowotter', name: 'Snow Otter Sculpture', icon: '⛄', rarity: 'rare' }],
   },
   {
@@ -16,15 +16,15 @@ export const EVENTS = [
     token: { name: 'Heart Shells', icon: '💗' },
     desc: 'Otters hold paws so they never drift apart. Share the love with your friends!',
     fx: ['💗', '💕', '💗'], tint: '#ffc9de',
-    shop: [{ kind: 'item', id: 'heartband', tokens: 30 }, { kind: 'item', id: 'rosebow', tokens: 25 }, { kind: 'furniture', id: 'heartpillow', tokens: 30 }],
+    shop: [{ kind: 'item', id: 'heartband', tokens: 30 }, { kind: 'item', id: 'rosebow', tokens: 25 }, { kind: 'item', id: 'loveglasses', tokens: 30 }, { kind: 'furniture', id: 'heartpillow', tokens: 30 }, { kind: 'furniture', id: 'loveletters', tokens: 20 }, { kind: 'furniture', id: 'rosebouquet', tokens: 25 }],
     finds: [{ id: 'pondrose', name: 'Pond Rose', icon: '🌹', rarity: 'uncommon' }, { id: 'loveletter', name: 'Message in a Bottle', icon: '💌', rarity: 'rare' }],
   },
   {
-    id: 'spring', name: 'Spring Bloom', icon: '🌸', start: [3, 15], end: [4, 30],
+    id: 'spring', name: 'Spring Bloom', icon: '🌸', start: [4, 15], end: [5, 20],
     token: { name: 'Petals', icon: '🌸' },
     desc: 'Everything is blooming! Petals drift across the water and the bees are busy.',
     fx: ['🌸', '🌼', '🌸'], tint: '#ffd6e7',
-    shop: [{ kind: 'item', id: 'flowercrown', tokens: 30 }, { kind: 'item', id: 'butterflywings', tokens: 40 }, { kind: 'furniture', id: 'flowerpot', tokens: 30 }],
+    shop: [{ kind: 'item', id: 'flowercrown', tokens: 30 }, { kind: 'item', id: 'butterflywings', tokens: 40 }, { kind: 'furniture', id: 'flowerpot', tokens: 30 }, { kind: 'furniture', id: 'flowerbed', tokens: 30 }, { kind: 'furniture', id: 'butterflylamp', tokens: 35 }],
     finds: [{ id: 'bumblebee', name: 'Fuzzy Bumblebee', icon: '🐝', rarity: 'uncommon' }, { id: 'tulip', name: 'Rainbow Tulip', icon: '🌷', rarity: 'rare' }],
   },
   {
@@ -32,7 +32,7 @@ export const EVENTS = [
     token: { name: 'Sunbeams', icon: '☀️' },
     desc: 'Long sunny days, warm water and sandcastles. Perfect floating weather.',
     fx: ['☀️', '🫧', '✨'], tint: '#fff3bf',
-    shop: [{ kind: 'item', id: 'sunhat', tokens: 30 }, { kind: 'item', id: 'lei', tokens: 25 }, { kind: 'furniture', id: 'beachchair', tokens: 35 }],
+    shop: [{ kind: 'item', id: 'sunhat', tokens: 30 }, { kind: 'item', id: 'lei', tokens: 25 }, { kind: 'item', id: 'swimsuit', tokens: 30 }, { kind: 'furniture', id: 'beachchair', tokens: 35 }, { kind: 'furniture', id: 'beachumbrella', tokens: 30 }, { kind: 'furniture', id: 'sandcastledecor', tokens: 25 }],
     finds: [{ id: 'sandcastle', name: 'Tiny Sandcastle', icon: '🏰', rarity: 'uncommon' }, { id: 'dolphin', name: 'Playful Dolphin', icon: '🐬', rarity: 'rare' }],
   },
   {
@@ -40,7 +40,7 @@ export const EVENTS = [
     token: { name: 'Ghost Pearls', icon: '👻' },
     desc: 'Fog rolls over the pond and something glows in the shipwreck… boo!',
     fx: ['🦇', '🍂', '👻'], tint: '#d0bfff',
-    shop: [{ kind: 'item', id: 'witchhat', tokens: 35 }, { kind: 'item', id: 'batwings', tokens: 35 }, { kind: 'furniture', id: 'jackolantern', tokens: 30 }],
+    shop: [{ kind: 'item', id: 'witchhat', tokens: 35 }, { kind: 'item', id: 'batwings', tokens: 35 }, { kind: 'item', id: 'ghostsheet', tokens: 30 }, { kind: 'furniture', id: 'jackolantern', tokens: 30 }, { kind: 'furniture', id: 'hauntedlighthouse', tokens: 40 }],
     finds: [{ id: 'littlebat', name: 'Little Bat', icon: '🦇', rarity: 'uncommon' }, { id: 'ghostfish', name: 'Ghost Fish', icon: '👻', rarity: 'rare' }],
   },
   {
@@ -48,8 +48,48 @@ export const EVENTS = [
     token: { name: 'Golden Leaves', icon: '🍁' },
     desc: 'Crisp leaves, a big orange moon and cocoa by the den fire. Time to get cozy.',
     fx: ['🍁', '🍂', '🍁'], tint: '#ffd8a8',
-    shop: [{ kind: 'item', id: 'acornhat', tokens: 30 }, { kind: 'item', id: 'leafscarf', tokens: 25 }, { kind: 'furniture', id: 'pumpkinlamp', tokens: 30 }],
+    shop: [{ kind: 'item', id: 'acornhat', tokens: 30 }, { kind: 'item', id: 'leafscarf', tokens: 25 }, { kind: 'item', id: 'leafsweater', tokens: 35 }, { kind: 'furniture', id: 'pumpkinlamp', tokens: 30 }, { kind: 'furniture', id: 'pumpkinchair', tokens: 35 }, { kind: 'furniture', id: 'leafrug', tokens: 25 }],
     finds: [{ id: 'mapleleaf', name: 'Crimson Maple Leaf', icon: '🍁', rarity: 'uncommon' }, { id: 'harvestmouse', name: 'Harvest Mouse', icon: '🐭', rarity: 'rare' }],
+  },
+  {
+    id: 'christmas', name: 'Starlight Christmas', icon: '🎄', start: [12, 20], end: [12, 30],
+    token: { name: 'Jingle Bells', icon: '🔔' },
+    desc: 'Stockings by the den fire and a twinkling tree on the lily pads. Give a gift to a friend!',
+    fx: ['🎄', '❄️', '🎁'], tint: '#b2f2bb',
+    shop: [{ kind: 'item', id: 'santahat', tokens: 30 }, { kind: 'item', id: 'elfhat', tokens: 25 }, { kind: 'item', id: 'elfsuit', tokens: 35 }, { kind: 'furniture', id: 'xmastree', tokens: 40 }, { kind: 'furniture', id: 'stockings', tokens: 25 }],
+    finds: [{ id: 'jinglebell', name: 'Jingle Bell', icon: '🔔', rarity: 'uncommon' }, { id: 'startopper', name: 'Tree-Topper Star', icon: '🌟', rarity: 'rare' }],
+  },
+  {
+    id: 'newyear', name: "New Year's Splash", icon: '🎆', start: [12, 31], end: [1, 10],
+    token: { name: 'Sparklers', icon: '✨' },
+    desc: 'Fireworks over the lighthouse and a toast to the year ahead. Make a wish on the first sunrise!',
+    fx: ['🎆', '✨', '🎉'], tint: '#ffe8a3',
+    shop: [{ kind: 'item', id: 'newyearcrown', tokens: 30 }, { kind: 'item', id: 'partybowtie', tokens: 25 }, { kind: 'furniture', id: 'fireworks', tokens: 30 }, { kind: 'furniture', id: 'goldgarland', tokens: 25 }],
+    finds: [{ id: 'confetti', name: 'Confetti Shell', icon: '🎊', rarity: 'uncommon' }, { id: 'luckycoin', name: 'First-Sunrise Coin', icon: '🪙', rarity: 'rare' }],
+  },
+  {
+    id: 'easter', name: 'Egg Hunt', icon: '🥚', start: [3, 20], end: [4, 14],
+    token: { name: 'Painted Eggs', icon: '🥚' },
+    desc: 'Somebody hid painted eggs all around the pond. Can you find them all?',
+    fx: ['🥚', '🐣', '🌷'], tint: '#e5dbff',
+    shop: [{ kind: 'item', id: 'bunnyears', tokens: 30 }, { kind: 'item', id: 'pastelhoodie', tokens: 30 }, { kind: 'furniture', id: 'eggbasket', tokens: 25 }, { kind: 'furniture', id: 'paintedeggs', tokens: 20 }],
+    finds: [{ id: 'paintedegg', name: 'Painted Egg', icon: '🥚', rarity: 'uncommon' }, { id: 'goldenegg', name: 'Golden Egg', icon: '🪺', rarity: 'rare' }],
+  },
+  {
+    id: 'ocean', name: 'Ocean Care Week', icon: '🌊', start: [6, 1], end: [6, 14],
+    token: { name: 'Clean Waves', icon: '♻️' },
+    desc: 'Marina is leading a beach clean-up and Shellby is teaching everyone about the reef. Every bit helps!',
+    fx: ['🌊', '🐢', '💙'], tint: '#a5d8ff',
+    shop: [{ kind: 'item', id: 'explorerhat', tokens: 30 }, { kind: 'item', id: 'explorervest', tokens: 30 }, { kind: 'furniture', id: 'coralgarden', tokens: 35 }, { kind: 'furniture', id: 'reefposter', tokens: 20 }],
+    finds: [{ id: 'babyturtle', name: 'Hatchling Turtle', icon: '🐢', rarity: 'uncommon' }, { id: 'healthycoral', name: 'Healthy Coral', icon: '🪸', rarity: 'rare' }],
+  },
+  {
+    id: 'pirate', name: 'Pirate Week', icon: '🏴‍☠️', start: [9, 12], end: [9, 26],
+    token: { name: 'Doubloons', icon: '🪙' },
+    desc: "Arr! Captain Barnacle has buried treasure somewhere on the map. Talk like a pirate, matey.",
+    fx: ['🏴‍☠️', '🪙', '⚓'], tint: '#ffd8a8',
+    shop: [{ kind: 'item', id: 'eyepatch', tokens: 25 }, { kind: 'furniture', id: 'treasurepile', tokens: 35 }, { kind: 'furniture', id: 'shipwheel', tokens: 30 }],
+    finds: [{ id: 'doubloon', name: 'Gold Doubloon', icon: '🪙', rarity: 'uncommon' }, { id: 'jollyflag', name: 'Tattered Jolly Roger', icon: '🏴‍☠️', rarity: 'rare' }],
   },
 ];
 

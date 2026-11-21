@@ -1,6 +1,6 @@
 // Drawings for companions, the garden and the front door. Uploaded art
 // (assets/art/companions, garden, crops, door) replaces each piece.
-import { COMPANIONS } from './companions.js';
+import { COMPANIONS, COMP_COLORS } from './companions.js';
 import { CROPS, PLOT_LEVELS, plotStage } from './garden.js';
 import { DOOR_ITEMS, doorColor } from './door.js';
 import { artUrl } from './art.js';
@@ -39,13 +39,67 @@ const BODIES = {
     ${[20, 32, 44, 56, 68, 80].map((x, k) => `<path d="M${x},64 q${k % 2 ? 6 : -6},16 0,28" stroke="#f783ac" stroke-width="9" fill="none" stroke-linecap="round"/>`).join('')}
     ${e(40, 46, 4.5)}${e(60, 46, 4.5)}<path d="M44,58 q6,5 12,0" stroke="#2b1c14" stroke-width="2" fill="none" stroke-linecap="round"/>
     <circle cx="32" cy="56" r="4" fill="#faa2c1"/><circle cx="68" cy="56" r="4" fill="#faa2c1"/>`,
+  jellyfish: (e) => `<path d="M20,52 Q20,14 50,14 Q80,14 80,52 Q72,46 65,52 Q57,46 50,52 Q43,46 35,52 Q27,46 20,52Z" fill="#f3a6d8" opacity=".9"/>
+    ${[26, 38, 50, 62, 74].map((x, k) => `<path d="M${x},52 q${k % 2 ? 6 : -6},14 0,28 q${k % 2 ? -4 : 4},8 0,14" stroke="#e599f7" stroke-width="3" fill="none" stroke-linecap="round"/>`).join('')}
+    ${e(42, 34)}${e(58, 34)}<path d="M45,42 q5,4 10,0" stroke="#2b1c14" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="36" cy="22" rx="8" ry="4" fill="#fff" opacity=".5"/>`,
+  seal: (e) => `<ellipse cx="50" cy="70" rx="38" ry="24" fill="#dee2e6"/><circle cx="50" cy="44" r="24" fill="#e9ecef"/>${e(41, 40, 4.5)}${e(59, 40, 4.5)}
+    <ellipse cx="50" cy="51" rx="5" ry="3.5" fill="#2b1c14"/><path d="M38,52 l-10,-2 M38,55 l-10,2 M62,52 l10,-2 M62,55 l10,2" stroke="#868e96" stroke-width="1.2"/>
+    <ellipse cx="22" cy="84" rx="12" ry="6" fill="#ced4da" transform="rotate(-20 22 84)"/><ellipse cx="78" cy="84" rx="12" ry="6" fill="#ced4da" transform="rotate(20 78 84)"/>`,
+  puffin: (e) => `<ellipse cx="50" cy="66" rx="26" ry="30" fill="#212529"/><ellipse cx="50" cy="72" rx="17" ry="22" fill="#fff"/><circle cx="50" cy="34" r="20" fill="#212529"/>
+    <ellipse cx="50" cy="38" rx="14" ry="12" fill="#fff"/>${e(44, 34, 3)}<path d="M50,40 l14,2 l-14,8Z" fill="#fd7e14"/><path d="M50,42 l10,1" stroke="#ffd43b" stroke-width="2"/>
+    <path d="M40,94 l-6,4 h10 M60,94 l-6,4 h10" stroke="#fd7e14" stroke-width="3" stroke-linecap="round"/>`,
+  axolotl: (e) => `<ellipse cx="54" cy="72" rx="34" ry="16" fill="#ffc9de"/><path d="M84,70 q14,-6 14,6 q-6,6 -14,2Z" fill="#ffc9de"/><ellipse cx="34" cy="54" rx="24" ry="20" fill="#ffdeeb"/>
+    ${[-1, 1].map((d) => [0, 1, 2].map((k) => `<path d="M${34 + d * 20},${44 + k * 8} l${d * 12},${-4 + k * 2}" stroke="#f06595" stroke-width="4" stroke-linecap="round"/>`).join('')).join('')}
+    ${e(26, 52, 3.5)}${e(42, 52, 3.5)}<path d="M28,62 q6,5 12,0" stroke="#c2255c" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <ellipse cx="34" cy="88" rx="6" ry="4" fill="#faa2c1"/><ellipse cx="70" cy="88" rx="6" ry="4" fill="#faa2c1"/>`,
+  minnow: (e) => `<path d="M14,60 Q40,30 70,58 Q40,86 14,60Z" fill="#adb5bd"/><path d="M68,58 L92,40 L88,58 L92,76Z" fill="#868e96"/><path d="M30,60 Q44,54 58,60" stroke="#e9ecef" stroke-width="3" fill="none"/>
+    ${e(28, 54, 4)}<path d="M18,64 q4,3 8,0" stroke="#495057" stroke-width="1.5" fill="none"/>`,
+  snail: (e) => `<path d="M10,90 Q10,78 30,76 L80,76 Q90,76 90,86 Q90,92 80,92 L18,92Z" fill="#ffd8a8"/><circle cx="58" cy="56" r="26" fill="#c9a66b" stroke="#8a6644" stroke-width="3"/>
+    <path d="M58,56 m-16,0 a16,16 0 1,1 16,16 a10,10 0 1,1 -8,-14" stroke="#8a6644" stroke-width="3" fill="none"/><path d="M22,76 L16,50 M30,76 L30,52" stroke="#ffd8a8" stroke-width="4" stroke-linecap="round"/>
+    ${e(16, 48, 3.5)}${e(30, 50, 3.5)}<path d="M18,84 q5,4 10,0" stroke="#8a6644" stroke-width="2" fill="none"/>`,
+  butterfly: (e) => `<path d="M50,50 Q20,6 10,30 Q4,52 50,56Z M50,50 Q80,6 90,30 Q96,52 50,56Z" fill="#74c0fc"/><path d="M50,58 Q24,64 22,82 Q36,92 50,62Z M50,58 Q76,64 78,82 Q64,92 50,62Z" fill="#a5d8ff"/>
+    <circle cx="28" cy="32" r="6" fill="#fff" opacity=".7"/><circle cx="72" cy="32" r="6" fill="#fff" opacity=".7"/><ellipse cx="50" cy="58" rx="5" ry="20" fill="#343a40"/>
+    <path d="M48,40 q-6,-12 -12,-14 M52,40 q6,-12 12,-14" stroke="#343a40" stroke-width="2" fill="none"/>${e(46, 46, 2)}${e(54, 46, 2)}`,
+  moth: (e) => `<path d="M50,50 Q14,10 8,40 Q6,62 50,58Z M50,50 Q86,10 92,40 Q94,62 50,58Z" fill="#e9e3d5"/><circle cx="28" cy="40" r="8" fill="#c5f6fa" opacity=".8"/><circle cx="72" cy="40" r="8" fill="#c5f6fa" opacity=".8"/>
+    <ellipse cx="50" cy="60" rx="9" ry="20" fill="#f8f9fa"/><path d="M46,42 q-10,-14 -20,-14 M54,42 q10,-14 20,-14" stroke="#adb5bd" stroke-width="2.5" fill="none" stroke-linecap="round"/>${e(46, 50, 2.6)}${e(54, 50, 2.6)}`,
+  ghostcrab: (e) => `<path d="M22,62 q-12,-20 -2,-30 q2,10 10,12Z M78,62 q12,-20 2,-30 q-2,10 -10,12Z" fill="#e9dcc4"/>
+    <ellipse cx="50" cy="72" rx="28" ry="18" fill="#f3ead8"/><path d="M36,46 v18 M64,46 v18" stroke="#d8c39c" stroke-width="3"/>
+    ${e(36, 44, 4.5)}${e(64, 44, 4.5)}<path d="M24,84 l-10,10 M30,88 l-6,10 M76,84 l10,10 M70,88 l6,10" stroke="#d8c39c" stroke-width="3" stroke-linecap="round"/>
+    <path d="M44,78 q6,4 12,0" stroke="#a8865f" stroke-width="2" fill="none"/>`,
 };
 
-export function companionSVG(id, { sleeping = false } = {}) {
+// Where a little accessory sits on each companion (x, y of the top of the head).
+const HEAD = {
+  duckling: [56, 18], crab: [50, 50], frog: [50, 32], turtle: [84, 48], starfish: [50, 14], seahorse: [62, 14], firefly: [50, 33], octopus: [50, 20],
+  jellyfish: [50, 14], seal: [50, 20], puffin: [50, 14], axolotl: [34, 34], minnow: [32, 40], snail: [24, 40], butterfly: [50, 34], moth: [50, 38], ghostcrab: [50, 52],
+};
+const ACC_DRAW = {
+  bow: (x, y) => `<path d="M${x},${y} l-10,-6 v12Z M${x},${y} l10,-6 v12Z" fill="#f06595"/><circle cx="${x}" cy="${y}" r="3" fill="#c2255c"/>`,
+  tophat: (x, y) => `<rect x="${x - 8}" y="${y - 20}" width="16" height="16" rx="2" fill="#212529"/><rect x="${x - 8}" y="${y - 8}" width="16" height="3" fill="#c92a2a"/><ellipse cx="${x}" cy="${y - 4}" rx="13" ry="3" fill="#343a40"/>`,
+  flowers: (x, y) => [-12, -4, 4, 12].map((d, k) => `<circle cx="${x + d}" cy="${y - 2 - Math.abs(d) * -0.1}" r="4" fill="${['#ff8fab', '#ffd43b', '#b197fc', '#ff8fab'][k]}"/>`).join(''),
+  bandana: (x, y) => `<path d="M${x - 16},${y + 4} Q${x},${y - 10} ${x + 16},${y + 4} L${x + 18},${y + 8} L${x + 24},${y + 4} L${x + 20},${y + 12}Z" fill="#e03131"/><circle cx="${x - 4}" cy="${y}" r="1.5" fill="#fff"/><circle cx="${x + 6}" cy="${y + 1}" r="1.5" fill="#fff"/>`,
+  specs: (x, y) => `<circle cx="${x - 8}" cy="${y + 14}" r="6" fill="none" stroke="#343a40" stroke-width="2"/><circle cx="${x + 8}" cy="${y + 14}" r="6" fill="none" stroke="#343a40" stroke-width="2"/><path d="M${x - 2},${y + 14} H${x + 2}" stroke="#343a40" stroke-width="2"/>`,
+  crown: (x, y) => `<path d="M${x - 12},${y} L${x - 12},${y - 12} L${x - 6},${y - 6} L${x},${y - 16} L${x + 6},${y - 6} L${x + 12},${y - 12} L${x + 12},${y}Z" fill="#ffd43b" stroke="#e67700" stroke-width="1.5"/>`,
+};
+const PATTERN_DRAW = {
+  spots: () => [[38, 66], [56, 74], [64, 60], [46, 80]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="4" fill="#fff" opacity=".55"/>`).join(''),
+  stripes: () => [58, 68, 78].map((y) => `<path d="M28,${y} Q50,${y - 6} 72,${y}" stroke="#fff" stroke-width="3" opacity=".5" fill="none"/>`).join(''),
+  sparkles: () => [[32, 58], [66, 66], [50, 80], [60, 50]].map(([x, y]) => `<path d="M${x},${y - 5} L${x + 1.5},${y - 1.5} L${x + 5},${y} L${x + 1.5},${y + 1.5} L${x},${y + 5} L${x - 1.5},${y + 1.5} L${x - 5},${y} L${x - 1.5},${y - 1.5}Z" fill="#fff3bf"/>`).join(''),
+  hearts: () => [[38, 64], [62, 72], [50, 82]].map(([x, y]) => `<path d="M${x},${y + 4} C${x - 7},${y - 1} ${x - 4},${y - 6} ${x},${y - 2} C${x + 4},${y - 6} ${x + 7},${y - 1} ${x},${y + 4}Z" fill="#ff8fab" opacity=".85"/>`).join(''),
+};
+
+// look: { color, pattern, acc } from the companion's save.
+export function companionSVG(id, { sleeping = false, look = {} } = {}) {
   if (!COMPANIONS[id]) return '';
-  const url = (sleeping && artUrl(`companions/${id}-sleeping`)) || artUrl(`companions/${id}`);
-  if (url) return img(url, 0, 0, 100, 100);
-  return (BODIES[id] || (() => ''))(sleeping ? (x, y) => sleepyEye(x, y) : eye);
+  const url = (sleeping && artUrl(`companions/${id}-sleeping`)) || (look.color && look.color !== 'natural' && artUrl(`companions/${id}-${look.color}`)) || artUrl(`companions/${id}`);
+  const hue = COMP_COLORS[look.color]?.hue || 0;
+  const filt = hue && !(url && artUrl(`companions/${id}-${look.color}`)) ? `cmp-hue-${hue}` : '';
+  const body = url ? img(url, 0, 0, 100, 100) : (BODIES[id] || (() => ''))(sleeping ? (x, y) => sleepyEye(x, y) : eye);
+  const [hx, hy] = HEAD[id] || [50, 20];
+  const pat = look.pattern && PATTERN_DRAW[look.pattern] ? PATTERN_DRAW[look.pattern]() : '';
+  const acc = look.acc && ACC_DRAW[look.acc] ? (artUrl(`companion-acc/${look.acc}`) ? img(artUrl(`companion-acc/${look.acc}`), hx - 16, hy - 24, 32, 32) : ACC_DRAW[look.acc](hx, hy)) : '';
+  const tint = COMP_COLORS[look.color]?.tint;
+  return `${filt ? `<defs><filter id="${filt}"><feColorMatrix type="hueRotate" values="${hue}" result="h"/><feFlood flood-color="${tint}" flood-opacity=".38"/><feComposite in2="SourceAlpha" operator="in" result="t"/><feMerge><feMergeNode in="h"/><feMergeNode in="t"/></feMerge></filter></defs>` : ''}<g${filt ? ` filter="url(#${filt})"` : ''}>${body}${pat}</g>${acc}`;
 }
 
 // ---------- garden ----------

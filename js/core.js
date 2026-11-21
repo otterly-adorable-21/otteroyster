@@ -6,13 +6,14 @@ import { LOC, FINDS, RARITY, MISSION_LOC, EXPLORE_ENERGY, EXPLORE_COOLDOWN_MIN, 
 import { activeEvent, questsFor, EVENT, EVENT_FIND_CHANCE, TOKENS_PER_ACTIVITY } from './events.js';
 import { TRAITS, TRAIT_IDS, blankPersona, favoritesFor, traitOf, hasTrait } from './personality.js';
 import { dailyMood, exploreLuck, weatherAt } from './ambience.js';
-import { COMPANIONS, BOND_PERK, BOND_MAX, PLAY_COOLDOWN, TREAT_PRICE, BOND_DECAY_PER_DAY, bondLevel } from './companions.js';
+import { COMPANIONS, BOND_PERK, BOND_MAX, PLAY_COOLDOWN, TREAT_PRICE, BOND_DECAY_PER_DAY, bondLevel, COMP_COLORS, COMP_PATTERNS, COMP_ACCS, COMP_TRAIT_IDS } from './companions.js';
 import { CROPS, PLOT_LEVELS, FRIEND_WATER_BONUS, plotStage } from './garden.js';
 import { DOOR_ITEMS, DOOR_COZY, defaultDoor } from './door.js';
 import { NPCS, NPC_PAGE_AT, NPC_MAX, MYSTERIES, MYSTERY } from './lore.js';
 import { happeningsAt, happeningLuck, npcWhere, merchantStock, MERCHANT_DISCOUNT, awayStories } from './worldsim.js';
 import { MASTERIES, MASTERY, TIERS, LEGACY_LEVEL, legacyStars, rankOf } from './legacy.js';
 import { timeOfDay, tideAt } from './ambience.js';
+import { TRINKETS, TRINKET_CHANCE, trinketFor, BOOKS, BOOK_IDS, BOOK_CHANCE, FISH, fishFor, FISHING_COOLDOWN } from './treasures.js';
 import { ACHIEVEMENTS, ACH } from './achievements.js';
 import { STAGES, stageOf, stageAtLeast, TRICKS, STORIES, WISDOM, mdOf, isBirthday } from './growth.js';
 
@@ -29,7 +30,7 @@ export function defaultState(now = Date.now()) {
     xp: 0,
     level: 1,
     owned: [],
-    equipped: { hat: null, eyes: null, neck: null, back: null },
+    equipped: { hat: null, eyes: null, neck: null, back: null, body: null, feet: null, acc: null },
     sleeping: false,
     mission: null,
     reports: [],
@@ -50,7 +51,7 @@ export function defaultState(now = Date.now()) {
     newAch: [],
     events: {},
     persona: blankPersona(now),
-    companions: { owned: {}, active: null },
+    companions: { owned: {}, active: null, accs: [] },
     garden: { plots: PLOT_LEVELS.map(() => null) },
     pantry: {},
     door: defaultDoor(),
@@ -61,6 +62,9 @@ export function defaultState(now = Date.now()) {
     legacy: { claimed: {}, title: null },
     titles: [],
     lastSeen: now,
+    trinkets: {},
+    books: [],
+    aquarium: { fish: {}, lastFish: 0 },
     explored: {},
     sets: [],
     best: {},
@@ -118,7 +122,13 @@ export function normalize(saved) {
   s.sets = Array.isArray(saved.sets) ? saved.sets : [];
   s.floors = Array.isArray(saved.floors) ? saved.floors : ['earth'];
   const co = saved.companions || {};
-  s.companions = { owned: Object.fromEntries(Object.entries(co.owned || {}).filter(([id]) => COMPANIONS[id])), active: COMPANIONS[co.active] ? co.active : null };
+  s.companions = { owned: Object.fromEntries(Object.entries(co.owned || {}).filter(([id]) => COMPANIONS[id])), active: COMPANIONS[co.active] ? co.active : null, accs: Array.isArray(co.accs) ? co.accs.filter((a) => COMP_ACCS[a]) : [] };
+  for (const [id, c] of Object.entries(s.companions.owned)) {
+    if (!c.trait) c.trait = COMP_TRAIT_IDS[[...id].reduce((a, ch) => a + ch.charCodeAt(0), 0) % COMP_TRAIT_IDS.length];
+    if (!COMP_COLORS[c.color]) c.color = 'natural';
+    if (!COMP_PATTERNS[c.pattern]) c.pattern = 'none';
+    if (c.acc && !COMP_ACCS[c.acc]) c.acc = null;
+  }
   if (s.companions.active && !s.companions.owned[s.companions.active]) s.companions.active = null;
   const plots = Array.isArray(saved.garden?.plots) ? saved.garden.plots : [];
   s.garden = { plots: PLOT_LEVELS.map((_, k) => (plots[k] && CROPS[plots[k].crop] ? plots[k] : null)) };
@@ -138,6 +148,10 @@ export function normalize(saved) {
   s.legacy = { claimed: Object.fromEntries(Object.entries(saved.legacy?.claimed || {}).filter(([id]) => MASTERY[id])), title: saved.legacy?.title || null };
   s.titles = Array.isArray(saved.titles) ? saved.titles : [];
   s.lastSeen = saved.lastSeen || s.lastTick || Date.now();
+  s.trinkets = Object.fromEntries(Object.entries(saved.trinkets || {}).filter(([id, n]) => TRINKETS[id] && n > 0));
+  s.books = Array.isArray(saved.books) ? saved.books.filter((id) => BOOKS[id]) : [];
+  s.aquarium = { fish: Object.fromEntries(Object.entries(saved.aquarium?.fish || {}).filter(([id]) => FISH[id])), lastFish: saved.aquarium?.lastFish || 0 };
+  for (const k of ['body', 'feet', 'acc']) if (s.equipped[k] === undefined) s.equipped[k] = null;
   // v1 stored memory best as `null` when unplayed
   for (const k of Object.keys(s.best)) if (s.best[k] == null) delete s.best[k];
   s.version = SAVE_VERSION;
@@ -217,7 +231,7 @@ export function tick(s, now = Date.now()) {
       }
     } else {
       const grumpy = s.stats.hunger < 25 || s.stats.clean < 25 ? 2 : 1;
-      stat(s, 'hunger', RATES.hunger * mins);
+      stat(s, 'hunger', RATES.hunger * (perk(s, 'axolotl') ? 0.85 : 1) * mins);
       stat(s, 'energy', RATES.energy * mins);
       stat(s, 'clean', RATES.clean * (hasTrait(s, 'tidy') ? 0.7 : 1) * mins);
       stat(s, 'happiness', RATES.happiness * grumpy * (1 - coziness(s) / 60) * (dailyMood(s, now) === 'cheerful' ? 0.75 : 1) * (perk(s, 'duckling') ? 0.8 : 1) * mins);
@@ -266,7 +280,7 @@ export function cuddle(s) {
   const b = busy(s);
   if (b) return no(b);
   if (s.stats.energy < 5) return no(`${s.name} is too tired to play.`);
-  stat(s, 'happiness', 8 + (dailyMood(s) === 'cuddly' ? 6 : 0));
+  stat(s, 'happiness', (8 + (dailyMood(s) === 'cuddly' ? 6 : 0)) * (perk(s, 'butterfly') ? 2 : 1));
   stat(s, 'energy', -3);
   const ups = addXP(s, 2);
   trackQuest(s, 'care');
@@ -278,7 +292,7 @@ export function bath(s) {
   const b = busy(s);
   if (b) return no(b);
   if (s.stats.clean >= 98) return no(`${s.name} is already squeaky clean!`);
-  stat(s, 'clean', 45);
+  stat(s, 'clean', perk(s, 'seal') ? 56 : 45);
   stat(s, 'happiness', 4);
   const ups = addXP(s, 2);
   log(s, `${s.name} had a bubble bath.`);
@@ -300,7 +314,7 @@ export function claimDaily(s, now = Date.now()) {
   if (!s.name) return no(busy(s));
   if (s.lastDaily === dayKey(now)) return no('Come back tomorrow for another gift!');
   s.lastDaily = dayKey(now);
-  const p = rand(15, 30);
+  const p = rand(15, 30) + (perk(s, 'snail') ? 10 : 0);
   s.pearls += p;
   log(s, `Collected a daily gift of ${p} pearls.`, now);
   return ok(`🎁 Daily gift: +${p} pearls!`, { pearls: p, fx: ['🎁', '✨'] });
@@ -554,7 +568,7 @@ export function celebratesBirthday(s, now = Date.now()) {
 export const locUnlocked = (s, locId) => s.level >= (LOC[locId]?.level ?? 99);
 
 export function exploreReadyAt(s, locId) {
-  return (s.explored[locId] || 0) + EXPLORE_COOLDOWN_MIN * 60000;
+  return (s.explored[locId] || 0) + EXPLORE_COOLDOWN_MIN * 60000 * (perk(s, 'puffin') ? 0.8 : 1);
 }
 
 // Roll a discovery at a place. `luck` > 1 favors rarer finds.
@@ -588,7 +602,29 @@ function discover(s, locId, luck = 1) {
   return { find, isNew, setDone, ups };
 }
 
+// Exploring can also turn up a trinket or a storybook, on top of the main find.
 export function explore(s, locId, now = Date.now()) {
+  const r = exploreMain(s, locId, now);
+  if (!r.ok) return r;
+  const extra = [];
+  if (Math.random() < TRINKET_CHANCE * (perk(s, 'ghostcrab') ? 1.5 : 1)) {
+    const id = trinketFor(locId, Math.random());
+    s.trinkets[id] = (s.trinkets[id] || 0) + 1;
+    r.trinket = id;
+    extra.push(`${TRINKETS[id].icon} Also found: ${TRINKETS[id].name}!`);
+  }
+  const unread = BOOK_IDS.filter((id) => !s.books.includes(id));
+  if (unread.length && Math.random() < BOOK_CHANCE) {
+    const id = unread[Math.floor(Math.random() * unread.length)];
+    s.books.push(id);
+    r.book = id;
+    extra.push(`${BOOKS[id].icon} A soggy old book: “${BOOKS[id].title}”. It's on your bookshelf.`);
+  }
+  if (extra.length) r.msg = `${r.msg} ${extra.join(' ')}`;
+  return r;
+}
+
+function exploreMain(s, locId, now = Date.now()) {
   const loc = LOC[locId];
   if (!loc) return no('Unknown place.');
   const b = busy(s);
@@ -626,7 +662,8 @@ export function explore(s, locId, now = Date.now()) {
     const ups = addXP(s, 2);
     return ok(`${loves}${s.name} poked around ${loc.name} and found ${p} loose pearls.`, { pearls: p, ups, find: null });
   }
-  const d = discover(s, locId, (hasTrait(s, 'adventurous') ? 1.3 : 1) * (favPlace ? 1.2 : 1) * exploreLuck(locId, now) * (dailyMood(s, now) === 'curious' ? 1.2 : 1) * (perk(s, 'frog') ? 1.15 : 1) * happeningLuck(locId, now) * (homeWaters(s, locId) ? 1.15 : 1));
+  const d = discover(s, locId, (hasTrait(s, 'adventurous') ? 1.3 : 1) * (favPlace ? 1.2 : 1) * exploreLuck(locId, now) * (dailyMood(s, now) === 'curious' ? 1.2 : 1) * (perk(s, 'frog') ? 1.15 : 1) * happeningLuck(locId, now) * (homeWaters(s, locId) ? 1.15 : 1)
+    * (perk(s, 'jellyfish') && locId === 'trench' ? 1.2 : 1) * (perk(s, 'moth') && timeOfDay(new Date(now)) === 'night' ? 1.2 : 1));
   const r = RARITY[d.find.rarity];
   const msg = loves + (d.isNew
     ? `${d.find.icon} New discovery! ${s.name} found a ${d.find.name} (${r.name})!`
@@ -890,7 +927,7 @@ export function adoptCompanion(s, id, now = Date.now()) {
   if (s.level < c.level) return no(`Reach level ${c.level} to adopt a ${c.name}.`);
   if (s.pearls < c.price) return no('Not enough pearls.');
   s.pearls -= c.price;
-  s.companions.owned[id] = { name: c.name, bond: 10, lastPlay: now, since: now };
+  s.companions.owned[id] = { name: c.name, bond: 10, lastPlay: now, since: now, trait: COMP_TRAIT_IDS[Math.floor(Math.random() * COMP_TRAIT_IDS.length)], color: 'natural', pattern: 'none', acc: null };
   s.companions.active = id;
   log(s, `${s.name} made a new friend: a ${c.name}!`, now);
   memory(s, c.icon, `${s.name} adopted a ${c.name} companion.`, now);
@@ -986,7 +1023,7 @@ export function harvest(s, idx, now = Date.now()) {
   const c = CROPS[p.crop];
   const k = 1 + (p.friend ? FRIEND_WATER_BONUS : 0);
   const got = [];
-  if (c.pearls) { const n = Math.round(c.pearls * k); s.pearls += n; got.push(`${n} pearls`); }
+  if (c.pearls) { const n = Math.round(c.pearls * k * (perk(s, 'minnow') ? 1.15 : 1)); s.pearls += n; got.push(`${n} pearls`); }
   for (const [snack, n0] of Object.entries(c.pantry || {})) {
     const n = Math.max(n0, Math.round(n0 * k));
     s.pantry[snack] = (s.pantry[snack] || 0) + n;
@@ -1218,3 +1255,49 @@ export function setTitle(s, title) {
   return ok(title ? `🏷️ Now known as ${s.name} ${displayTitle(s)}!` : 'Title removed.');
 }
 export const displayTitle = (s) => (s.legacy?.title ? (/^(the |Friend )/.test(s.legacy.title) ? s.legacy.title : `the ${s.legacy.title}`) : '');
+
+// ---------- aquarium ----------
+export const hasFurniture = (s, id) => (s.furniture?.[id] || 0) > 0;
+export function goFishing(s, now = Date.now()) {
+  if (!hasFurniture(s, 'aquarium')) return no('Get an aquarium for your den first!');
+  const wait = (s.aquarium.lastFish || 0) + FISHING_COOLDOWN - now;
+  if (wait > 0) return no(`The fish are hiding. Try again in ${Math.ceil(wait / 60000)} min.`);
+  s.aquarium.lastFish = now;
+  const id = fishFor(Math.random());
+  const isNew = !s.aquarium.fish[id];
+  s.aquarium.fish[id] = (s.aquarium.fish[id] || 0) + 1;
+  const ups = addXP(s, isNew ? 6 : 2);
+  stat(s, 'happiness', 4);
+  return ok(`${FISH[id].icon} ${isNew ? 'New fish!' : 'Another'} ${FISH[id].name} for the aquarium!`, { fish: id, isNew, ups, fx: [FISH[id].icon, '🫧'] });
+}
+export const readBook = (s, id) => (s.books.includes(id) ? ok('', { book: BOOKS[id] }) : no("You haven't found that book yet."));
+
+// ---------- companion looks ----------
+export const companionLook = (c) => (c ? { color: c.color, pattern: c.pattern, acc: c.acc } : {});
+export function styleCompanion(s, id, { color, pattern, acc } = {}) {
+  const c = s.companions.owned[id];
+  if (!c) return no("You don't have that companion.");
+  if (color !== undefined) { if (!COMP_COLORS[color]) return no('Unknown color.'); c.color = color; }
+  if (pattern !== undefined) {
+    const p = COMP_PATTERNS[pattern];
+    if (!p) return no('Unknown pattern.');
+    if (c.bond < p.bond) return no(`Bond to ${p.bond} with ${c.name} to unlock ${p.name.toLowerCase()}.`);
+    c.pattern = pattern;
+  }
+  if (acc !== undefined) {
+    if (acc && !s.companions.accs.includes(acc)) return no('Buy that accessory first.');
+    c.acc = acc || null;
+  }
+  return ok(`${COMPANIONS[id].icon} ${c.name} looks great!`);
+}
+export function buyCompanionAcc(s, acc) {
+  const a = COMP_ACCS[acc];
+  if (!a) return no('Unknown accessory.');
+  if (s.companions.accs.includes(acc)) return no('You already have that.');
+  if (s.pearls < a.price) return no('Not enough pearls.');
+  s.pearls -= a.price;
+  s.companions.accs.push(acc);
+  const id = s.companions.active;
+  if (id) s.companions.owned[id].acc = acc;
+  return ok(`${a.icon} Bought the ${a.name}!${id ? ` ${s.companions.owned[id].name} is wearing it.` : ''}`, { fx: [a.icon, '✨'] });
+}

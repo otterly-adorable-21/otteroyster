@@ -1,3 +1,4 @@
+import { MORE_FURNITURE, MORE_DEN_CATS, MORE_WALLPAPERS, MORE_FLOORS } from './catalog-den.js';
 // Otter's Den catalog: furniture, decor, plushies, rugs, wall hangings, wallpapers, floors.
 // Each item's `svg` is drawn in its own viewBox `vb` and shown `w` den-units wide
 // (the den is 400 x 300). `cozy` points make the den comfier for your otter.
@@ -8,6 +9,7 @@ export const DEN_CATS = [
   { id: 'plush', name: 'Plushies', icon: '🧸' },
   { id: 'rug', name: 'Rugs', icon: '🟫' },
   { id: 'wall', name: 'Wall', icon: '🖼️' },
+  ...MORE_DEN_CATS,
 ];
 
 export const DEN_W = 400;
@@ -227,6 +229,7 @@ export const FURNITURE = {
       <circle cx="30" cy="38" r="9" fill="url(#den-pearl)"/><rect x="22" y="47" width="16" height="5" rx="2" fill="#d9b45a"/>
       <path d="M14,16 L22,16" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".8"/>`,
   },
+  ...MORE_FURNITURE,
 };
 
 export const WALLPAPERS = {
@@ -235,6 +238,7 @@ export const WALLPAPERS = {
   stars: { name: 'Starry Night', price: 70, swatch: '#1b2c4a' },
   coral: { name: 'Coral Blush', price: 50, swatch: '#d98c7a' },
   sand: { name: 'Sandy Plaster', price: 40, swatch: '#d8c39c' },
+  ...MORE_WALLPAPERS,
 };
 
 export const FLOORS = {
@@ -242,6 +246,7 @@ export const FLOORS = {
   planks: { name: 'Driftwood Planks', price: 45, swatch: '#8a6644' },
   pebbles: { name: 'Pebble Mosaic', price: 55, swatch: '#8c8070' },
   moss: { name: 'Moss Carpet', price: 50, swatch: '#5d7a3a' },
+  ...MORE_FLOORS,
 };
 
 // Every new otter starts with a little furnished den.
@@ -253,7 +258,7 @@ export const STARTER_DEN = [
 
 export const zoneOf = (id) => {
   const c = FURNITURE[id]?.cat;
-  return c === 'wall' ? 'wall' : c === 'rug' ? 'rug' : 'floor';
+  return c === 'wall' || FURNITURE[id]?.wall ? 'wall' : c === 'rug' ? 'rug' : 'floor';
 };
 
 export function itemSize(id) {

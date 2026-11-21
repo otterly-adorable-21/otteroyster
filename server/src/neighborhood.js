@@ -29,6 +29,7 @@ export function createNeighborhood(db, store, social, social2 = null) {
       species: s.species,
       title: core.displayTitle(s),
       companion: s.companions?.active || null,
+      companionLook: s.companions?.active ? core.companionLook(s.companions.owned[s.companions.active]) : null,
       home: !s.mission,
       sleeping: !!s.sleeping,
       birthday: core.celebratesBirthday(s),

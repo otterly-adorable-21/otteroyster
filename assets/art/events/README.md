@@ -9,8 +9,8 @@ any spot left empty, the drawn version stays.
 
 | | File name | What | Size (px) | Notes |
 | --- | --- | --- | --- | --- |
-| ⬜ | `lantern` | 🏮 Winter Lantern Festival icon | 256 × 256 |  |
-| ⬜ | `lantern-token` | 🏮 Winter Lantern Festival token (Lantern Lights) | 256 × 256 |  |
+| ⬜ | `lantern` | 🏮 Winterfest Lanterns icon | 256 × 256 |  |
+| ⬜ | `lantern-token` | 🏮 Winterfest Lanterns token (Lantern Lights) | 256 × 256 |  |
 | ⬜ | `sweetheart` | 💗 Sweetheart Shoals icon | 256 × 256 |  |
 | ⬜ | `sweetheart-token` | 💗 Sweetheart Shoals token (Heart Shells) | 256 × 256 |  |
 | ⬜ | `spring` | 🌸 Spring Bloom icon | 256 × 256 |  |
@@ -21,3 +21,13 @@ any spot left empty, the drawn version stays.
 | ⬜ | `spooky-token` | 👻 Spooky Seas token (Ghost Pearls) | 256 × 256 |  |
 | ⬜ | `harvest` | 🍁 Harvest Moon icon | 256 × 256 |  |
 | ⬜ | `harvest-token` | 🍁 Harvest Moon token (Golden Leaves) | 256 × 256 |  |
+| ⬜ | `christmas` | 🎄 Starlight Christmas icon | 256 × 256 |  |
+| ⬜ | `christmas-token` | 🔔 Starlight Christmas token (Jingle Bells) | 256 × 256 |  |
+| ⬜ | `newyear` | 🎆 New Year's Splash icon | 256 × 256 |  |
+| ⬜ | `newyear-token` | ✨ New Year's Splash token (Sparklers) | 256 × 256 |  |
+| ⬜ | `easter` | 🥚 Egg Hunt icon | 256 × 256 |  |
+| ⬜ | `easter-token` | 🥚 Egg Hunt token (Painted Eggs) | 256 × 256 |  |
+| ⬜ | `ocean` | 🌊 Ocean Care Week icon | 256 × 256 |  |
+| ⬜ | `ocean-token` | ♻️ Ocean Care Week token (Clean Waves) | 256 × 256 |  |
+| ⬜ | `pirate` | 🏴‍☠️ Pirate Week icon | 256 × 256 |  |
+| ⬜ | `pirate-token` | 🪙 Pirate Week token (Doubloons) | 256 × 256 |  |

@@ -82,7 +82,7 @@ const STAR = (x, y, r) => `<path d="M${x},${y - r} C${x + r * 0.15},${y - r * 0.
 function sceneSVG(s) {
   const night = s.sleeping;
   const comp = activeCompanion(s);
-  const otter = s.mission ? '' : `<svg x="140" y="24" width="200" height="254" viewBox="0 -24 200 254" overflow="visible">${otterSVG(s)}</svg>${comp ? `<svg x="88" y="196" width="70" height="70" viewBox="0 0 100 100">${companionSVG(comp.id, { sleeping: s.sleeping })}</svg>` : ''}`;
+  const otter = s.mission ? '' : `<svg x="140" y="24" width="200" height="254" viewBox="0 -24 200 254" overflow="visible">${otterSVG(s)}</svg>${comp ? `<svg x="88" y="196" width="70" height="70" viewBox="0 0 100 100">${companionSVG(comp.id, { sleeping: s.sleeping, look: { color: comp.color, pattern: comp.pattern, acc: comp.acc } })}</svg>` : ''}`;
   const away = s.mission
     ? '<g fill="#fff" opacity=".8"><circle cx="240" cy="170" r="10"/><circle cx="260" cy="140" r="7"/><circle cx="248" cy="114" r="5"/><circle cx="264" cy="94" r="4"/></g><ellipse cx="240" cy="190" rx="60" ry="14" fill="none" stroke="#fff" stroke-opacity=".4" stroke-width="2"/>'
     : '<ellipse cx="240" cy="262" rx="78" ry="14" fill="#fff" opacity=".18"/>';

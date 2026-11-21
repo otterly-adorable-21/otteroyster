@@ -56,3 +56,13 @@ any spot left empty, the drawn version stays.
 | ⬜ | `ghostfish` | 👻 Ghost Fish | 256 × 256 | event find |
 | ⬜ | `mapleleaf` | 🍁 Crimson Maple Leaf | 256 × 256 | event find |
 | ⬜ | `harvestmouse` | 🐭 Harvest Mouse | 256 × 256 | event find |
+| ⬜ | `jinglebell` | 🔔 Jingle Bell | 256 × 256 | event find |
+| ⬜ | `startopper` | 🌟 Tree-Topper Star | 256 × 256 | event find |
+| ⬜ | `confetti` | 🎊 Confetti Shell | 256 × 256 | event find |
+| ⬜ | `luckycoin` | 🪙 First-Sunrise Coin | 256 × 256 | event find |
+| ⬜ | `paintedegg` | 🥚 Painted Egg | 256 × 256 | event find |
+| ⬜ | `goldenegg` | 🪺 Golden Egg | 256 × 256 | event find |
+| ⬜ | `babyturtle` | 🐢 Hatchling Turtle | 256 × 256 | event find |
+| ⬜ | `healthycoral` | 🪸 Healthy Coral | 256 × 256 | event find |
+| ⬜ | `doubloon` | 🪙 Gold Doubloon | 256 × 256 | event find |
+| ⬜ | `jollyflag` | 🏴‍☠️ Tattered Jolly Roger | 256 × 256 | event find |

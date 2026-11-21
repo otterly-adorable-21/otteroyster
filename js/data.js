@@ -32,12 +32,18 @@ function stars() {
   return pts.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.2" fill="#fff3bf"/>`).join('');
 }
 
+import { MORE_ITEMS, MORE_SLOTS } from './catalog-clothes.js';
+
 export const SLOTS = [
   { id: 'hat', name: 'Hats' },
+  { id: 'body', name: 'Clothing' },
   { id: 'eyes', name: 'Eyewear' },
   { id: 'neck', name: 'Neckwear' },
+  { id: 'acc', name: 'Accessories' },
   { id: 'back', name: 'Extras' },
+  { id: 'feet', name: 'Footwear' },
 ];
+export { MORE_SLOTS };
 
 // price: null => can only be found on missions.
 export const ITEMS = {
@@ -244,6 +250,7 @@ export const ITEMS = {
       <circle cx="92" cy="30" r="3" fill="#ffd43b"/><circle cx="106" cy="16" r="3" fill="#ff8787"/><circle cx="104" cy="36" r="3" fill="#b197fc"/>
       <circle cx="100" cy="-8" r="7" fill="#ffd43b"/><path d="M78,46 Q100,54 122,46" stroke="#1c7ed6" stroke-width="4" fill="none"/>`,
   },
+  ...MORE_ITEMS,
 };
 
 export const SNACKS = [

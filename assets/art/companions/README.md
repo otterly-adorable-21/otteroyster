@@ -1,6 +1,6 @@
 # Pet companions
 
-Transparent, 512 × 512 px, the companion standing on the bottom edge, facing right. Optional sleeping pose: <id>-sleeping.
+Transparent, 512 × 512 px, the companion standing on the bottom edge, facing right. Optional sleeping pose: <id>-sleeping. Optional color versions: <id>-sunset, -ocean, -mint, -lilac, -golden (otherwise the colors are tinted automatically).
 
 Upload files named exactly like the **File name** column, plus the extension
 (`.png` is best: it also works in Shelly's Discord pictures. `.webp` and animated `.gif` work on the website), e.g. `duckling.png`. Use lowercase.
@@ -25,3 +25,21 @@ any spot left empty, the drawn version stays.
 | ⬜ | `firefly-sleeping` | 💤 Firefly (sleeping) | 512 × 512 | optional |
 | ⬜ | `octopus` | 🐙 Baby Octopus | 512 × 512 |  |
 | ⬜ | `octopus-sleeping` | 💤 Baby Octopus (sleeping) | 512 × 512 | optional |
+| ⬜ | `jellyfish` | 🪼 Jellyfish | 512 × 512 |  |
+| ⬜ | `jellyfish-sleeping` | 💤 Jellyfish (sleeping) | 512 × 512 | optional |
+| ⬜ | `seal` | 🦭 Baby Seal | 512 × 512 |  |
+| ⬜ | `seal-sleeping` | 💤 Baby Seal (sleeping) | 512 × 512 | optional |
+| ⬜ | `puffin` | 🐧 Puffin | 512 × 512 |  |
+| ⬜ | `puffin-sleeping` | 💤 Puffin (sleeping) | 512 × 512 | optional |
+| ⬜ | `axolotl` | 🦎 Axolotl | 512 × 512 |  |
+| ⬜ | `axolotl-sleeping` | 💤 Axolotl (sleeping) | 512 × 512 | optional |
+| ⬜ | `minnow` | 🐟 Little Fish | 512 × 512 |  |
+| ⬜ | `minnow-sleeping` | 💤 Little Fish (sleeping) | 512 × 512 | optional |
+| ⬜ | `snail` | 🐌 Snail | 512 × 512 |  |
+| ⬜ | `snail-sleeping` | 💤 Snail (sleeping) | 512 × 512 | optional |
+| ⬜ | `butterfly` | 🦋 Butterfly | 512 × 512 |  |
+| ⬜ | `butterfly-sleeping` | 💤 Butterfly (sleeping) | 512 × 512 | optional |
+| ⬜ | `moth` | 🌙 Moon Moth | 512 × 512 |  |
+| ⬜ | `moth-sleeping` | 💤 Moon Moth (sleeping) | 512 × 512 | optional |
+| ⬜ | `ghostcrab` | 👻 Ghost Crab | 512 × 512 |  |
+| ⬜ | `ghostcrab-sleeping` | 💤 Ghost Crab (sleeping) | 512 × 512 | optional |

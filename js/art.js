@@ -17,6 +17,8 @@ import { CROPS } from './garden.js';
 import { DOOR_ITEMS } from './door.js';
 import { NPCS } from './lore.js';
 import { HAPPENINGS, CRITTERS } from './worldsim.js';
+import { TRINKETS, BOOKS, FISH } from './treasures.js';
+import { COMP_ACCS } from './companions.js';
 
 let files = {};
 let loaded = false;
@@ -89,7 +91,7 @@ export const GROUPS = [
     slots: Object.entries(ITEMS).map(([id, it]) => ({ id, name: it.name, note: `${it.slot}${it.event ? ' · event item' : ''}`, emoji: it.icon })),
   },
   {
-    id: 'companions', size: '512 × 512', name: 'Pet companions', tip: 'Transparent, 512 × 512 px, the companion standing on the bottom edge, facing right. Optional sleeping pose: <id>-sleeping.',
+    id: 'companions', size: '512 × 512', name: 'Pet companions', tip: 'Transparent, 512 × 512 px, the companion standing on the bottom edge, facing right. Optional sleeping pose: <id>-sleeping. Optional color versions: <id>-sunset, -ocean, -mint, -lilac, -golden (otherwise the colors are tinted automatically).',
     slots: Object.entries(COMPANIONS).flatMap(([id, c]) => [{ id, name: c.name, emoji: c.icon }, { id: `${id}-sleeping`, name: `${c.name} (sleeping)`, emoji: '💤', note: 'optional' }]),
   },
   {
@@ -103,6 +105,22 @@ export const GROUPS = [
   {
     id: 'critters', size: '128 × 128', name: 'Pond wildlife', tip: 'Little animals that wander across the pond scene, 128 × 128 px, transparent, facing right. Animated GIF/WebP works great.',
     slots: Object.entries(CRITTERS).map(([id, e]) => ({ id, name: id[0].toUpperCase() + id.slice(1), emoji: e })),
+  },
+  {
+    id: 'trinkets', size: '256 × 256', name: 'Trinkets', tip: 'Collectible trinkets, 256 × 256 px, transparent. They also appear inside the den display cases.',
+    slots: Object.entries(TRINKETS).map(([id, t]) => ({ id, name: t.name, emoji: t.icon, note: t.rarity })),
+  },
+  {
+    id: 'books', size: '256 × 256', name: 'Storybooks', tip: 'Book covers for the bookshelf, 256 × 256 px.',
+    slots: Object.entries(BOOKS).map(([id, b]) => ({ id, name: b.title, emoji: b.icon })),
+  },
+  {
+    id: 'fish', size: '256 × 256', name: 'Aquarium fish', tip: 'Fish for the aquarium, 256 × 256 px, transparent, facing left (they flip when swimming the other way).',
+    slots: Object.entries(FISH).map(([id, f]) => ({ id, name: f.name, emoji: f.icon, note: f.rarity })),
+  },
+  {
+    id: 'companion-acc', size: '256 × 256', name: 'Companion accessories', tip: 'Tiny accessories that sit on top of a companion\'s head, 256 × 256 px, transparent, drawn so the bottom edge sits on the head.',
+    slots: Object.entries(COMP_ACCS).map(([id, a]) => ({ id, name: a.name, emoji: a.icon })),
   },
   {
     id: 'garden', name: 'Garden', tip: 'The garden outside the den.',

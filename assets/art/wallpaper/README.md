@@ -14,3 +14,44 @@ any spot left empty, the drawn version stays.
 | ⬜ | `stars` | Starry Night | 1600 × 784 |  |
 | ⬜ | `coral` | Coral Blush | 1600 × 784 |  |
 | ⬜ | `sand` | Sandy Plaster | 1600 × 784 |  |
+| ⬜ | `bioglow` | Deep Sea Glow | 1600 × 784 |  |
+| ⬜ | `reef` | Coral Reef | 1600 × 784 |  |
+| ⬜ | `kelpforest` | Kelp Forest | 1600 × 784 |  |
+| ⬜ | `jellydrift` | Jellyfish Drift | 1600 × 784 |  |
+| ⬜ | `bubbles` | Underwater Bubbles | 1600 × 784 |  |
+| ⬜ | `pearlgrad` | Pearl Gradient | 1600 × 784 |  |
+| ⬜ | `tidepools` | Tide Pools | 1600 × 784 |  |
+| ⬜ | `waves` | Ocean Waves | 1600 × 784 |  |
+| ⬜ | `wreckwall` | Shipwreck Planks | 1600 × 784 |  |
+| ⬜ | `treasure` | Sunken Treasure | 1600 × 784 |  |
+| ⬜ | `tropical` | Tropical Fish | 1600 × 784 |  |
+| ⬜ | `seaglass` | Sea Glass Mosaic | 1600 × 784 |  |
+| ⬜ | `shellpattern` | Seashell Pattern | 1600 × 784 |  |
+| ⬜ | `driftgrain` | Driftwood Grain | 1600 × 784 |  |
+| ⬜ | `coastflorals` | Coastal Florals | 1600 × 784 |  |
+| ⬜ | `dunes` | Sand Dunes | 1600 × 784 |  |
+| ⬜ | `beachgrass` | Beach Grass | 1600 × 784 |  |
+| ⬜ | `mushroomwall` | Mushroom Forest | 1600 × 784 |  |
+| ⬜ | `fernmoss` | Ferns and Moss | 1600 × 784 |  |
+| ⬜ | `wildflowers` | Wildflowers | 1600 × 784 |  |
+| ⬜ | `pressedflowers` | Pressed Flowers | 1600 × 784 |  |
+| ⬜ | `gingham` | Cottagecore Gingham | 1600 × 784 |  |
+| ⬜ | `mermaid` | Mermaid Scales | 1600 × 784 |  |
+| ⬜ | `moonlit` | Moonlit Ocean | 1600 × 784 |  |
+| ⬜ | `constellations` | Starry Constellations | 1600 × 784 |  |
+| ⬜ | `enchanted` | Enchanted Forest | 1600 × 784 |  |
+| ⬜ | `crystals` | Crystal Caves | 1600 × 784 |  |
+| ⬜ | `fairylights` | Fairy Lights | 1600 × 784 |  |
+| ⬜ | `runes` | Magical Runes | 1600 × 784 |  |
+| ⬜ | `aurora` | Aurora Borealis | 1600 × 784 |  |
+| ⬜ | `clouds` | Celestial Clouds | 1600 × 784 |  |
+| ⬜ | `islands` | Floating Islands | 1600 × 784 |  |
+| ⬜ | `tinyotters` | Hundreds of Tiny Otters | 1600 × 784 |  |
+| ⬜ | `bigoysters` | Suspiciously Large Oysters | 1600 × 784 |  |
+| ⬜ | `fishhats` | Fish Wearing Hats | 1600 × 784 |  |
+| ⬜ | `clamfaces` | Clams With Faces | 1600 × 784 |  |
+| ⬜ | `ducks` | Ducks | 1600 × 784 |  |
+| ⬜ | `cheese` | Cheese Pattern | 1600 × 784 |  |
+| ⬜ | `newsprint` | Newspaper Print | 1600 × 784 |  |
+| ⬜ | `retro` | Vintage Computer | 1600 × 784 |  |
+| ⬜ | `pawprints` | Otter Paw Prints | 1600 × 784 |  |

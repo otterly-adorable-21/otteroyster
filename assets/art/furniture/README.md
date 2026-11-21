@@ -38,3 +38,76 @@ any spot left empty, the drawn version stays.
 | ⬜ | `beachchair` | Striped Beach Chair | 320 × 304 | event item |
 | ⬜ | `jackolantern` | Jack-o'-Lantern | 280 × 256 | event item |
 | ⬜ | `museumcase` | Museum Display Case | 240 × 320 | event item |
+| ⬜ | `rockingchair` | Driftwood Rocking Chair | 360 × 400 | seating |
+| ⬜ | `jellybeanbag` | Jellyfish Beanbag | 400 × 320 | seating |
+| ⬜ | `shellloveseat` | Seashell Loveseat | 600 × 360 | seating |
+| ⬜ | `coralthrone` | Coral Throne | 400 × 520 | seating |
+| ⬜ | `floatlounger` | Floating Lounger | 520 × 200 | seating |
+| ⬜ | `whalesofa` | Whale Sofa | 640 × 360 | seating |
+| ⬜ | `kelpchair` | Woven Kelp Chair | 360 × 400 | seating |
+| ⬜ | `clambed` | Giant Clam Bed | 600 × 360 | beds |
+| ⬜ | `canopybed` | Driftwood Canopy Bed | 560 × 520 | beds |
+| ⬜ | `mushroombed` | Mushroom Bed | 560 × 440 | beds |
+| ⬜ | `shellcradle` | Seashell Cradle | 480 × 320 | beds |
+| ⬜ | `netbed` | Hammock Bed | 600 × 360 | beds |
+| ⬜ | `pearlbed` | Pearl Cushion Bed | 520 × 360 | beds |
+| ⬜ | `chestbed` | Sunken Treasure Chest Bed | 560 × 400 | beds |
+| ⬜ | `bubblebed` | Underwater Bubble Bed | 520 × 480 | beds |
+| ⬜ | `cloudbed` | Cloud Bed | 600 × 360 | beds |
+| ⬜ | `knitnest` | Cozy Knitted Nest | 480 × 280 | beds |
+| ⬜ | `coffeetable` | Driftwood Coffee Table | 480 × 200 | tables |
+| ⬜ | `oystertable` | Oyster-Shell Side Table | 280 × 280 | tables |
+| ⬜ | `coralshelf` | Coral Bookshelf | 320 × 480 | tables |
+| ⬜ | `chestdresser` | Treasure Chest Dresser | 360 × 360 | tables |
+| ⬜ | `bottlecabinet` | Glass Bottle Cabinet | 320 × 480 | tables |
+| ⬜ | `mushroomstand` | Mushroom Nightstand | 240 × 280 | tables |
+| ⬜ | `fishbowltable` | Fishbowl Table | 320 × 360 | tables |
+| ⬜ | `kelpbasket` | Kelp Basket | 280 × 240 | tables |
+| ⬜ | `vanity` | Antique Vanity | 360 × 480 | tables |
+| ⬜ | `oceanpainting` | Framed Ocean Painting | 360 × 280 | wall |
+| ⬜ | `seaweedart` | Pressed Seaweed Artwork | 240 × 320 | wall |
+| ⬜ | `pearlstand` | Pearl Display Stand | 200 × 280 | decor |
+| ⬜ | `shipbottle` | Ship in a Bottle | 360 × 200 | decor |
+| ⬜ | `minilighthouse` | Miniature Lighthouse | 200 × 440 | decor |
+| ⬜ | `coralsculpture` | Coral Sculpture | 280 × 360 | decor |
+| ⬜ | `jellylanterns` | Hanging Jellyfish Lanterns | 480 × 280 | wall |
+| ⬜ | `glassfloats` | Glass Floats | 320 × 200 | decor |
+| ⬜ | `divehelmet` | Antique Diving Helmet | 280 × 320 | decor |
+| ⬜ | `driftsculpture` | Driftwood Sculpture | 240 × 360 | decor |
+| ⬜ | `messagebottle` | Message in a Bottle | 280 × 160 | decor |
+| ⬜ | `windchimes` | Shell Wind Chimes | 240 × 320 | wall |
+| ⬜ | `stargarland` | Starfish Garland | 560 × 160 | wall |
+| ⬜ | `hangingplants` | Hanging Plants | 240 × 360 | wall |
+| ⬜ | `shellcurtains` | Seashell Curtains | 400 × 440 | wall |
+| ⬜ | `candles` | Floating Candles | 280 × 160 | decor |
+| ⬜ | `nauticalmap` | Vintage Nautical Map | 400 × 280 | wall |
+| ⬜ | `shellcabinet` | Shell Collection Cabinet | 360 × 440 | collect |
+| ⬜ | `rockshelf` | Rock Collection Shelf | 440 × 240 | collect |
+| ⬜ | `fossildisplay` | Fossil Display | 320 × 360 | collect |
+| ⬜ | `pearlcase` | Pearl Collection Case | 320 × 360 | collect |
+| ⬜ | `postcardwall` | Postcard Wall | 440 × 280 | collect |
+| ⬜ | `trophycabinet` | Trophy Cabinet | 360 × 480 | collect |
+| ⬜ | `aquarium` | Aquarium | 480 × 360 | fun |
+| ⬜ | `arcademachine` | Arcade Machine | 280 × 520 | fun |
+| ⬜ | `photobooth` | Photo Booth | 360 × 520 | fun |
+| ⬜ | `flowerbed` | Spring Flower Bed | 440 × 200 | event item |
+| ⬜ | `butterflylamp` | Butterfly Lamp | 200 × 400 | event item |
+| ⬜ | `eggbasket` | Egg Basket | 280 × 240 | event item |
+| ⬜ | `paintedeggs` | Painted Eggs | 280 × 160 | event item |
+| ⬜ | `beachumbrella` | Beach Umbrella | 400 × 440 | event item |
+| ⬜ | `sandcastledecor` | Sandcastle | 320 × 280 | event item |
+| ⬜ | `shipwheel` | Ship's Wheel | 320 × 320 | event item |
+| ⬜ | `treasurepile` | Treasure Pile | 320 × 200 | event item |
+| ⬜ | `coralgarden` | Coral Garden | 440 × 240 | event item |
+| ⬜ | `reefposter` | Save the Reef Poster | 240 × 320 | event item |
+| ⬜ | `hauntedlighthouse` | Haunted Lighthouse | 240 × 480 | event item |
+| ⬜ | `pumpkinchair` | Pumpkin Chair | 360 × 320 | event item |
+| ⬜ | `leafrug` | Autumn Leaf Rug | 560 × 160 | event item |
+| ⬜ | `snowglobe` | Snow Globe | 240 × 280 | event item |
+| ⬜ | `icechair` | Ice Chair | 320 × 360 | event item |
+| ⬜ | `xmastree` | Decorated Tree | 320 × 480 | event item |
+| ⬜ | `stockings` | Stockings | 400 × 240 | event item |
+| ⬜ | `loveletters` | Love Letters | 280 × 160 | event item |
+| ⬜ | `rosebouquet` | Rose Bouquet | 200 × 320 | event item |
+| ⬜ | `fireworks` | Fireworks Display | 440 × 280 | event item |
+| ⬜ | `goldgarland` | Golden Garland | 560 × 160 | event item |

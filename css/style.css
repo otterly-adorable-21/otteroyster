@@ -1039,3 +1039,33 @@ details.lore-page summary { cursor: pointer; font-weight: 700; font-family: Nuni
 #panel > .card + .card, #panel > .card + details.card, #panel > details.card + .card { margin-top: 12px; }
 #panel > .explore-head + .map-wrap { margin-top: 8px; }
 .relogin { display: grid; gap: 6px; margin-bottom: 12px; border: 2px solid #5865f2; }
+
+/* ---------- companion personalities ---------- */
+.companion[data-trait='hop'] { animation: comp-hopidle 2.2s ease-in-out infinite; }
+.companion[data-trait='peek'] { animation: comp-peek 5s ease-in-out infinite; }
+.companion[data-trait='march'] { animation: comp-march 4s ease-in-out infinite; }
+.companion[data-trait='snooze'] { animation: comp-bob 5s ease-in-out infinite; filter: drop-shadow(0 4px 4px rgba(0,0,0,.25)) saturate(.9); }
+.companion[data-trait='look'] { animation: comp-look 4.5s ease-in-out infinite; }
+.companion[data-trait='wiggle'] { animation: comp-wiggle 1.6s ease-in-out infinite; }
+.trait-hop svg { animation: comp-hopidle 2.2s ease-in-out infinite; }
+.trait-wiggle svg { animation: comp-wiggle 1.6s ease-in-out infinite; }
+.trait-look svg { animation: comp-look 4.5s ease-in-out infinite; }
+@keyframes comp-hopidle { 0%, 60%, 100% { transform: translateY(0); } 70% { transform: translateY(-14px); } 80% { transform: translateY(0); } 88% { transform: translateY(-6px); } }
+@keyframes comp-peek { 0%, 100% { transform: translateX(0); } 40%, 60% { transform: translateX(14px) rotate(6deg); } }
+@keyframes comp-march { 0%, 100% { transform: translateX(-10px) scaleX(1); } 49% { transform: translateX(10px) scaleX(1); } 50% { transform: translateX(10px) scaleX(-1); } 99% { transform: translateX(-10px) scaleX(-1); } }
+@keyframes comp-look { 0%, 45%, 100% { transform: rotate(0); } 55%, 70% { transform: rotate(-10deg); } 80%, 90% { transform: rotate(8deg); } }
+@keyframes comp-wiggle { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg) translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) { .companion, .trait-hop svg, .trait-wiggle svg, .trait-look svg { animation: none !important; } }
+.comp-style-art { width: 140px; height: 140px; margin: 6px auto 10px; border-radius: 24px; background: radial-gradient(circle at 50% 70%, #d2f2ee, #e9f7f4 70%); display: grid; place-items: center; }
+.comp-style-art svg { width: 110px; height: 110px; }
+.comp-style .chips { flex-wrap: wrap; }
+
+/* ---------- treasures, library, aquarium, photo booth ---------- */
+.book summary { cursor: pointer; list-style: none; display: flex; gap: 8px; align-items: center; }
+.library .card, .library .btn { margin-top: 8px; }
+.tank { position: relative; height: 150px; margin: 8px 0 12px; border-radius: 18px; overflow: hidden; background: linear-gradient(#a5d8ff, #1c7ed6); box-shadow: inset 0 -20px 0 #e8d6a8; display: grid; place-items: center; }
+.tank-fish { position: absolute; left: -40px; font-size: 26px; animation: swim calc(9s + var(--k) * 1.7s) linear infinite; animation-delay: calc(var(--k) * -2.3s); }
+.tank-fish .art-icon { width: 34px; height: 34px; }
+@keyframes swim { from { transform: translateX(0) scaleX(-1); } 49% { transform: translateX(min(80vw, 420px)) scaleX(-1); } 50% { transform: translateX(min(80vw, 420px)) scaleX(1); } to { transform: translateX(0) scaleX(1); } }
+.booth-preview svg, .booth-photo { width: 100%; height: auto; border-radius: 14px; display: block; margin: 8px 0; }
+svg.swatch-chip { display: block; }

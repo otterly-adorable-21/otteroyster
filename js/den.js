@@ -7,6 +7,33 @@ import { otterSVG } from './otter.js';
 import { artUrl } from './art.js';
 import { companionSVG } from './extras-draw.js';
 import { COMPANIONS } from './companions.js';
+import { TRINKETS, FISH } from './treasures.js';
+
+// What a display case or the aquarium shows inside it (emoji icons, or art).
+const SHELF_SPOTS = {
+  shellcabinet: [[22, 32], [45, 32], [68, 32], [22, 64], [45, 64], [68, 64], [22, 96], [45, 96], [68, 96]],
+  rockshelf: [[12, 20], [30, 20], [48, 20], [66, 20], [84, 20], [100, 20], [12, 48], [30, 48], [48, 48], [66, 48], [84, 48], [100, 48]],
+  fossildisplay: [[26, 30], [54, 30], [40, 58]],
+  pearlcase: [[24, 30], [40, 26], [56, 30], [32, 52], [48, 52]],
+  postcardwall: [[18, 22], [42, 20], [66, 24], [90, 22], [30, 48], [56, 50], [80, 48]],
+  trophycabinet: [[24, 36], [45, 36], [66, 36], [24, 70], [45, 70], [66, 70], [24, 104], [45, 104], [66, 104]],
+};
+function displayContents(it, id, state) {
+  const icon = (x, y, key, emoji, size) => {
+    const url = artUrl(key);
+    return url ? `<image href="${url}" x="${x - size / 2}" y="${y - size}" width="${size}" height="${size}"/>` : `<text x="${x}" y="${y}" font-size="${size * 0.8}" text-anchor="middle">${emoji}</text>`;
+  };
+  if (it.shows) {
+    const groups = it.shows === 'fossil' ? ['fossil'] : it.shows === 'pearls' ? ['pearls'] : [it.shows];
+    const have = Object.keys(state.trinkets || {}).filter((t) => groups.includes(TRINKETS[t]?.group));
+    return (SHELF_SPOTS[id] || []).slice(0, have.length).map(([x, y], k) => icon(x, y, `trinkets/${have[k]}`, TRINKETS[have[k]].icon, 18)).join('');
+  }
+  if (it.use === 'aquarium') {
+    const fish = Object.keys(state.aquarium?.fish || {}).slice(0, 6);
+    return fish.map((f, k) => `<g class="aq-fish" style="--k:${k}">${icon(22 + (k % 3) * 34, 30 + Math.floor(k / 3) * 22, `fish/${f}`, FISH[f].icon, 16)}</g>`).join('');
+  }
+  return '';
+}
 
 const img = (url, x, y, w, h) => `<image href="${url}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="none"/>`;
 // Uploaded furniture art fills the item's own drawing box.
@@ -75,14 +102,14 @@ function burrowFrame() {
 }
 
 const DEFS = (wallpaper, floor) => `<defs>
-  ${PATTERNS[`wp-${wallpaper}`] || PATTERNS['wp-moss']}${PATTERNS[`fl-${floor}`] || PATTERNS['fl-earth']}
+  ${PATTERNS[`wp-${wallpaper}`] || WALLPAPERS[wallpaper]?.pattern || PATTERNS['wp-moss']}${PATTERNS[`fl-${floor}`] || FLOORS[floor]?.pattern || PATTERNS['fl-earth']}
   <linearGradient id="den-floorshade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".25"/><stop offset="1" stop-color="#000" stop-opacity="0"/></linearGradient>
   <radialGradient id="den-window" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#9be8de"/><stop offset=".6" stop-color="#3cc7c0"/><stop offset="1" stop-color="#1f8f95"/></radialGradient>
   <radialGradient id="den-pearl" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#fff"/><stop offset=".45" stop-color="#f1e8ff"/><stop offset=".75" stop-color="#d2f2ee"/><stop offset="1" stop-color="#c6b8d6"/></radialGradient>
   <radialGradient id="den-light" cx="50%" cy="10%" r="80%"><stop offset="0" stop-color="#fff3bf" stop-opacity=".22"/><stop offset="1" stop-color="#fff3bf" stop-opacity="0"/></radialGradient>
 </defs>`;
 
-function itemSVG(p, { selected = false, editable = false } = {}) {
+function itemSVG(p, { selected = false, editable = false, state = null } = {}) {
   const it = FURNITURE[p.id];
   if (!it) return '';
   const { w, h } = itemSize(p.id);
@@ -91,7 +118,7 @@ function itemSVG(p, { selected = false, editable = false } = {}) {
   const flip = p.flip ? ` transform="translate(${p.x * 2} 0) scale(-1 1)"` : '';
   const shadow = zoneOf(p.id) === 'floor' ? `<ellipse cx="${p.x}" cy="${p.y - 1}" rx="${w * 0.42}" ry="${Math.max(3, w * 0.07)}" fill="#000" opacity=".22"/>` : '';
   const sel = selected ? `<rect x="${x - 4}" y="${y - 4}" width="${w + 8}" height="${h + 8}" rx="8" fill="none" stroke="#f3d98c" stroke-width="2.5" stroke-dasharray="6 4"/>` : '';
-  return `<g class="den-item${editable ? ' editable' : ''}" data-uid="${p.uid}">${shadow}<g${flip}><svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="${it.vb}" overflow="visible">${furnitureArt(p.id, it)}</svg></g>${sel}</g>`;
+  return `<g class="den-item${editable ? ' editable' : ''}" data-uid="${p.uid}">${shadow}<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="transparent"/><g${flip}><svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="${it.vb}" overflow="visible">${furnitureArt(p.id, it)}${state ? displayContents(it, p.id, state) : ''}</svg></g>${sel}</g>`;
 }
 
 function otterInDen(state, pos, { selected = false, editable = false } = {}) {
@@ -122,7 +149,7 @@ export function denSVG(state, opts = {}) {
   const items = den.items.filter((p) => FURNITURE[p.id]);
   const layer = (z) => items.filter((p) => zoneOf(p.id) === z).sort((a, b) => a.y - b.y);
   const pos = otterPos(state);
-  const floorThings = layer('floor').map((p) => ({ y: p.y, html: itemSVG(p, { selected: opts.selected === p.uid, editable: opts.editable }) }));
+  const floorThings = layer('floor').map((p) => ({ y: p.y, html: itemSVG(p, { selected: opts.selected === p.uid, editable: opts.editable, state }) }));
   for (const [k, g] of (opts.guests || []).entries()) {
     const gx = Math.max(60, Math.min(340, pos.x + (k % 2 ? -1 : 1) * (70 + k * 20)));
     const gstate = { ...state, name: g.name, equipped: g.equipped || {}, sleeping: state.sleeping, stats: { hunger: 90, happiness: 90, energy: 90, clean: 90 }, persona: state.persona };
@@ -135,14 +162,14 @@ export function denSVG(state, opts = {}) {
   if (comp && COMPANIONS[comp] && !state.mission) {
     const cx = Math.max(40, Math.min(360, pos.x + (pos.x > 300 ? -52 : 52)));
     const cy = pos.inBed ? 292 : Math.min(296, pos.y + 4);
-    floorThings.push({ y: cy, html: `<g class="den-companion" pointer-events="none"><ellipse cx="${cx}" cy="${cy - 1}" rx="13" ry="3.5" fill="#000" opacity=".22"/><svg x="${cx - 17}" y="${cy - 34}" width="34" height="34" viewBox="0 0 100 100">${companionSVG(comp, { sleeping: state.sleeping })}</svg></g>` });
+    floorThings.push({ y: cy, html: `<g class="den-companion" pointer-events="none"><ellipse cx="${cx}" cy="${cy - 1}" rx="13" ry="3.5" fill="#000" opacity=".22"/><svg x="${cx - 17}" y="${cy - 34}" width="34" height="34" viewBox="0 0 100 100">${companionSVG(comp, { sleeping: state.sleeping, look: (({ color, pattern, acc }) => ({ color, pattern, acc }))(state.companions.owned[comp] || {}) })}</svg></g>` });
   }
   floorThings.sort((a, b) => a.y - b.y);
   const ex = opts.extraAttrs || '';
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${DEN_W} ${DEN_H}" ${ex}>${DEFS(wallpaper, floor)}
     ${room(wallpaper, floor)}
-    ${layer('wall').map((p) => itemSVG(p, { selected: opts.selected === p.uid, editable: opts.editable })).join('')}
-    ${layer('rug').map((p) => itemSVG(p, { selected: opts.selected === p.uid, editable: opts.editable })).join('')}
+    ${layer('wall').map((p) => itemSVG(p, { selected: opts.selected === p.uid, editable: opts.editable, state })).join('')}
+    ${layer('rug').map((p) => itemSVG(p, { selected: opts.selected === p.uid, editable: opts.editable, state })).join('')}
     ${floorThings.map((t) => t.html).join('')}
     ${opts.party ? partyDecor() : ''}
     <rect width="${DEN_W}" height="${DEN_H}" fill="url(#den-light)" pointer-events="none"/>

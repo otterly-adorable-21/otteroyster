@@ -100,13 +100,14 @@ const sparkle = (x, y, r, fill = '#fff6d0') => `<path d="M${x},${y - r} C${x + r
 
 // River otter: sleeker body, long tapered tail, small ears, cream muzzle and
 // throat, holding a smooth river stone. Same frame as the sea otter, so clothes fit.
-function riverBody(state, m, asleep, blush) {
+function riverBody(state, m, asleep, blush, clothes = '') {
   return `
   <path d="M134,200 Q206,214 198,150 Q194,124 180,120 Q190,150 180,170 Q168,190 132,182Z" fill="${C.furDark}"/>
   <ellipse cx="76" cy="214" rx="17" ry="9" fill="${C.furDark}"/>
   <ellipse cx="124" cy="214" rx="17" ry="9" fill="${C.furDark}"/>
   <ellipse cx="100" cy="162" rx="50" ry="57" fill="url(#oo-fur)"/>
   <path d="M78,118 Q100,128 122,118 Q132,150 122,186 Q100,204 78,186 Q68,150 78,118Z" fill="url(#oo-cream)" opacity=".85"/>
+  ${clothes}
   <g class="o-stone"><ellipse cx="100" cy="150" rx="21" ry="13" fill="#8d99ae"/><ellipse cx="100" cy="146" rx="15" ry="7" fill="#a9b4c6"/><ellipse cx="93" cy="144" rx="5" ry="2.4" fill="#fff" opacity=".55"/></g>
   <ellipse cx="78" cy="152" rx="10" ry="8.5" fill="${C.furDark}"/>
   <ellipse cx="122" cy="152" rx="10" ry="8.5" fill="${C.furDark}"/>
@@ -149,21 +150,24 @@ export function otterSVG(state, { idPrefix = 'oo' } = {}) {
   const P = (x) => x.replace(/oo-/g, `${idPrefix}-`);
   C = palette(state.species);
   const art = otterArt(state, m);
+  const clothes = P(layer(eq.body));
   const body = art
-    ? otterImage(artUrl(art)) + (state.stats.clean < 40 && artUrl(dirtArt) ? otterImage(artUrl(dirtArt)) : '')
-    : P(drawnBody(state, m, asleep));
+    ? otterImage(artUrl(art)) + (state.stats.clean < 40 && artUrl(dirtArt) ? otterImage(artUrl(dirtArt)) : '') + `<g class="o-body">${clothes}</g>`
+    : P(drawnBody(state, m, asleep, `<g class="o-body">${clothes}</g>`));
   const dirtArt = state.species === 'river' ? 'otter/river-dirty' : 'otter/dirty';
   return `${P(defs())}
   <g class="o-back">${P(layer(eq.back))}</g>
   ${body}
+  <g class="o-feet">${P(layer(eq.feet))}</g>
   <g class="o-neck">${P(layer(eq.neck))}</g>
+  <g class="o-acc">${P(layer(eq.acc))}</g>
   <g class="o-eyes">${asleep ? '' : P(layer(eq.eyes))}</g>
   <g class="o-hat">${P(layer(eq.hat))}</g>`;
 }
 
-function drawnBody(state, m, asleep) {
+function drawnBody(state, m, asleep, clothes = '') {
   const blush = !asleep && m !== 'sad' ? '<ellipse cx="70" cy="91" rx="7" ry="4" fill="#f2a5a0" opacity=".45"/><ellipse cx="130" cy="91" rx="7" ry="4" fill="#f2a5a0" opacity=".45"/>' : '';
-  if (state.species === 'river') return riverBody(state, m, asleep, blush);
+  if (state.species === 'river') return riverBody(state, m, asleep, blush, clothes);
   return `
   <path d="M136,196 Q192,212 186,168 Q180,150 170,160 Q176,186 134,180Z" fill="${C.furDark}"/>
   <ellipse cx="74" cy="214" rx="19" ry="10" fill="${C.furDark}"/>
@@ -171,6 +175,7 @@ function drawnBody(state, m, asleep) {
   <ellipse cx="100" cy="160" rx="56" ry="58" fill="url(#oo-fur)"/>
   <ellipse cx="100" cy="168" rx="38" ry="44" fill="url(#oo-cream)" opacity=".92"/>
   <path d="M82,190 q6,4 12,0 M106,196 q6,4 12,0 M90,206 q5,3 10,0" stroke="${C.creamShade}" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  ${clothes}
   ${oyster()}
   <ellipse cx="76" cy="152" rx="11" ry="9" fill="${C.furDark}"/>
   <ellipse cx="124" cy="152" rx="11" ry="9" fill="${C.furDark}"/>
@@ -195,6 +200,6 @@ function drawnBody(state, m, asleep) {
 // A small standalone preview of a single item (for shop/wardrobe cards).
 export function itemPreviewSVG(id) {
   const it = ITEMS[id];
-  const boxes = { hat: '40 -24 120 80', eyes: '50 50 100 50', neck: '50 96 100 80', back: '20 -10 170 240' };
+  const boxes = { hat: '40 -24 120 80', eyes: '50 50 100 50', neck: '50 96 100 80', back: '20 -10 170 240', body: '30 96 140 140', feet: '40 180 120 60', acc: '40 0 120 220' };
   return `<svg viewBox="${it.view || boxes[it.slot]}" aria-hidden="true">${layer(id)}</svg>`;
 }

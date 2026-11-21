@@ -6,7 +6,8 @@ import { sync } from './sync.js';
 import { detectArt, art } from './assets.js';
 import { playCare, setSleeping } from './animations.js';
 import { ic, artUrl, loadArtManifest } from './art.js';
-import { COMPANIONS, BOND_PERK, BOND_NAMES, bondLevel, TREAT_PRICE, PLAY_COOLDOWN } from './companions.js';
+import { COMPANIONS, BOND_PERK, BOND_NAMES, bondLevel, TREAT_PRICE, PLAY_COOLDOWN, COMP_COLORS, COMP_PATTERNS, COMP_ACCS, COMP_TRAITS } from './companions.js';
+import { TRINKETS, TRINKET_IDS, TRINKET_GROUPS, BOOKS, BOOK_IDS, FISH, FISH_IDS, FISHING_COOLDOWN } from './treasures.js';
 import { CROPS, PLOT_LEVELS, plotStage, plotReadyAt } from './garden.js';
 import { DOOR_ITEMS, DOOR_KINDS } from './door.js';
 import { companionSVG, gardenSVG, houseFrontSVG } from './extras-draw.js';
@@ -393,8 +394,9 @@ function renderScene() {
   const comp = core.activeCompanion(state);
   const compEl = $('#companion');
   compEl.parentElement.hidden = !comp || away;
+  if (comp) compEl.parentElement.dataset.trait = COMP_TRAITS[comp.trait]?.anim || '';
   if (comp && !away) {
-    const cs = companionSVG(comp.id, { sleeping: state.sleeping });
+    const cs = companionSVG(comp.id, { sleeping: state.sleeping, look: core.companionLook(comp) });
     if (compEl.dataset.k !== cs) { compEl.innerHTML = cs; compEl.dataset.k = cs; }
     compEl.setAttribute('aria-label', `Play with ${comp.name}`);
   }
@@ -726,15 +728,33 @@ function companionCard() {
   const lvl = bondLevel(c.bond);
   const on = c.bond >= BOND_PERK;
   const wait = (c.lastPlay || 0) + PLAY_COOLDOWN - Date.now();
-  return `<div class="card comp-card"><button class="comp-art" data-action="comp-play" aria-label="Play with ${esc(c.name)}"><svg viewBox="0 0 100 100">${companionSVG(c.id)}</svg></button>
+  return `<div class="card comp-card"><button class="comp-art trait-${COMP_TRAITS[c.trait]?.anim || ''}" data-action="comp-play" aria-label="Play with ${esc(c.name)}"><svg viewBox="0 0 100 100">${companionSVG(c.id, { look: core.companionLook(c) })}</svg></button>
     <div class="comp-info"><b>${esc(c.name)}</b> <small class="muted">${c.icon} ${COMPANIONS[c.id].name} · ${BOND_NAMES[lvl]}</small>
       <div class="bar"><div style="width:${c.bond}%"></div></div>
       <small class="${on ? 'perk-on' : 'muted'}">${on ? '✨ ' : '🔒 '}${esc(COMPANIONS[c.id].perk)}${on ? '' : ` (bond to ${BOND_PERK} to unlock)`}</small>
+      ${COMP_TRAITS[c.trait] ? `<small class="muted">${COMP_TRAITS[c.trait].icon} ${COMP_TRAITS[c.trait].name}: ${esc(c.name)} ${COMP_TRAITS[c.trait].line}</small>` : ''}
       <div class="row left">
         <button class="btn small ${wait > 0 ? '' : 'primary'}" data-action="comp-play">${wait > 0 ? `🎾 Play in ${Math.ceil(wait / 60000)}m` : '🎾 Play'}</button>
         <button class="btn small" data-action="comp-treat">🍪 Treat · <span class="pearl-icon"></span> ${TREAT_PRICE}</button>
+        <button class="btn small" data-action="comp-style" data-id="${c.id}">🎨 Style</button>
         <button class="btn small" data-action="comp-cove">🐾 ${owned.length > 1 ? 'Switch' : 'More'}</button>
       </div></div></div>`;
+}
+
+function openCompanionStyle(id) {
+  const c = state.companions.owned[id];
+  if (!c) return;
+  const look = core.companionLook(c);
+  showModal(`<div class="comp-style"><div class="game-top"><h2>🎨 Style ${esc(c.name)}</h2><button class="icon-btn" data-close aria-label="Close">✕</button></div>
+    <div class="comp-style-art trait-${COMP_TRAITS[c.trait]?.anim || ''}"><svg viewBox="0 0 100 100">${companionSVG(id, { look })}</svg></div>
+    <h3 class="den-sub dark">Color</h3><div class="chips">${Object.entries(COMP_COLORS).map(([k, v]) => `<button class="chip-btn" data-action="comp-look" data-id="${id}" data-k="color" data-v="${k}" aria-pressed="${look.color === k}">${v.name}</button>`).join('')}</div>
+    <h3 class="den-sub dark">Pattern <small class="muted">unlocks as you bond</small></h3><div class="chips">${Object.entries(COMP_PATTERNS).map(([k, v]) => `<button class="chip-btn" data-action="comp-look" data-id="${id}" data-k="pattern" data-v="${k}" aria-pressed="${look.pattern === k}" ${c.bond < v.bond ? 'disabled' : ''}>${c.bond < v.bond ? `🔒 ${v.bond}` : ''} ${v.name}</button>`).join('')}</div>
+    <h3 class="den-sub dark">Accessory <small class="muted">buy once, any companion can wear it</small></h3><div class="chips">
+      <button class="chip-btn" data-action="comp-look" data-id="${id}" data-k="acc" data-v="" aria-pressed="${!look.acc}">None</button>
+      ${Object.entries(COMP_ACCS).map(([k, v]) => (state.companions.accs.includes(k) ? `<button class="chip-btn" data-action="comp-look" data-id="${id}" data-k="acc" data-v="${k}" aria-pressed="${look.acc === k}">${v.icon} ${v.name}</button>`
+    : `<button class="chip-btn" data-action="comp-acc-buy" data-id="${k}" data-comp="${id}" ${state.pearls < v.price ? 'disabled' : ''}>${v.icon} ${v.name} · <span class="pearl-icon"></span> ${v.price}</button>`)).join('')}</div>
+    <p class="muted">${COMP_TRAITS[c.trait] ? `${COMP_TRAITS[c.trait].icon} ${esc(c.name)} is ${COMP_TRAITS[c.trait].name.toLowerCase()}.` : ''} 💕 Bond ${Math.round(c.bond)}/100</p>
+  </div>`, { wide: true });
 }
 
 function openCove() {
@@ -746,11 +766,11 @@ function openCove() {
     const mine = owned[id];
     const active = state.companions.active === id;
     const locked = state.level < c.level;
-    return `<div class="card cove-card ${active ? 'active' : ''}"><svg viewBox="0 0 100 100">${companionSVG(id)}</svg>
+    return `<div class="card cove-card ${active ? 'active' : ''}"><svg viewBox="0 0 100 100">${companionSVG(id, { look: core.companionLook(mine) })}</svg>
       <b>${mine ? esc(mine.name) : c.name}</b><small class="muted">${esc(c.perk)}</small>
-      ${mine ? `<small>💕 ${BOND_NAMES[bondLevel(mine.bond)]}</small>
+      ${mine ? `<small>💕 ${BOND_NAMES[bondLevel(mine.bond)]}${COMP_TRAITS[mine.trait] ? ` · ${COMP_TRAITS[mine.trait].icon} ${COMP_TRAITS[mine.trait].name}` : ''}</small>
         <div class="row">${active ? '<button class="btn small" data-action="comp-set" data-id="">Rest at home</button>' : `<button class="btn small primary" data-action="comp-set" data-id="${id}">Bring along</button>`}
-        <button class="link small" data-action="comp-rename" data-id="${id}">Rename</button></div>`
+        <button class="link small" data-action="comp-rename" data-id="${id}">Rename</button><button class="link small" data-action="comp-style" data-id="${id}">Style</button></div>`
     : locked ? `<button class="btn small" disabled>🔒 Lv ${c.level}</button>`
       : `<div class="buy-row">${tryBtn('comp', id)}<button class="btn small primary" data-action="comp-adopt" data-id="${id}" ${state.pearls < c.price ? 'disabled' : ''}><span class="pearl-icon"></span> ${c.price}</button></div>`}
     </div>`;
@@ -840,13 +860,15 @@ function openAdventureBook() {
   </div>`, { wide: true });
 }
 
+let closetSlot = 'hat';
 function panelCloset() {
   const toggle = `<div class="segmented">
     <button data-closet="wardrobe" aria-pressed="${closetView === 'wardrobe'}">👗 My clothes</button>
     <button data-closet="shop" aria-pressed="${closetView === 'shop'}">🛍️ Shop</button></div>`;
   if (closetView === 'shop') {
-    return toggle + SLOTS.map((slot) => {
-      const ids = Object.keys(ITEMS).filter((id) => ITEMS[id].slot === slot.id && ITEMS[id].price !== null);
+    const chips = `<div class="chips closet-slots">${SLOTS.map((sl) => `<button class="chip-btn" data-action="closet-slot" data-id="${sl.id}" aria-pressed="${closetSlot === sl.id}">${sl.name}</button>`).join('')}</div>`;
+    return toggle + chips + SLOTS.filter((slot) => slot.id === closetSlot).map((slot) => {
+      const ids = Object.keys(ITEMS).filter((id) => ITEMS[id].slot === slot.id && ITEMS[id].price !== null && !ITEMS[id].event);
       return `<h2 class="section-title">${slot.name}</h2><div class="grid">${ids.map((id) => itemCard(id, 'shop')).join('')}</div>`;
     }).join('') + `<p class="note">✨ Some rare items can only be found on missions. Tap 👀 to try something on.${skipConfirm() ? ' <button class="link" data-action="confirm-on">Ask before buying again</button>' : ''}</p>`;
   }
@@ -912,7 +934,7 @@ function houseSVG(h, k, you = false) {
   const st = { ...core.defaultState(), species: you ? state.species : h.species, stats: { hunger: lvl, happiness: 90, energy: 90, clean: 90 }, equipped: h.equipped || {}, sleeping: h.sleeping };
   return `<button class="house ${you ? 'you' : ''} ${h.friend ? 'friend' : ''}" data-action="lane-house" data-code="${h.code}" data-you="${you ? 1 : ''}" data-x="${k}" aria-label="${esc(h.name)}'s den">
     <svg viewBox="0 0 120 130" aria-hidden="true">${houseFrontSVG(you ? state.door : h.door || { paint: null }, { cozyStar: h.cozy >= 15, balloon: h.birthday })}</svg>
-    ${h.companion && COMPANIONS[h.companion] ? `<svg class="porch-comp" viewBox="0 0 100 100" aria-hidden="true">${companionSVG(h.companion, { sleeping: h.sleeping })}</svg>` : ''}
+    ${h.companion && COMPANIONS[h.companion] ? `<svg class="porch-comp" viewBox="0 0 100 100" aria-hidden="true">${companionSVG(h.companion, { sleeping: h.sleeping, look: h.companionLook || {} })}</svg>` : ''}
     ${h.home && !h.sleeping ? `<svg class="porch-otter" viewBox="0 -24 200 254" aria-hidden="true">${otterSVG(st, { idPrefix: `ln${k}` })}</svg>` : ''}
     ${h.sleeping ? '<span class="house-zzz">z z</span>' : !h.home ? '<span class="house-zzz">🧭 out</span>' : ''}
     <span class="house-sign">${you ? '🏠 ' : h.friend ? '💗 ' : ''}${esc(h.name)} <small>${h.stage || ''} Lv ${h.level}</small>${h.title ? `<small class="house-title">${esc(h.title)}</small>` : ''}</span>
@@ -1014,7 +1036,7 @@ function panelMissions() {
   return `${head}
     ${gazetteCard()}
     <div class="explore-head"><h2 class="section-title">Explore</h2>
-      <div class="row"><button class="btn small" data-action="lore-book">📜 Lore ${state.lore.pages.length}/${TOTAL_PAGES}</button><button class="btn small" data-action="journal">📖 Journal ${found}/${TOTAL_FINDS}</button></div></div>
+      <div class="row"><button class="btn small" data-action="treasures">🪨 ${Object.keys(state.trinkets || {}).length}/${TRINKET_IDS.length}</button><button class="btn small" data-action="lore-book">📜 Lore ${state.lore.pages.length}/${TOTAL_PAGES}</button><button class="btn small" data-action="journal">📖 Journal ${found}/${TOTAL_FINDS}</button></div></div>
     <div class="map-wrap">${mapSVG(state, loc.id)}</div>
     <div class="card loc-card ${locked ? 'locked' : ''}">
       <div class="loc-title"><span class="loc-icon">${ic(`places/${loc.id}`, loc.icon)}</span><div><h3>${loc.name}${state.sets.includes(loc.id) ? ' 🏅' : ''}${state.persona?.fav.place === loc.id ? ` <span class="fav-tag">❤️ ${esc(state.name)}'s favorite</span>` : ''}</h3><p class="muted">${loc.desc}</p></div></div>
@@ -1165,6 +1187,97 @@ function showWelcomeBack(stories) {
     <p class="muted">While you were away…</p>
     <ul class="away-list">${stories.map((x) => `<li>${esc(x.text)}${x.pearls ? ` <small>+${x.pearls} pearls</small>` : ''}</li>`).join('')}</ul>
     <button class="btn primary" data-close>Hi, ${esc(state.name)}!</button></div>`);
+}
+
+// ---------- trinkets, books, aquarium, photo booth ----------
+const trinketIcon = (id) => ic(`trinkets/${id}`, TRINKETS[id].icon);
+function openTreasures() {
+  const have = state.trinkets || {};
+  const n = Object.keys(have).length;
+  showModal(`<div class="treasures"><div class="game-top"><h2>🪨 Treasures</h2><button class="icon-btn" data-close aria-label="Close">✕</button></div>
+    <p class="muted">${n} of ${TRINKET_IDS.length} found. Trinkets turn up while exploring. Show them off in display cases in your den: ${Object.values(FURNITURE).filter((f) => f.shows).map((f) => f.name).join(', ')}.</p>
+    ${Object.entries(TRINKET_GROUPS).map(([g, label]) => `<h3 class="den-sub dark">${label}</h3><div class="finds">${TRINKET_IDS.filter((id) => TRINKETS[id].group === g).map((id) => `<div class="find ${have[id] ? 'got' : ''}"><span class="find-icon">${have[id] ? trinketIcon(id) : '❔'}</span><span class="find-name">${have[id] ? TRINKETS[id].name : '???'}</span><span class="find-rar">${have[id] ? `×${have[id]}` : TRINKETS[id].rarity}</span></div>`).join('')}</div>`).join('')}
+  </div>`, { wide: true });
+}
+function openLibrary() {
+  showModal(`<div class="library"><div class="game-top"><h2>📚 Your Bookshelf</h2><button class="icon-btn" data-close aria-label="Close">✕</button></div>
+    <p class="muted">${state.books.length} of ${BOOK_IDS.length} books. Old books sometimes wash up while exploring.</p>
+    ${BOOK_IDS.map((id) => (state.books.includes(id) ? `<details class="card book"><summary>${ic(`books/${id}`, BOOKS[id].icon)} <b>${esc(BOOKS[id].title)}</b></summary><p class="lore-page">${esc(BOOKS[id].text)}</p></details>` : `<p class="muted lore-locked">📕 A book you haven't found yet</p>`)).join('')}
+    ${sync.linked ? '<button class="btn" data-action="open-mailbox">✉️ Open your Shell Mail</button>' : ''}
+    <button class="btn" data-action="lore-book">📜 Open the Lore Book</button></div>`, { wide: true });
+}
+function openAquarium() {
+  const fish = state.aquarium.fish;
+  const wait = (state.aquarium.lastFish || 0) + FISHING_COOLDOWN - Date.now();
+  showModal(`<div class="aquarium-view"><div class="game-top"><h2>🐠 Aquarium</h2><button class="icon-btn" data-close aria-label="Close">✕</button></div>
+    <div class="tank">${Object.keys(fish).map((f, k) => `<span class="tank-fish" style="--k:${k};top:${15 + (k * 23) % 60}%">${ic(`fish/${f}`, FISH[f].icon)}</span>`).join('') || '<p class="muted">Empty for now…</p>'}</div>
+    <button class="btn primary" data-action="go-fishing" ${wait > 0 ? 'disabled' : ''}>${wait > 0 ? `🎣 Fish again in ${fmtTime(wait)}` : '🎣 Go fishing for a new fish'}</button>
+    <div class="finds">${FISH_IDS.map((f) => `<div class="find ${fish[f] ? 'got' : ''}"><span class="find-icon">${fish[f] ? ic(`fish/${f}`, FISH[f].icon) : '❔'}</span><span class="find-name">${fish[f] ? FISH[f].name : '???'}</span><span class="find-rar">${fish[f] ? `×${fish[f]}` : FISH[f].rarity}</span></div>`).join('')}</div></div>`, { wide: true });
+}
+
+// Photo booth: a keepsake picture of your otter with up to three friends.
+let boothPick = [];
+function openPhotoBooth() {
+  const friends = (friendsData?.friends || []).slice(0, 12);
+  showModal(`<div class="booth"><div class="game-top"><h2>📸 Photo Booth</h2><button class="icon-btn" data-close aria-label="Close">✕</button></div>
+    <p class="muted">${friends.length ? 'Pick up to three friends to squeeze into the picture.' : 'Make friends on the Friends tab to take pictures together! For now, a solo portrait.'}</p>
+    ${friends.length ? `<div class="chips">${friends.map((f) => `<button class="chip-btn" data-action="booth-pick" data-id="${f.code}" aria-pressed="${boothPick.includes(f.code)}">${esc(f.name)}</button>`).join('')}</div>` : ''}
+    <div class="booth-preview" id="booth-preview">${boothSVG()}</div>
+    <div class="row"><button class="btn primary" data-action="booth-snap">📸 Take the picture</button></div>
+    <div id="booth-result"></div></div>`, { wide: true });
+}
+function boothSVG() {
+  const friends = (friendsData?.friends || []).filter((f) => boothPick.includes(f.code));
+  const cast = [{ name: state.name, st: { ...state, sleeping: false } }, ...friends.map((f) => ({ name: f.name, st: { ...core.defaultState(), species: f.species, equipped: f.equipped || {}, stats: { hunger: 90, happiness: 95, energy: 90, clean: 90 } } }))];
+  const W = 800; const H = 600; const step = W / (cast.length + 1);
+  const comp = core.activeCompanion(state);
+  const wp = WALLPAPERS[state.den.wallpaper];
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
+    <defs>${wp?.pattern || ''}<linearGradient id="booth-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9be8de"/><stop offset="1" stop-color="#1f8f95"/></linearGradient></defs>
+    <rect width="${W}" height="${H}" fill="${wp?.pattern ? `url(#wp-${state.den.wallpaper})` : 'url(#booth-bg)'}"/>
+    <rect width="${W}" height="${H}" fill="#fff" opacity=".18"/>
+    ${cast.map((c, k) => `<svg x="${step * (k + 1) - 120}" y="140" width="240" height="305" viewBox="0 -24 200 254">${otterSVG(c.st, { idPrefix: `booth${k}` })}</svg>
+      <text x="${step * (k + 1)}" y="478" text-anchor="middle" font-size="26" font-weight="800" fill="#fffaf0" stroke="#0c3440" stroke-width="6" paint-order="stroke" font-family="Nunito, sans-serif">${esc(c.name || '')}</text>`).join('')}
+    ${comp ? `<svg x="${step - 190}" y="360" width="90" height="90" viewBox="0 0 100 100">${companionSVG(comp.id, { look: core.companionLook(comp) })}</svg>` : ''}
+    <rect x="12" y="12" width="${W - 24}" height="${H - 24}" rx="26" fill="none" stroke="#d9b45a" stroke-width="10"/>
+    <rect x="${W / 2 - 220}" y="${H - 92}" width="440" height="56" rx="28" fill="#0c3440" opacity=".85"/>
+    <text x="${W / 2}" y="${H - 55}" text-anchor="middle" font-size="26" fill="#f3d98c" font-family="Georgia, serif">Otter &amp; Oyster · ${new Date().toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</text>
+  </svg>`;
+}
+// Pictures inside an SVG must be inlined before it can be drawn onto a canvas.
+async function inlineImages(svg) {
+  const urls = [...new Set([...svg.matchAll(/href="(https?:[^"]+)"/g)].map((m) => m[1]))];
+  for (const u of urls) {
+    try {
+      const blob = await (await fetch(u)).blob();
+      const data = await new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(blob); });
+      svg = svg.split(`href="${u}"`).join(`href="${data}"`);
+    } catch { /* leave it */ }
+  }
+  return svg;
+}
+async function snapPhoto() {
+  const out = $('#booth-result');
+  if (!out) return;
+  out.innerHTML = '<p class="muted">Say cheese… 🧀</p>';
+  try {
+    const svg = await inlineImages(boothSVG());
+    const img = new Image();
+    const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+    await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
+    const cv = document.createElement('canvas');
+    cv.width = 800; cv.height = 600;
+    cv.getContext('2d').drawImage(img, 0, 0, 800, 600);
+    URL.revokeObjectURL(url);
+    const png = cv.toDataURL('image/png');
+    const file = `${(state.name || 'otter').toLowerCase().replace(/[^a-z0-9]+/g, '-')}-photo.png`;
+    out.innerHTML = `<img class="booth-photo" src="${png}" alt="Your photo"><div class="row"><a class="btn primary" href="${png}" download="${file}">💾 Save picture</a>${navigator.share ? '<button class="btn" data-action="booth-share">📤 Share</button>' : ''}</div>`;
+    out.dataset.png = png;
+    out.dataset.file = file;
+    burst(['📸', '✨'], 6);
+  } catch {
+    out.innerHTML = '<p class="muted">The camera jammed. Try again!</p>';
+  }
 }
 
 function bestLabel(g) {
@@ -1506,7 +1619,7 @@ function panelDoor() {
   return `<h2 class="section-title">${esc(state.name || 'Your otter')}'s Front Door</h2>
     <div class="door-stage"><svg viewBox="-20 0 160 130" role="img" aria-label="Your front door">${houseFrontSVG(state.door)}
       ${!state.mission ? `<svg x="84" y="64" width="44" height="58" viewBox="0 -24 200 254" overflow="visible">${otterSVG({ ...state, sleeping: false }, { idPrefix: 'door-otter' })}</svg>` : ''}
-      ${comp ? `<svg x="-8" y="96" width="26" height="26" viewBox="0 0 100 100">${companionSVG(comp.id)}</svg>` : ''}</svg></div>
+      ${comp ? `<svg x="-8" y="96" width="26" height="26" viewBox="0 0 100 100">${companionSVG(comp.id, { look: core.companionLook(comp) })}</svg>` : ''}</svg></div>
     <p class="note center">This is how your house looks on Otter Lane. Each decoration adds ✨ +1 coziness.</p>
     <div class="chips">${DOOR_KINDS.map((k) => `<button class="chip-btn" data-action="door-kind" data-id="${k.id}" aria-pressed="${doorKind === k.id}">${k.icon} ${k.name}</button>`).join('')}</div>
     <div class="grid">${items.map(([id, it]) => {
@@ -1536,7 +1649,7 @@ function panelDenInside() {
   let shop;
   if (denShop === 'walls') {
     const sw = (kind, id, it, owned, active) => `<div class="swatch-wrap"><button class="swatch ${active ? 'on' : ''}" data-action="den-${kind}" data-id="${id}" ${!owned && state.pearls < it.price ? 'disabled' : ''}>
-        <span class="swatch-chip" style="background:${it.swatch}"></span><b>${it.name}</b>
+        ${it.pattern ? `<svg class="swatch-chip" viewBox="0 0 40 40"><defs>${it.pattern.replace(/id="([^"]+)"/, 'id="sw-$1"')}</defs><rect width="40" height="40" fill="url(#sw-${kind === 'wall' ? 'wp' : 'fl'}-${id})"/></svg>` : `<span class="swatch-chip" style="background:${it.swatch}"></span>`}<b>${it.name}</b>
         <small>${active ? 'In use ✓' : owned ? 'Owned' : `<span class="pearl-icon"></span> ${it.price}`}</small></button>
         ${owned ? '' : `<button class="link small" data-action="try" data-kind="${kind === 'wall' ? 'wall' : 'floor'}" data-id="${id}">👀 Preview</button>`}</div>`;
     shop = `<h3 class="den-sub">Wallpaper</h3><div class="swatches">${Object.entries(WALLPAPERS).map(([id, it]) => sw('wall', id, it, state.wallpapers.includes(id), state.den.wallpaper === id)).join('')}</div>
@@ -1584,7 +1697,12 @@ document.addEventListener('pointerdown', (e) => {
   if (!denEdit) {
     if (g?.dataset.uid === 'otter') act(core.cuddle(state));
     const item = g && state.den.items.find((q) => q.uid === g.dataset.uid);
-    if (item?.id === 'bookshelf') { if (sync.linked && socialData) openMailbox(); else toast('📖 Your letter book. Sign in on the Friends tab to get Shell Mail!'); }
+    const fu = item && FURNITURE[item.id];
+    if (item?.id === 'bookshelf' || fu?.use === 'books') openLibrary();
+    else if (fu?.use === 'aquarium') openAquarium();
+    else if (fu?.use === 'arcade') { tab = 'arcade'; renderPanel(); window.scrollTo({ top: 0 }); }
+    else if (fu?.use === 'photo') { if (sync.linked && !friendsData) loadFriends(); openPhotoBooth(); }
+    else if (fu?.shows) openTreasures();
     return;
   }
   if (!g || !g.classList.contains('editable')) { denSel = null; renderPanel(); return; }
@@ -2050,6 +2168,28 @@ document.addEventListener('click', async (e) => {
     }
     case 'journal': journalOpen = !journalOpen; renderPanel(); window.scrollTo({ top: 0 }); return null;
     case 'den-edit': denEdit = !denEdit; denSel = null; return renderPanel();
+    case 'closet-slot': closetSlot = id; return renderPanel();
+    case 'comp-style': return openCompanionStyle(id);
+    case 'comp-look': { const r = act(core.styleCompanion(state, id, { [a.dataset.k]: a.dataset.v })); if (r.ok) openCompanionStyle(id); return r; }
+    case 'comp-acc-buy': { const r = act(core.buyCompanionAcc(state, id)); if (r.ok && a.dataset.comp) { core.styleCompanion(state, a.dataset.comp, { acc: id }); commit(); openCompanionStyle(a.dataset.comp); } return r; }
+    case 'treasures': return openTreasures();
+    case 'library': return openLibrary();
+    case 'open-mailbox': return openMailbox();
+    case 'aquarium': return openAquarium();
+    case 'go-fishing': { const r = act(core.goFishing(state)); if (r.ok) openAquarium(); return r; }
+    case 'photo-booth': if (sync.linked && !friendsData) loadFriends(); return openPhotoBooth();
+    case 'booth-pick': {
+      boothPick = boothPick.includes(id) ? boothPick.filter((x) => x !== id) : [...boothPick, id].slice(-3);
+      document.querySelectorAll('[data-action=booth-pick]').forEach((b) => b.setAttribute('aria-pressed', boothPick.includes(b.dataset.id)));
+      $('#booth-preview').innerHTML = boothSVG();
+      return null;
+    }
+    case 'booth-snap': return snapPhoto();
+    case 'booth-share': {
+      const out = $('#booth-result');
+      try { const blob = await (await fetch(out.dataset.png)).blob(); await navigator.share({ files: [new File([blob], out.dataset.file, { type: 'image/png' })], title: 'Otter & Oyster' }); } catch { /* cancelled */ }
+      return null;
+    }
     case 'relogin-dismiss': sync.dismissRelogin(); return renderPanel();
     case 'species': { const r = act(core.setSpecies(state, id)); lastOtter = ''; return r; }
     case 'legacy-claim': return act(core.claimLegacy(state, id));
