@@ -538,7 +538,7 @@ function previewArt(kind, id) {
     trial.furniture[id] = (trial.furniture[id] || 0) + 1;
     sel = core.placeFurniture(trial, id).uid || null;
   }
-  return `<div class="den-stage try-den">${denSVG(trial, { selected: sel, extraAttrs: 'class="den-svg" role="img" aria-label="Your den with it"' }).replace(/den-otter-/g, 'try-otter-')}</div>`;
+  return `<div class="den-stage try-den">${denSVG({ ...trial, den: core.room(trial) }, { selected: sel, extraAttrs: 'class="den-svg" role="img" aria-label="Your den with it"' }).replace(/den-otter-/g, 'try-otter-')}</div>`;
 }
 
 function shopPreview(kind, id, { confirming = false } = {}) {
@@ -1235,10 +1235,10 @@ function boothSVG() {
   const cast = [{ name: state.name, st: { ...state, sleeping: false } }, ...friends.map((f) => ({ name: f.name, st: { ...core.defaultState(), species: f.species, equipped: f.equipped || {}, stats: { hunger: 90, happiness: 95, energy: 90, clean: 90 } } }))];
   const W = 800; const H = 600; const step = W / (cast.length + 1);
   const comp = core.activeCompanion(state);
-  const wp = WALLPAPERS[state.den.wallpaper];
+  const wp = WALLPAPERS[curRoom().wallpaper];
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
     <defs>${wp?.pattern || ''}<linearGradient id="booth-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9be8de"/><stop offset="1" stop-color="#1f8f95"/></linearGradient></defs>
-    <rect width="${W}" height="${H}" fill="${wp?.pattern ? `url(#wp-${state.den.wallpaper})` : 'url(#booth-bg)'}"/>
+    <rect width="${W}" height="${H}" fill="${wp?.pattern ? `url(#wp-${curRoom().wallpaper})` : 'url(#booth-bg)'}"/>
     <rect width="${W}" height="${H}" fill="#fff" opacity=".18"/>
     ${cast.map((c, k) => `<svg x="${step * (k + 1) - 120}" y="140" width="240" height="305" viewBox="0 -24 200 254">${otterSVG(c.st, { idPrefix: `booth${k}` })}</svg>
       <text x="${step * (k + 1)}" y="478" text-anchor="middle" font-size="26" font-weight="800" fill="#fffaf0" stroke="#0c3440" stroke-width="6" paint-order="stroke" font-family="Nunito, sans-serif">${esc(c.name || '')}</text>`).join('')}
@@ -1542,9 +1542,19 @@ let denView = 'inside';
 let doorKind = 'wreath';
 let gardenTick = 0;
 
+const curRoom = () => core.room(state);
+const roomName = (k = state.room || 0) => (k ? state.rooms[k - 1].name : 'Den');
+function roomBar() {
+  const next = core.ROOM_COSTS[state.rooms.length];
+  return `<div class="chips rooms">${[0, ...state.rooms.map((_, k) => k + 1)].map((k) => `<button class="chip-btn" data-action="room-go" data-id="${k}" aria-pressed="${(state.room || 0) === k}">${k ? '🚪' : '🏠'} ${esc(k ? state.rooms[k - 1].name : 'Main den')}</button>`).join('')}
+    ${next ? `<button class="chip-btn add-room" data-action="room-add" ${state.level < next.level || state.pearls < next.pearls ? 'disabled' : ''}>${state.level < next.level ? `🔒 New room at Lv ${next.level}` : `➕ New room · <span class="pearl-icon"></span> ${next.pearls}`}</button>` : ''}</div>
+    ${state.room ? '<button class="link small room-rename" data-action="room-rename">✏️ Rename this room</button>' : ''}`;
+}
+
 function denStageHTML() {
   const guests = (socialData?.sleepovers || []).filter((x) => x.hosting && x.status === 'accepted').map((x) => ({ name: x.name, equipped: x.equipped }));
-  return denSVG(state, { editable: denEdit, selected: denEdit ? denSel : null, guests, party: !!isPartyDay(), extraAttrs: 'class="den-svg" role="img" aria-label="Your otter\'s den"' });
+  const main = !state.room;
+  return denSVG({ ...state, den: curRoom() }, { editable: denEdit, selected: denEdit ? denSel : null, guests: main ? guests : [], party: main && !!isPartyDay(), extraAttrs: 'class="den-svg" role="img" aria-label="Your otter\'s den"' });
 }
 
 function cozyLine() {
@@ -1638,7 +1648,7 @@ function panelDoor() {
 }
 
 function panelDenInside() {
-  const sel = denSel && denSel !== 'otter' ? state.den.items.find((p) => p.uid === denSel) : null;
+  const sel = denSel && denSel !== 'otter' ? curRoom().items.find((p) => p.uid === denSel) : null;
   const storage = Object.keys(FURNITURE).filter((id) => core.inStorage(state, id) > 0);
   const toolbar = denEdit
     ? `<div class="den-toolbar">
@@ -1657,8 +1667,8 @@ function panelDenInside() {
         ${it.pattern ? `<svg class="swatch-chip" viewBox="0 0 40 40"><defs>${it.pattern.replace(/id="([^"]+)"/, 'id="sw-$1"')}</defs><rect width="40" height="40" fill="url(#sw-${kind === 'wall' ? 'wp' : 'fl'}-${id})"/></svg>` : `<span class="swatch-chip" style="background:${it.swatch}"></span>`}<b>${it.name}</b>
         <small>${active ? 'In use ✓' : owned ? 'Owned' : `<span class="pearl-icon"></span> ${it.price}`}</small></button>
         ${owned ? '' : `<button class="link small" data-action="try" data-kind="${kind === 'wall' ? 'wall' : 'floor'}" data-id="${id}">👀 Preview</button>`}</div>`;
-    shop = `<h3 class="den-sub">Wallpaper</h3><div class="swatches">${Object.entries(WALLPAPERS).map(([id, it]) => sw('wall', id, it, state.wallpapers.includes(id), state.den.wallpaper === id)).join('')}</div>
-      <h3 class="den-sub">Floors</h3><div class="swatches">${Object.entries(FLOORS).map(([id, it]) => sw('floor', id, it, state.floors.includes(id), state.den.floor === id)).join('')}</div>`;
+    shop = `<h3 class="den-sub">Wallpaper</h3><div class="swatches">${Object.entries(WALLPAPERS).map(([id, it]) => sw('wall', id, it, state.wallpapers.includes(id), curRoom().wallpaper === id)).join('')}</div>
+      <h3 class="den-sub">Floors</h3><div class="swatches">${Object.entries(FLOORS).map(([id, it]) => sw('floor', id, it, state.floors.includes(id), curRoom().floor === id)).join('')}</div>`;
   } else {
     shop = `<div class="grid">${Object.entries(FURNITURE).filter(([, it]) => it.cat === denShop && !it.event).map(([id, it]) => {
       const owned = state.furniture[id] || 0;
@@ -1671,11 +1681,12 @@ function panelDenInside() {
   }
 
   return `
-    ${denHead('Den')}
+    ${denHead(roomName())}
+    ${roomBar()}
     <div class="den-stage ${denEdit ? 'editing' : ''}" id="den-stage">${denStageHTML()}</div>
     ${toolbar}
     ${cozyLine()}
-    ${storage.length ? `<h2 class="section-title">Storage <small>tap to put it back in the den</small></h2>
+    ${storage.length ? `<h2 class="section-title">Storage <small>tap to put it in this room</small></h2>
       <div class="storage">${storage.map((id) => `<button class="store-item" data-action="den-place" data-id="${id}" title="${FURNITURE[id].name}">
         <span class="den-art">${furniturePreviewSVG(id)}</span><b>×${core.inStorage(state, id)}</b></button>`).join('')}</div>` : ''}
     <h2 class="section-title">Furniture shop</h2>
@@ -1701,7 +1712,7 @@ document.addEventListener('pointerdown', (e) => {
   const g = e.target.closest('.den-item');
   if (!denEdit) {
     if (g?.dataset.uid === 'otter') act(core.cuddle(state));
-    const item = g && state.den.items.find((q) => q.uid === g.dataset.uid);
+    const item = g && curRoom().items.find((q) => q.uid === g.dataset.uid);
     const fu = item && FURNITURE[item.id];
     if (item?.id === 'bookshelf' || fu?.use === 'books') openLibrary();
     else if (fu?.use === 'aquarium') openAquarium();
@@ -1715,7 +1726,7 @@ document.addEventListener('pointerdown', (e) => {
   const uid = g.dataset.uid;
   const svg = stage.querySelector('svg');
   const p = svgPoint(svg, e);
-  const cur = uid === 'otter' ? (state.den.otter || { x: 196, y: 286 }) : state.den.items.find((q) => q.uid === uid);
+  const cur = uid === 'otter' ? (curRoom().otter || { x: 196, y: 286 }) : curRoom().items.find((q) => q.uid === uid);
   drag = { uid, dx: cur.x - p.x, dy: cur.y - p.y, moved: false, raf: 0 };
   if (denSel !== uid) { denSel = uid; renderPanel(); }
   $('#den-stage').setPointerCapture?.(e.pointerId);
@@ -2218,6 +2229,10 @@ document.addEventListener('click', async (e) => {
     }
     case 'merchant': return openMerchant();
     case 'merchant-buy': { const r = act(core.buyMerchant(state, id)); if (r.ok) openMerchant(); return r; }
+    case 'room-go': denSel = null; denEdit = false; core.setRoom(state, Number(id)); commit({ push: false }); return null;
+    case 'room-add': { const r = act(core.addRoom(state)); denSel = null; return r; }
+    case 'room-rename': return showModal(`<form class="gift-form" data-form="room-rename"><h2>Rename this room</h2>
+        <input name="name" maxlength="18" value="${esc(roomName())}" required aria-label="Room name"><div class="row"><button class="btn" type="button" data-close>Cancel</button><button class="btn primary">Save</button></div></form>`);
     case 'den-view': denView = id; denEdit = false; denSel = null; return renderPanel();
     case 'door-kind': doorKind = id; return renderPanel();
     case 'door-buy': return requestPurchase('door', id);
@@ -2326,6 +2341,9 @@ document.addEventListener('submit', (e) => {
       burst(['✉️', '🕊️'], 6);
       return loadFriends();
     });
+  } else if (form.dataset.form === 'room-rename') {
+    const r = act(core.renameRoom(state, state.room, new FormData(form).get('name')));
+    if (r.ok) closeModal();
   } else if (form.dataset.form === 'comp-rename') {
     const r = act(core.renameCompanion(state, form.dataset.id, new FormData(form).get('name')));
     if (r.ok) closeModal();

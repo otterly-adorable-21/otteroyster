@@ -53,6 +53,8 @@ export function defaultState(now = Date.now()) {
     persona: blankPersona(now),
     companions: { owned: {}, active: null, accs: [] },
     garden: { plots: PLOT_LEVELS.map(() => null) },
+    rooms: [],
+    room: 0,
     pantry: {},
     door: defaultDoor(),
     doorItems: ['paint-moss'],
@@ -103,6 +105,11 @@ export function normalize(saved) {
     s.furniture = { ...(saved.furniture || {}) };
   }
   s.wallpapers = Array.isArray(saved.wallpapers) ? saved.wallpapers : ['moss'];
+  s.rooms = (Array.isArray(saved.rooms) ? saved.rooms : []).slice(0, ROOM_COSTS.length).map((r, k) => ({
+    id: r.id || `room${k}`, name: String(r.name || ROOM_NAMES[k]).slice(0, 18), wallpaper: r.wallpaper || 'moss', floor: r.floor || 'earth',
+    items: Array.isArray(r.items) ? r.items.filter((p) => FURNITURE[p.id]) : [], otter: r.otter || { x: 200, y: 286 },
+  }));
+  s.room = Number.isInteger(saved.room) && saved.room >= 0 && saved.room <= s.rooms.length ? saved.room : 0;
   s.collection = { ...(saved.collection || {}) };
   s.persona = {
     pts: { ...blankPersona(s.created).pts, ...(saved.persona?.pts || {}) },
@@ -466,7 +473,7 @@ export const COZY_MAX = 30;
 export function coziness(s) {
   const seen = {};
   let total = 0;
-  for (const p of s.den?.items || []) {
+  for (const p of allRoomItems(s)) {
     const it = FURNITURE[p.id];
     if (!it) continue;
     seen[p.id] = (seen[p.id] || 0) + 1;
@@ -477,8 +484,43 @@ export function coziness(s) {
   return Math.min(COZY_MAX, total);
 }
 
+// ---------- rooms ----------
+// s.den is the main den (what visitors and Discord see); s.rooms holds extra
+// rooms; s.room is the one being viewed (0 = main den).
+export const ROOM_COSTS = [{ pearls: 250, level: 3 }, { pearls: 500, level: 6 }, { pearls: 900, level: 10 }];
+export const ROOM_NAMES = ['Bedroom', 'Playroom', 'Library'];
+export const room = (s, k = s.room || 0) => (k && s.rooms?.[k - 1]) || s.den;
+export const allRoomItems = (s) => [...(s.den?.items || []), ...(s.rooms || []).flatMap((r) => r.items || [])];
+
+export function addRoom(s) {
+  const n = (s.rooms || []).length;
+  const c = ROOM_COSTS[n];
+  if (!c) return no('Your house is as big as it gets! 🏡');
+  if (s.level < c.level) return no(`Reach level ${c.level} to add another room.`);
+  if (s.pearls < c.pearls) return no('Not enough pearls.');
+  s.pearls -= c.pearls;
+  s.rooms.push({ id: newUid(), name: ROOM_NAMES[n], wallpaper: 'moss', floor: 'earth', items: [], otter: { x: 200, y: 286 } });
+  s.room = s.rooms.length;
+  log(s, `Dug out a new room: the ${ROOM_NAMES[n]}!`);
+  memory(s, '🏡', `${s.name}'s den grew a new room: the ${ROOM_NAMES[n]}.`);
+  return ok(`🏡 A brand new ${ROOM_NAMES[n]}! Move furniture in from storage, or buy something new.`, { fx: ['🏡', '✨'] });
+}
+export function setRoom(s, k) {
+  if (k < 0 || k > (s.rooms || []).length) return no('No such room.');
+  s.room = k;
+  return ok('');
+}
+export function renameRoom(s, k, name) {
+  const r = k ? s.rooms[k - 1] : null;
+  if (!r) return no('The main den keeps its name.');
+  const n = String(name || '').replace(/[<>]/g, '').trim().slice(0, 18);
+  if (!n) return no('Pick a name.');
+  r.name = n;
+  return ok(`🏷️ Renamed to ${n}.`);
+}
+
 export function inStorage(s, id) {
-  const placed = s.den.items.filter((p) => p.id === id).length;
+  const placed = allRoomItems(s).filter((p) => p.id === id).length;
   return Math.max(0, (s.furniture[id] || 0) - placed);
 }
 
@@ -499,37 +541,38 @@ export function buyFurniture(s, id) {
 
 export function placeFurniture(s, id) {
   if (inStorage(s, id) <= 0) return no('None left in storage.');
-  if (s.den.items.length >= 40) return no('Your den is full! Put something away first.');
+  const den = room(s);
+  if (den.items.length >= 40) return no('This room is full! Put something away first.');
   const z = ZONES[zoneOf(id)];
-  const jitter = (s.den.items.length % 5) * 14 - 28;
+  const jitter = (den.items.length % 5) * 14 - 28;
   const pos = clampPos(id, 200 + jitter, zoneOf(id) === 'wall' ? 120 : (z.minY + z.maxY) / 2 + jitter / 2);
   const uid = newUid();
-  s.den.items.push({ uid, id, ...pos, flip: false });
+  den.items.push({ uid, id, ...pos, flip: false });
   return ok('', { uid });
 }
 
 export function moveItem(s, uid, x, y) {
   if (uid === 'otter') {
-    s.den.otter = clampPos('otter', x, y);
+    room(s).otter = clampPos('otter', x, y);
     return ok('');
   }
-  const p = s.den.items.find((q) => q.uid === uid);
+  const p = room(s).items.find((q) => q.uid === uid);
   if (!p) return no('That item is gone.');
   Object.assign(p, clampPos(p.id, x, y));
   return ok('');
 }
 
 export function flipItem(s, uid) {
-  const p = s.den.items.find((q) => q.uid === uid);
+  const p = room(s).items.find((q) => q.uid === uid);
   if (!p) return no('That item is gone.');
   p.flip = !p.flip;
   return ok('');
 }
 
 export function storeItem(s, uid) {
-  const i = s.den.items.findIndex((q) => q.uid === uid);
+  const i = room(s).items.findIndex((q) => q.uid === uid);
   if (i < 0) return no('That item is gone.');
-  const [p] = s.den.items.splice(i, 1);
+  const [p] = room(s).items.splice(i, 1);
   return ok(`Put the ${FURNITURE[p.id].name} in storage.`);
 }
 
@@ -542,7 +585,7 @@ export function setWallpaper(s, id) {
     s.wallpapers.push(id);
     log(s, `Put up ${w.name} wallpaper.`);
   }
-  s.den.wallpaper = id;
+  room(s).wallpaper = id;
   return ok(`🖌️ ${w.name} wallpaper!`);
 }
 
@@ -555,7 +598,7 @@ export function setFloor(s, id) {
     s.floors.push(id);
     log(s, `Laid down a ${f.name} floor.`);
   }
-  s.den.floor = id;
+  room(s).floor = id;
   return ok(`🪵 ${f.name} floor!`);
 }
 

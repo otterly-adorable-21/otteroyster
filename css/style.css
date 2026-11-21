@@ -1092,3 +1092,6 @@ svg.swatch-chip { display: block; }
 .explore-head .row .btn.small { padding: 6px 9px; }
 @media (max-width: 520px) { .explore-head .lbl { display: none; } }
 .bday-tag { color: #c2255c; font-weight: 800; font-size: .72rem; }
+.chips.rooms { margin: 6px 0 2px; }
+.add-room { background: rgba(217, 180, 90, .18) !important; }
+.room-rename { display: block; margin: 0 2px 8px auto; color: var(--aqua-light); }
