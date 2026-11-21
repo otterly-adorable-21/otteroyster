@@ -381,10 +381,88 @@ function itemCard(id, mode) {
   } else if (state.level < it.level) {
     action = `<button class="btn small" disabled>🔒 Lv ${it.level}</button>`;
   } else {
-    action = `<button class="btn small primary" data-action="buy" data-id="${id}" ${state.pearls < it.price ? 'disabled' : ''}><span class="pearl-icon"></span> ${it.price}</button>`;
+    action = `<div class="buy-row">${tryBtn('item', id)}<button class="btn small primary" data-action="buy" data-id="${id}" ${state.pearls < it.price ? 'disabled' : ''}><span class="pearl-icon"></span> ${it.price}</button></div>`;
   }
   return `<div class="card item ${worn ? 'worn' : ''}"><div class="item-art">${itemPreviewSVG(id)}</div><div class="item-name">${it.name}</div>${action}</div>`;
 }
+
+// ---------- try on + purchase confirmation ----------
+const SKIP_KEY = 'otteroyster.skipConfirm';
+const skipConfirm = () => { try { return localStorage.getItem(SKIP_KEY) === '1'; } catch { return false; } };
+const setSkipConfirm = (on) => { try { if (on) localStorage.setItem(SKIP_KEY, '1'); else localStorage.removeItem(SKIP_KEY); } catch { /* ignore */ } };
+
+// kind: item | furn | wall | floor | evitem | evfurn
+function shopEntry(kind, id) {
+  const ev = core.eventStatus(state);
+  const evPrice = (x) => ev?.event.shop.find((e) => e.id === x)?.tokens;
+  switch (kind) {
+    case 'item': return { name: ITEMS[id].name, price: ITEMS[id].price, cur: 'pearls', have: state.pearls };
+    case 'furn': return { name: FURNITURE[id].name, price: FURNITURE[id].price, cur: 'pearls', have: state.pearls };
+    case 'wall': return { name: `${WALLPAPERS[id].name} wallpaper`, price: WALLPAPERS[id].price, cur: 'pearls', have: state.pearls };
+    case 'floor': return { name: `${FLOORS[id].name} floor`, price: FLOORS[id].price, cur: 'pearls', have: state.pearls };
+    case 'evitem': return { name: ITEMS[id].name, price: evPrice(id), cur: 'tokens', have: ev?.tokens || 0, token: ev?.event.token };
+    case 'evfurn': return { name: FURNITURE[id].name, price: evPrice(id), cur: 'tokens', have: ev?.tokens || 0, token: ev?.event.token };
+    default: return null;
+  }
+}
+
+function doPurchase(kind, id) {
+  switch (kind) {
+    case 'item': return act(core.buy(state, id));
+    case 'furn': {
+      const r = act(core.buyFurniture(state, id));
+      if (r.ok) { denEdit = true; denSel = r.uid; renderPanel(); }
+      return r;
+    }
+    case 'wall': return act(core.setWallpaper(state, id));
+    case 'floor': return act(core.setFloor(state, id));
+    case 'evitem': case 'evfurn': return act(core.buyEventItem(state, id));
+    default: return null;
+  }
+}
+
+// A picture of what you'd get: your otter wearing it, or your den with it.
+function previewArt(kind, id) {
+  if (kind === 'item' || kind === 'evitem') {
+    const it = ITEMS[id];
+    const trial = { ...state, sleeping: false, equipped: { ...state.equipped, [it.slot]: id } };
+    return `<div class="try-stage"><svg viewBox="-10 -30 220 270" aria-label="${esc(state.name)} wearing the ${esc(it.name)}">${otterSVG(trial, { idPrefix: 'try' })}</svg></div>`;
+  }
+  const trial = JSON.parse(JSON.stringify(state));
+  trial.sleeping = false;
+  let sel = null;
+  if (kind === 'wall') trial.den.wallpaper = id;
+  else if (kind === 'floor') trial.den.floor = id;
+  else {
+    trial.furniture[id] = (trial.furniture[id] || 0) + 1;
+    sel = core.placeFurniture(trial, id).uid || null;
+  }
+  return `<div class="den-stage try-den">${denSVG(trial, { selected: sel, extraAttrs: 'class="den-svg" role="img" aria-label="Your den with it"' }).replace(/den-otter-/g, 'try-otter-')}</div>`;
+}
+
+function shopPreview(kind, id, { confirming = false } = {}) {
+  const e = shopEntry(kind, id);
+  if (!e || e.price == null) return;
+  const icon = e.cur === 'tokens' ? e.token?.icon || '🪙' : '<span class="pearl-icon"></span>';
+  const short = e.have < e.price;
+  showModal(`<div class="try-panel">
+    <div class="game-top"><h2>${confirming ? 'Buy this?' : '👀 Try it on'}</h2><button class="icon-btn" data-close aria-label="Close">✕</button></div>
+    ${previewArt(kind, id)}
+    <p class="try-name"><b>${esc(e.name)}</b> · ${icon} ${e.price}${e.cur === 'tokens' ? ` ${esc(e.token?.name || 'tokens')}` : ''}</p>
+    ${short ? `<p class="muted center">You need ${e.price - e.have} more ${e.cur === 'tokens' ? esc(e.token?.name || 'tokens') : 'pearls'}.</p>` : ''}
+    <div class="row"><button class="btn" data-close>${confirming ? 'Cancel' : 'Maybe later'}</button>
+      <button class="btn primary" data-action="confirm-buy" data-kind="${kind}" data-id="${id}" ${short ? 'disabled' : ''}>Buy · ${icon} ${e.price}</button></div>
+    ${confirming ? '<label class="skip-check"><input type="checkbox" data-skip-confirm> Don\'t ask me again</label>' : ''}
+  </div>`);
+}
+
+// All "Buy" buttons go through here: confirm first unless the player turned that off.
+function requestPurchase(kind, id) {
+  if (skipConfirm()) return doPurchase(kind, id);
+  return shopPreview(kind, id, { confirming: true });
+}
+
+const tryBtn = (kind, id) => `<button class="btn small try-btn" data-action="try" data-kind="${kind}" data-id="${id}" aria-label="Try it on">👀</button>`;
 
 function daysLeft(ms) {
   const d = Math.ceil((ms - Date.now()) / 86400000);
@@ -418,7 +496,7 @@ function panelEvent() {
     const owned = isItem ? state.owned.includes(e.id) : false;
     return `<div class="card item"><div class="item-art ${isItem ? '' : 'den-art'}">${isItem ? itemPreviewSVG(e.id) : furniturePreviewSVG(e.id)}</div>
       <div class="item-name">${it.name}</div><small class="muted">${isItem ? 'Outfit' : `Den · ✨ +${it.cozy}`}</small>
-      ${owned ? '<button class="btn small" disabled>Owned ✓</button>' : `<button class="btn small primary" data-action="ev-buy" data-id="${e.id}" ${st.tokens < e.tokens ? 'disabled' : ''}>${ev.token.icon} ${e.tokens}</button>`}</div>`;
+      ${owned ? '<button class="btn small" disabled>Owned ✓</button>' : `<div class="buy-row">${tryBtn(isItem ? 'evitem' : 'evfurn', e.id)}<button class="btn small primary" data-action="ev-buy" data-id="${e.id}" ${st.tokens < e.tokens ? 'disabled' : ''}>${ev.token.icon} ${e.tokens}</button></div>`}</div>`;
   };
   return `
     <div class="event-hero" style="--tint:${ev.tint}">
@@ -497,7 +575,7 @@ function panelCloset() {
     return toggle + SLOTS.map((slot) => {
       const ids = Object.keys(ITEMS).filter((id) => ITEMS[id].slot === slot.id && ITEMS[id].price !== null);
       return `<h2 class="section-title">${slot.name}</h2><div class="grid">${ids.map((id) => itemCard(id, 'shop')).join('')}</div>`;
-    }).join('') + '<p class="note">✨ Some rare items can only be found on missions.</p>';
+    }).join('') + `<p class="note">✨ Some rare items can only be found on missions. Tap 👀 to try something on.${skipConfirm() ? ' <button class="link" data-action="confirm-on">Ask before buying again</button>' : ''}</p>`;
   }
   if (!state.owned.length) {
     return `${toggle}<div class="empty"><div class="empty-icon">👗</div><p>No clothes yet! Buy some in the <button class="link" data-closet="shop">shop</button> or find rare items on <button class="link" data-tab="missions">expeditions</button>.</p></div>`;
@@ -785,9 +863,10 @@ function panelDen() {
   const shopTabs = [...DEN_CATS, { id: 'walls', name: 'Walls & floors', icon: '🎨' }];
   let shop;
   if (denShop === 'walls') {
-    const sw = (kind, id, it, owned, active) => `<button class="swatch ${active ? 'on' : ''}" data-action="den-${kind}" data-id="${id}" ${!owned && state.pearls < it.price ? 'disabled' : ''}>
+    const sw = (kind, id, it, owned, active) => `<div class="swatch-wrap"><button class="swatch ${active ? 'on' : ''}" data-action="den-${kind}" data-id="${id}" ${!owned && state.pearls < it.price ? 'disabled' : ''}>
         <span class="swatch-chip" style="background:${it.swatch}"></span><b>${it.name}</b>
-        <small>${active ? 'In use ✓' : owned ? 'Owned' : `<span class="pearl-icon"></span> ${it.price}`}</small></button>`;
+        <small>${active ? 'In use ✓' : owned ? 'Owned' : `<span class="pearl-icon"></span> ${it.price}`}</small></button>
+        ${owned ? '' : `<button class="link small" data-action="try" data-kind="${kind === 'wall' ? 'wall' : 'floor'}" data-id="${id}">👀 Preview</button>`}</div>`;
     shop = `<h3 class="den-sub">Wallpaper</h3><div class="swatches">${Object.entries(WALLPAPERS).map(([id, it]) => sw('wall', id, it, state.wallpapers.includes(id), state.den.wallpaper === id)).join('')}</div>
       <h3 class="den-sub">Floors</h3><div class="swatches">${Object.entries(FLOORS).map(([id, it]) => sw('floor', id, it, state.floors.includes(id), state.den.floor === id)).join('')}</div>`;
   } else {
@@ -797,7 +876,7 @@ function panelDen() {
       return `<div class="card item"><div class="item-art den-art">${furniturePreviewSVG(id)}</div><div class="item-name">${it.name}</div>
         <small class="muted">✨ +${it.cozy}${owned ? ` · own ${owned}` : ''}</small>
         ${locked ? `<button class="btn small" disabled>🔒 Lv ${it.level}</button>`
-    : `<button class="btn small primary" data-action="den-buy" data-id="${id}" ${state.pearls < it.price ? 'disabled' : ''}><span class="pearl-icon"></span> ${it.price}</button>`}</div>`;
+    : `<div class="buy-row">${tryBtn('furn', id)}<button class="btn small primary" data-action="den-buy" data-id="${id}" ${state.pearls < it.price ? 'disabled' : ''}><span class="pearl-icon"></span> ${it.price}</button></div>`}</div>`;
     }).join('')}</div>`;
   }
 
@@ -1059,7 +1138,16 @@ document.addEventListener('click', async (e) => {
     case 'bath': return act(core.bath(state));
     case 'sleep': return act(core.toggleSleep(state));
     case 'daily': return act(core.claimDaily(state));
-    case 'buy': return act(core.buy(state, id));
+    case 'buy': return requestPurchase('item', id);
+    case 'try': return shopPreview(a.dataset.kind, id);
+    case 'confirm-buy': {
+      if (document.querySelector('[data-skip-confirm]')?.checked) setSkipConfirm(true);
+      closeModal();
+      const r = doPurchase(a.dataset.kind, id);
+      if (r?.ok && skipConfirm() && document.querySelector('[data-skip-confirm]') === null) toast(r.msg);
+      return r;
+    }
+    case 'confirm-on': setSkipConfirm(false); toast('Purchase confirmations are back on.'); return renderPanel();
     case 'wear': bounce(); return act({ ...core.toggleWear(state, id), msg: '' });
     case 'hardreload': {
       try {
@@ -1123,7 +1211,7 @@ document.addEventListener('click', async (e) => {
       return loadFriends();
     }
     case 'ev-claim': return act(core.claimQuest(state, id));
-    case 'ev-buy': return act(core.buyEventItem(state, id));
+    case 'ev-buy': return requestPurchase(ITEMS[id] ? 'evitem' : 'evfurn', id);
     case 'explore': {
       const r = core.explore(state, id);
       if (!r.ok) return toast(r.msg);
@@ -1141,11 +1229,7 @@ document.addEventListener('click', async (e) => {
     }
     case 'journal': journalOpen = !journalOpen; renderPanel(); window.scrollTo({ top: 0 }); return null;
     case 'den-edit': denEdit = !denEdit; denSel = null; return renderPanel();
-    case 'den-buy': {
-      const r = act(core.buyFurniture(state, id));
-      if (r.ok) { denEdit = true; denSel = r.uid; renderPanel(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
-      return r;
-    }
+    case 'den-buy': return requestPurchase('furn', id);
     case 'den-place': {
       const r = core.placeFurniture(state, id);
       if (!r.ok) return toast(r.msg);
@@ -1154,8 +1238,8 @@ document.addEventListener('click', async (e) => {
     }
     case 'den-flip': core.flipItem(state, denSel); return commit();
     case 'den-store': { const r = core.storeItem(state, denSel); denSel = null; return act(r); }
-    case 'den-wall': return act(core.setWallpaper(state, id));
-    case 'den-floor': return act(core.setFloor(state, id));
+    case 'den-wall': return state.wallpapers.includes(id) ? act(core.setWallpaper(state, id)) : requestPurchase('wall', id);
+    case 'den-floor': return state.floors.includes(id) ? act(core.setFloor(state, id)) : requestPurchase('floor', id);
     case 'undress': Object.keys(state.equipped).forEach((k) => { state.equipped[k] = null; }); return commit();
     case 'mission': return act(core.startMission(state, id));
     case 'recall': return act(core.recallMission(state));
