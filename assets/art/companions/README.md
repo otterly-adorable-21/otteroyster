@@ -11,7 +11,7 @@ any spot left empty, the drawn version stays.
 | --- | --- | --- | --- | --- |
 | ⬜ | `duckling` | 🐥 Duckling | 512 × 512 |  |
 | ⬜ | `duckling-sleeping` | 💤 Duckling (sleeping) | 512 × 512 | optional |
-| ⬜ | `crab` | 🦀 Hermit Crab | 512 × 512 |  |
+| ✅ | `crab` | 🦀 Hermit Crab | 512 × 512 |  |
 | ⬜ | `crab-sleeping` | 💤 Hermit Crab (sleeping) | 512 × 512 | optional |
 | ⬜ | `frog` | 🐸 Lily Frog | 512 × 512 |  |
 | ⬜ | `frog-sleeping` | 💤 Lily Frog (sleeping) | 512 × 512 | optional |
