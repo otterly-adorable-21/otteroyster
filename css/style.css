@@ -1114,3 +1114,4 @@ svg.swatch-chip { display: block; }
 .acc-buy { display: inline-flex; gap: 4px; align-items: center; flex: none; }
 .acc-buy .try-btn { padding: 6px 8px; }
 .try-note { margin: 8px 4px 0; font-size: .85rem; }
+.swatch-chip.swatch-art { object-fit: cover; }
