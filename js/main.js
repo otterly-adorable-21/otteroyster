@@ -1801,8 +1801,31 @@ document.addEventListener('pointerup', () => {
 
 const PANELS = { event: panelEvent, home: panelHome, den: panelDen, closet: panelCloset, missions: panelMissions, arcade: panelArcade, friends: panelFriends };
 
+// Gently bring an element into view, below the sticky top bar, only if it
+// isn't already visible. Never jumps to the bottom or the very top.
+function reveal(el, { smooth = true, partly = false } = {}) {
+  if (!el) return;
+  const nav = document.querySelector('.topnav')?.offsetHeight || 0;
+  const r = el.getBoundingClientRect();
+  if (r.top >= nav + 4 && r.top < innerHeight - 80) return;
+  if (partly && r.bottom > nav + 60 && r.top < innerHeight - 60) return; // some of it is on screen already
+  window.scrollBy({ top: r.top - nav - 12, behavior: smooth ? 'smooth' : 'auto' });
+}
+
 function renderPanel() {
+  // Keep each sideways row of tabs where it was, so picking a tab doesn't
+  // snap the row back to the start.
+  const rows = [...document.querySelectorAll('#panel .chips')].map((c) => c.scrollLeft);
   $('#panel').innerHTML = PANELS[tab]();
+  document.querySelectorAll('#panel .chips').forEach((c, k) => {
+    if (rows[k] != null) c.scrollLeft = rows[k];
+    const on = c.querySelector('[aria-pressed="true"]');
+    if (on) {
+      const l = on.offsetLeft - c.offsetLeft;
+      if (l < c.scrollLeft) c.scrollLeft = l - 8;
+      else if (l + on.offsetWidth > c.scrollLeft + c.clientWidth) c.scrollLeft = l + on.offsetWidth - c.clientWidth + 8;
+    }
+  });
   document.body.dataset.view = tab;
   document.querySelectorAll('.tabs button').forEach((b) => b.setAttribute('aria-current', b.dataset.tab === tab ? 'page' : 'false'));
 }
@@ -2024,7 +2047,7 @@ document.addEventListener('click', async (e) => {
   if (plotEl && plotEl.closest('#garden-stage')) { plotTap(Number(plotEl.dataset.plot)); return; }
   if (place) { placeView = place.dataset.place; if (placeView === 'museum') loadMuseum(); else loadLane(); renderPanel(); window.scrollTo({ top: 0 }); return; }
   const pin = e.target.closest('[data-loc]');
-  if (pin) { mapSel = pin.dataset.loc; renderPanel(); document.querySelector('.loc-card')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return; }
+  if (pin) { mapSel = pin.dataset.loc; renderPanel(); reveal(document.querySelector('.loc-card')); return; }
   const shopBtn = e.target.closest('[data-denshop]');
   if (shopBtn) { denShop = shopBtn.dataset.denshop; return renderPanel(); }
   const closetBtn = e.target.closest('[data-closet]');
@@ -2321,7 +2344,7 @@ document.addEventListener('click', async (e) => {
     case 'den-place': {
       const r = core.placeFurniture(state, id);
       if (!r.ok) return toast(r.msg);
-      denEdit = true; denSel = r.uid; commit(); window.scrollTo({ top: 0, behavior: 'smooth' });
+      denEdit = true; denSel = r.uid; commit(); reveal($('#den-stage'), { partly: true });
       return r;
     }
     case 'den-flip': core.flipItem(state, denSel); return commit();
