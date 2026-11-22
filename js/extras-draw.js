@@ -75,6 +75,7 @@ const BODIES = {
 //   eyes: [[x, y], ...]  one eye = seen from the side; back = which way the specs' arm goes (-1 left, 1 right)
 //   lens: specs lens radius
 //   neck: [x, y, neck width, tilt°]
+//   hat:  optional, where hats and crowns go instead of top (e.g. on the hermit crab's shell)
 const FIT = {
   duckling: { top: [56, 18.5, 34, 0], eyes: [[62, 34]], lens: 5, back: -1, neck: [52, 56, 30, 0] },
   crab: { top: [50, 53, 30, 0], eyes: [[34, 46], [66, 46]], lens: 6.5, neck: [50, 58, 46, 0] },
@@ -98,7 +99,7 @@ const FIT = {
 // A new upload without a fit here uses the drawn one above.
 export const ART_FIT = {
   axolotl: { top: [62.5, 4, 40, 0], eyes: [[52.7, 17.2], [71.3, 17.2]], lens: 5.5, neck: [63, 40, 38, 0] },
-  crab: { top: [85, 19, 16, 10], eyes: [[81.6, 29], [87.2, 26.9]], lens: 3.6, neck: [77, 43, 18, -30] },
+  crab: { hat: [40, 2.5, 26, -12], top: [85, 19, 16, 10], eyes: [[81.6, 29], [87.2, 26.9]], lens: 3.6, neck: [77, 43, 18, -30] },
   duckling: { top: [63, 4, 38, 4], eyes: [[67.9, 20.8], [82.8, 19.1]], lens: 5.6, neck: [60, 45, 34, 0] },
 };
 export const fitFor = (id, uploaded) => (uploaded && ART_FIT[id]) || FIT[id] || { top: [50, 20, 30, 0], eyes: [[42, 40], [58, 40]], lens: 6, neck: [50, 60, 30, 0] };
@@ -147,16 +148,18 @@ function specs(f) {
 }
 // How far each head item rises above the head (for a head 40 wide).
 const ACC_RISE = { bow: 16, tophat: 30, flowers: 8, crown: 21 };
+const ON_HAT = ['tophat', 'flowers', 'crown'];
+const headSpot = (acc, f) => (f.hat && ON_HAT.includes(acc) ? f.hat : f.top);
 export const ACC_KIND = { bow: 'head', tophat: 'head', flowers: 'head', crown: 'head', bandana: 'neck', specs: 'eyes' };
 
 // Uploaded accessory art (256 x 256): head items sit with the bottom middle on
 // the head and the middle 210 px as wide as the head; the bandana's knot band
 // runs across y = 64 with the middle 210 px as wide as the neck; specs have
 // their lens centres at (80, 128) and (176, 128).
-function accArt(url, f, kind) {
+function accArt(url, f, kind, acc) {
   if (kind === 'head' || kind === 'neck') {
     const box = kind === 'head' ? `x="-24.4" y="-48.8" width="48.8" height="48.8"` : `x="-24.4" y="-12.2" width="48.8" height="48.8"`;
-    return frame(kind === 'head' ? f.top : f.neck, `<image href="${url}" ${box} preserveAspectRatio="xMidYMid meet"/>`);
+    return frame(kind === 'head' ? headSpot(acc, f) : f.neck, `<image href="${url}" ${box} preserveAspectRatio="xMidYMid meet"/>`);
   }
   const [a, b] = f.eyes;
   if (!b) { // one eye: the right-hand lens on the eye, sized to the lens
@@ -174,8 +177,8 @@ export function accessorySVG(acc, f, compId) {
   const own = compId && artUrl(`companion-acc/${acc}-${compId}`);
   if (own) return img(own, 0, 0, 100, 100);
   const url = artUrl(`companion-acc/${acc}`);
-  if (url) return accArt(url, f, kind);
-  if (kind === 'head') return frame(f.top, ACC_HEAD[acc]);
+  if (url) return accArt(url, f, kind, acc);
+  if (kind === 'head') return frame(headSpot(acc, f), ACC_HEAD[acc]);
   if (kind === 'neck') return frame(f.neck, ACC_NECK[acc]);
   return specs(f);
 }
@@ -198,7 +201,8 @@ export function companionSVG(id, { sleeping = false, look = {} } = {}) {
   const fit = fitFor(id, ownArt);
   const acc = look.acc ? accessorySVG(look.acc, fit, id) : '';
   // A tall hat on a tall companion: shrink the pair a little (feet stay put) so the hat isn't cut off.
-  const peak = ACC_RISE[look.acc] ? fit.top[1] - ACC_RISE[look.acc] * (fit.top[2] / 40) : 100;
+  const spot = look.acc && headSpot(look.acc, fit);
+  const peak = ACC_RISE[look.acc] ? spot[1] - ACC_RISE[look.acc] * (spot[2] / 40) : 100;
   const k = peak < 1 ? 99 / (100 - peak) : 1;
   const tint = COMP_COLORS[look.color]?.tint;
   return `${filt ? `<defs><filter id="${filt}"><feColorMatrix type="hueRotate" values="${hue}" result="h"/><feFlood flood-color="${tint}" flood-opacity=".38"/><feComposite in2="SourceAlpha" operator="in" result="t"/><feMerge><feMergeNode in="h"/><feMergeNode in="t"/></feMerge></filter></defs>` : ''}${k < 1 ? `<g transform="translate(${50 * (1 - k)} ${100 * (1 - k)}) scale(${k.toFixed(4)})">` : ''}<g${filt ? ` filter="url(#${filt})"` : ''}>${body}${pat}</g>${acc}${k < 1 ? '</g>' : ''}`;
