@@ -165,7 +165,7 @@ Fish for the aquarium, 256 × 256 px, transparent, facing left (they flip when s
 - **256 × 256**: `guppy` 🐟 Rainbow Guppy _(common)_ · `goldfish` 🐠 Goldfish _(common)_ · `minnow` 🐟 Silver Minnow _(common)_ · `clown` 🐠 Clownfish _(uncommon)_ · `bluetang` 🐟 Blue Tang _(uncommon)_ · `seahorsefish` 🐴 Dwarf Seahorse _(uncommon)_ · `puffer` 🐡 Pufferfish _(rare)_ · `angel` 🐠 Angelfish _(rare)_ · `jelly` 🪼 Moon Jelly _(rare)_ · `lantern` 🐟 Lanternfish _(legendary)_
 
 ### Companion accessories (`assets/art/companion-acc/`) · 6
-Tiny accessories that sit on top of a companion's head, 256 × 256 px, transparent, drawn so the bottom edge sits on the head.
+One picture per accessory, 256 × 256 px (or 512 × 512), transparent. The game lines it up on every companion (head, eyes or neck) and sizes it to fit, so follow the guide picture in the `_templates` folder: hats, bows, crowns and flower crowns sit with the bottom edge on the head; the bandana's middle goes on the red dot; the specs' lenses go on the two red dots. Want one made just for a single companion? Add `<accessory>-<companion>` (e.g. `tophat-crab`), 512 × 512 drawn right on top of that companion's picture, and it is used for that companion only.
 
 - **256 × 256**: `bow` 🎀 Little Bow · `tophat` 🎩 Teeny Top Hat · `flowers` 🌸 Flower Crown · `bandana` 🧣 Bandana · `specs` 👓 Round Specs · `crown` 👑 Tiny Crown
 

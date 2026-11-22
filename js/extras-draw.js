@@ -68,19 +68,116 @@ const BODIES = {
     <path d="M44,78 q6,4 12,0" stroke="#a8865f" stroke-width="2" fill="none"/>`,
 };
 
-// Where a little accessory sits on each companion (x, y of the top of the head).
-const HEAD = {
-  duckling: [56, 18], crab: [50, 50], frog: [50, 32], turtle: [84, 48], starfish: [50, 14], seahorse: [62, 14], firefly: [50, 33], octopus: [50, 20],
-  jellyfish: [50, 14], seal: [50, 20], puffin: [50, 14], axolotl: [34, 34], minnow: [32, 40], snail: [24, 40], butterfly: [50, 34], moth: [50, 38], ghostcrab: [50, 52],
+// ---------- companion accessories ----------
+// Every companion has a "fit": where its head top, eyes and neck are, so each
+// accessory lines up on every body. Numbers are in the 100 x 100 box.
+//   top:  [x, y, head width, tilt°]  (x, y = the top middle of the head)
+//   eyes: [[x, y], ...]  one eye = seen from the side; back = which way the specs' arm goes (-1 left, 1 right)
+//   lens: specs lens radius
+//   neck: [x, y, neck width, tilt°]
+const FIT = {
+  duckling: { top: [56, 18.5, 34, 0], eyes: [[62, 34]], lens: 5, back: -1, neck: [52, 56, 30, 0] },
+  crab: { top: [50, 53, 30, 0], eyes: [[34, 46], [66, 46]], lens: 6.5, neck: [50, 58, 46, 0] },
+  frog: { top: [50, 52, 26, 0], eyes: [[34, 45], [66, 45]], lens: 8, neck: [50, 70, 50, 0] },
+  turtle: { top: [84, 50, 24, 12], eyes: [[88, 58]], lens: 4.5, back: -1, neck: [75, 66, 16, 0] },
+  starfish: { top: [50, 17, 16, 0], eyes: [[43, 50], [57, 50]], lens: 5, neck: [50, 66, 30, 0] },
+  seahorse: { top: [54, 17, 22, -12], eyes: [[60, 26]], lens: 4.5, back: -1, neck: [44, 42, 16, 20] },
+  firefly: { top: [50, 34, 26, 0], eyes: [[45, 44], [56, 44]], lens: 4.3, neck: [50, 58, 22, 0] },
+  octopus: { top: [50, 19, 40, 0], eyes: [[40, 46], [60, 46]], lens: 7, neck: [50, 63, 52, 0] },
+  jellyfish: { top: [50, 15, 40, 0], eyes: [[42, 34], [58, 34]], lens: 6, neck: [50, 51, 58, 0] },
+  seal: { top: [50, 21, 36, 0], eyes: [[41, 40], [59, 40]], lens: 7, neck: [50, 65, 42, 0] },
+  puffin: { top: [50, 15, 32, 0], eyes: [[44, 34]], lens: 5, back: -1, neck: [50, 53, 30, 0] },
+  axolotl: { top: [34, 35, 30, 0], eyes: [[26, 52], [42, 52]], lens: 6, neck: [38, 72, 34, 0] },
+  minnow: { top: [40, 46, 22, -8], eyes: [[28, 54]], lens: 5.5, back: 1, neck: [44, 59, 24, 0] },
+  snail: { top: [23, 45, 22, 0], eyes: [[16, 48], [30, 50]], lens: 4.5, neck: [22, 77, 22, 0] },
+  butterfly: { top: [50, 41, 14, 0], eyes: [[46, 46], [54, 46]], lens: 3.2, neck: [50, 53, 12, 0] },
+  moth: { top: [50, 43, 16, 0], eyes: [[46, 50], [54, 50]], lens: 3.4, neck: [50, 57, 16, 0] },
+  ghostcrab: { top: [50, 55, 28, 0], eyes: [[36, 44], [64, 44]], lens: 7, neck: [50, 60, 42, 0] },
 };
-const ACC_DRAW = {
-  bow: (x, y) => `<path d="M${x},${y} l-10,-6 v12Z M${x},${y} l10,-6 v12Z" fill="#f06595"/><circle cx="${x}" cy="${y}" r="3" fill="#c2255c"/>`,
-  tophat: (x, y) => `<rect x="${x - 8}" y="${y - 20}" width="16" height="16" rx="2" fill="#212529"/><rect x="${x - 8}" y="${y - 8}" width="16" height="3" fill="#c92a2a"/><ellipse cx="${x}" cy="${y - 4}" rx="13" ry="3" fill="#343a40"/>`,
-  flowers: (x, y) => [-12, -4, 4, 12].map((d, k) => `<circle cx="${x + d}" cy="${y - 2 - Math.abs(d) * -0.1}" r="4" fill="${['#ff8fab', '#ffd43b', '#b197fc', '#ff8fab'][k]}"/>`).join(''),
-  bandana: (x, y) => `<path d="M${x - 16},${y + 4} Q${x},${y - 10} ${x + 16},${y + 4} L${x + 18},${y + 8} L${x + 24},${y + 4} L${x + 20},${y + 12}Z" fill="#e03131"/><circle cx="${x - 4}" cy="${y}" r="1.5" fill="#fff"/><circle cx="${x + 6}" cy="${y + 1}" r="1.5" fill="#fff"/>`,
-  specs: (x, y) => `<circle cx="${x - 8}" cy="${y + 14}" r="6" fill="none" stroke="#343a40" stroke-width="2"/><circle cx="${x + 8}" cy="${y + 14}" r="6" fill="none" stroke="#343a40" stroke-width="2"/><path d="M${x - 2},${y + 14} H${x + 2}" stroke="#343a40" stroke-width="2"/>`,
-  crown: (x, y) => `<path d="M${x - 12},${y} L${x - 12},${y - 12} L${x - 6},${y - 6} L${x},${y - 16} L${x + 6},${y - 6} L${x + 12},${y - 12} L${x + 12},${y}Z" fill="#ffd43b" stroke="#e67700" stroke-width="1.5"/>`,
+// Fits for uploaded companion art (assets/art/companions), measured from the pictures.
+// A new upload without a fit here uses the drawn one above.
+export const ART_FIT = {
+  axolotl: { top: [62.5, 4, 40, 0], eyes: [[52.7, 17.2], [71.3, 17.2]], lens: 5.5, neck: [63, 40, 38, 0] },
+  crab: { top: [84, 56, 16, 10], eyes: [[81.2, 61], [86.4, 59.8]], lens: 3.4, neck: [74, 67, 18, -30] },
 };
+export const fitFor = (id, uploaded) => (uploaded && ART_FIT[id]) || FIT[id] || { top: [50, 20, 30, 0], eyes: [[42, 40], [58, 40]], lens: 6, neck: [50, 60, 30, 0] };
+
+// Head items are drawn for a head 40 wide with its top middle at 0,0; the
+// neck item for a neck 40 wide centred on 0,0. The fit scales and turns them.
+const frame = ([x, y, w, t], inner) => `<g transform="translate(${x} ${y}) rotate(${t}) scale(${(w / 40).toFixed(3)})">${inner}</g>`;
+const OUT = 'stroke-linejoin="round" stroke-linecap="round"';
+const flower = (x, y, c) => `<g transform="translate(${x} ${y})">${[0, 72, 144, 216, 288].map((a) => `<circle cx="${(2.6 * Math.cos((a - 90) * Math.PI / 180)).toFixed(2)}" cy="${(2.6 * Math.sin((a - 90) * Math.PI / 180)).toFixed(2)}" r="2.5" fill="${c}"/>`).join('')}<circle r="1.7" fill="#ffd43b"/></g>`;
+const ACC_HEAD = {
+  bow: `<g ${OUT} stroke="#c2255c" stroke-width="1.2"><path d="M-1.5,-4 L-6,7 L-3,5.5 L-2,8.5Z M1.5,-4 L6,7 L3,5.5 L2,8.5Z" fill="#e64980"/>
+    <path d="M0,-5 C-5,-15 -18,-14 -16,-4 C-15,3 -6,2 0,-5Z M0,-5 C5,-15 18,-14 16,-4 C15,3 6,2 0,-5Z" fill="#ff8fab"/>
+    <ellipse cx="0" cy="-5" rx="3.4" ry="4" fill="#f06595"/></g><path d="M-12,-8 q2,-3 5,-2 M12,-8 q-2,-3 -5,-2" stroke="#fff" stroke-width="1.2" fill="none" opacity=".7" stroke-linecap="round"/>`,
+  tophat: `<g transform="translate(2 0) rotate(8)" ${OUT}><ellipse cx="0" cy="-2.5" rx="16" ry="3.8" fill="#343a40" stroke="#1a1d20" stroke-width="1"/>
+    <path d="M-10,-3 L-9,-26 Q0,-28.5 9,-26 L10,-3 Q0,-1 -10,-3Z" fill="#212529" stroke="#1a1d20" stroke-width="1"/>
+    <path d="M-9.8,-7 Q0,-5 9.8,-7 L9.6,-11 Q0,-9 -9.6,-11Z" fill="#c92a2a"/><ellipse cx="0" cy="-26" rx="9" ry="2.3" fill="#495057"/>
+    <path d="M-6,-23 L-6.5,-13" stroke="#fff" stroke-width="1.4" opacity=".35"/></g>`,
+  flowers: `${[[-17, 1], [-10, -2], [-2, -3.6], [6, -3.2], [13, -1.6], [18, 1.5]].map(([x, y], k) => `<ellipse cx="${x + 3}" cy="${y + 1.5}" rx="3.4" ry="1.6" fill="#69db7c" transform="rotate(${-20 + k * 8} ${x + 3} ${y + 1.5})"/>`).join('')}
+    ${[[-16, 0, '#ff8fab'], [-8, -2.8, '#fff'], [0, -4, '#b197fc'], [8, -3.2, '#ffa94d'], [16, 0, '#ff8fab']].map(([x, y, c]) => flower(x, y, c)).join('')}`,
+  crown: `<g ${OUT}><path d="M-13,0 L-14.5,-15 L-7,-8 L0,-19 L7,-8 L14.5,-15 L13,0Z" fill="#ffd43b" stroke="#e67700" stroke-width="1.4"/>
+    <rect x="-13.4" y="-4.6" width="26.8" height="4.6" rx="1" fill="#fcc419" stroke="#e67700" stroke-width="1.2"/>
+    <circle cx="0" cy="-19" r="2" fill="#f06595"/><circle cx="-14.5" cy="-15" r="1.7" fill="#4dabf7"/><circle cx="14.5" cy="-15" r="1.7" fill="#4dabf7"/>
+    <circle cx="0" cy="-2.3" r="1.6" fill="#e03131"/><circle cx="-7" cy="-2.3" r="1.1" fill="#fff"/><circle cx="7" cy="-2.3" r="1.1" fill="#fff"/>
+    <path d="M-10,-6 L-10.8,-12" stroke="#fff" stroke-width="1.3" opacity=".6"/></g>`,
+};
+const ACC_NECK = {
+  bandana: `<g ${OUT} stroke="#a61e1e" stroke-width="1.1"><path d="M-11,2 Q0,6 11,2 L1,17 Q0,18.5 -1,17Z" fill="#e03131"/>
+    <path d="M-20,-3.5 Q0,3 20,-3.5 L20,1.5 Q0,8 -20,1.5Z" fill="#f03e3e"/>
+    <path d="M18,-1 L23.4,-6 L24,0Z M18,0.5 L23.4,5 L19.5,7Z" fill="#e03131"/><circle cx="19" cy="-1" r="2.4" fill="#c92a2a"/></g>
+    <g fill="#fff">${[[-12, 0.5], [-4, 2.2], [4, 2.2], [12, 0.5], [-4, 8], [3, 8], [0, 12.5]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1"/>`).join('')}</g>`,
+};
+function specs(f) {
+  const r = f.lens;
+  const sw = Math.max(0.8, r * 0.24).toFixed(2);
+  const lens = ([x, y]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#d0ebff" fill-opacity=".28" stroke="#343a40" stroke-width="${sw}"/><path d="M${x - r * 0.55},${y - r * 0.2} a${r * 0.6},${r * 0.6} 0 0 1 ${r * 0.45},-${r * 0.4}" stroke="#fff" stroke-width="${(sw * 0.8).toFixed(2)}" fill="none" stroke-linecap="round" opacity=".85"/>`;
+  const [a, b] = f.eyes;
+  if (!b) { // seen from the side: one lens and an arm going back
+    const d = f.back || -1;
+    return `${lens(a)}<path d="M${a[0] + d * r},${a[1]} l${d * r * 1.8},${-r * 0.25}" stroke="#343a40" stroke-width="${sw}" stroke-linecap="round"/>`;
+  }
+  const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy), ux = dx / len, uy = dy / len;
+  const p1 = [a[0] + ux * r, a[1] + uy * r], p2 = [b[0] - ux * r, b[1] - uy * r];
+  const bridge = len > 2 * r + 0.5 ? `<path d="M${p1[0]},${p1[1]} Q${(p1[0] + p2[0]) / 2},${(p1[1] + p2[1]) / 2 - r * 0.45} ${p2[0]},${p2[1]}" stroke="#343a40" stroke-width="${sw}" fill="none" stroke-linecap="round"/>` : '';
+  const arms = `<path d="M${a[0] - ux * r},${a[1] - uy * r} l${-ux * r * 0.7},${-uy * r * 0.7 - r * 0.15} M${b[0] + ux * r},${b[1] + uy * r} l${ux * r * 0.7},${uy * r * 0.7 - r * 0.15}" stroke="#343a40" stroke-width="${sw}" stroke-linecap="round"/>`;
+  return `${arms}${bridge}${lens(a)}${lens(b)}`;
+}
+// How far each head item rises above the head (for a head 40 wide).
+const ACC_RISE = { bow: 16, tophat: 30, flowers: 8, crown: 21 };
+export const ACC_KIND = { bow: 'head', tophat: 'head', flowers: 'head', crown: 'head', bandana: 'neck', specs: 'eyes' };
+
+// Uploaded accessory art (256 x 256): head items sit with the bottom middle on
+// the head and the middle 210 px as wide as the head; the bandana's knot band
+// runs across y = 64 with the middle 210 px as wide as the neck; specs have
+// their lens centres at (80, 128) and (176, 128).
+function accArt(url, f, kind) {
+  if (kind === 'head' || kind === 'neck') {
+    const box = kind === 'head' ? `x="-24.4" y="-48.8" width="48.8" height="48.8"` : `x="-24.4" y="-12.2" width="48.8" height="48.8"`;
+    return frame(kind === 'head' ? f.top : f.neck, `<image href="${url}" ${box} preserveAspectRatio="xMidYMid meet"/>`);
+  }
+  const [a, b] = f.eyes;
+  if (!b) { // one eye: the right-hand lens on the eye, sized to the lens
+    const k = (f.lens * 2) / 80;
+    return `<g transform="translate(${a[0]} ${a[1]}) scale(${(f.back > 0 ? -k : k).toFixed(4)} ${k.toFixed(4)}) translate(-176 -128)"><image href="${url}" x="128" y="0" width="128" height="256" preserveAspectRatio="xMaxYMid slice"/></g>`;
+  }
+  const len = Math.hypot(b[0] - a[0], b[1] - a[1]), k = len / 96, ang = Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI;
+  return `<g transform="translate(${a[0]} ${a[1]}) rotate(${ang.toFixed(1)}) scale(${k.toFixed(4)}) translate(-80 -128)"><image href="${url}" width="256" height="256"/></g>`;
+}
+
+export function accessorySVG(acc, f, compId) {
+  const kind = ACC_KIND[acc];
+  if (!kind) return '';
+  // A picture made for this exact companion (512 x 512, drawn over it) wins.
+  const own = compId && artUrl(`companion-acc/${acc}-${compId}`);
+  if (own) return img(own, 0, 0, 100, 100);
+  const url = artUrl(`companion-acc/${acc}`);
+  if (url) return accArt(url, f, kind);
+  if (kind === 'head') return frame(f.top, ACC_HEAD[acc]);
+  if (kind === 'neck') return frame(f.neck, ACC_NECK[acc]);
+  return specs(f);
+}
 const PATTERN_DRAW = {
   spots: () => [[38, 66], [56, 74], [64, 60], [46, 80]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="4" fill="#fff" opacity=".55"/>`).join(''),
   stripes: () => [58, 68, 78].map((y) => `<path d="M28,${y} Q50,${y - 6} 72,${y}" stroke="#fff" stroke-width="3" opacity=".5" fill="none"/>`).join(''),
@@ -95,11 +192,15 @@ export function companionSVG(id, { sleeping = false, look = {} } = {}) {
   const hue = COMP_COLORS[look.color]?.hue || 0;
   const filt = hue && !(url && artUrl(`companions/${id}-${look.color}`)) ? `cmp-hue-${hue}` : '';
   const body = url ? img(url, 0, 0, 100, 100) : (BODIES[id] || (() => ''))(sleeping ? (x, y) => sleepyEye(x, y) : eye);
-  const [hx, hy] = HEAD[id] || [50, 20];
   const pat = look.pattern && PATTERN_DRAW[look.pattern] ? PATTERN_DRAW[look.pattern]() : '';
-  const acc = look.acc && ACC_DRAW[look.acc] ? (artUrl(`companion-acc/${look.acc}`) ? img(artUrl(`companion-acc/${look.acc}`), hx - 16, hy - 24, 32, 32) : ACC_DRAW[look.acc](hx, hy)) : '';
+  const ownArt = !!(artUrl(`companions/${id}`) || (look.color && artUrl(`companions/${id}-${look.color}`)));
+  const fit = fitFor(id, ownArt);
+  const acc = look.acc ? accessorySVG(look.acc, fit, id) : '';
+  // A tall hat on a tall companion: shrink the pair a little (feet stay put) so the hat isn't cut off.
+  const peak = ACC_RISE[look.acc] ? fit.top[1] - ACC_RISE[look.acc] * (fit.top[2] / 40) : 100;
+  const k = peak < 1 ? 99 / (100 - peak) : 1;
   const tint = COMP_COLORS[look.color]?.tint;
-  return `${filt ? `<defs><filter id="${filt}"><feColorMatrix type="hueRotate" values="${hue}" result="h"/><feFlood flood-color="${tint}" flood-opacity=".38"/><feComposite in2="SourceAlpha" operator="in" result="t"/><feMerge><feMergeNode in="h"/><feMergeNode in="t"/></feMerge></filter></defs>` : ''}<g${filt ? ` filter="url(#${filt})"` : ''}>${body}${pat}</g>${acc}`;
+  return `${filt ? `<defs><filter id="${filt}"><feColorMatrix type="hueRotate" values="${hue}" result="h"/><feFlood flood-color="${tint}" flood-opacity=".38"/><feComposite in2="SourceAlpha" operator="in" result="t"/><feMerge><feMergeNode in="h"/><feMergeNode in="t"/></feMerge></filter></defs>` : ''}${k < 1 ? `<g transform="translate(${50 * (1 - k)} ${100 * (1 - k)}) scale(${k.toFixed(4)})">` : ''}<g${filt ? ` filter="url(#${filt})"` : ''}>${body}${pat}</g>${acc}${k < 1 ? '</g>' : ''}`;
 }
 
 // ---------- garden ----------

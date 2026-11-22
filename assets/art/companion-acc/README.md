@@ -1,6 +1,6 @@
 # Companion accessories
 
-Tiny accessories that sit on top of a companion's head, 256 × 256 px, transparent, drawn so the bottom edge sits on the head.
+One picture per accessory, 256 × 256 px (or 512 × 512), transparent. The game lines it up on every companion (head, eyes or neck) and sizes it to fit, so follow the guide picture in the `_templates` folder: hats, bows, crowns and flower crowns sit with the bottom edge on the head; the bandana's middle goes on the red dot; the specs' lenses go on the two red dots. Want one made just for a single companion? Add `<accessory>-<companion>` (e.g. `tophat-crab`), 512 × 512 drawn right on top of that companion's picture, and it is used for that companion only.
 
 Upload files named exactly like the **File name** column, plus the extension
 (`.png` is best: it also works in Shelly's Discord pictures. `.webp` and animated `.gif` work on the website), e.g. `bow.png`. Use lowercase.

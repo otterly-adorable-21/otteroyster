@@ -115,7 +115,7 @@ export const GROUPS = [
     slots: Object.entries(FISH).map(([id, f]) => ({ id, name: f.name, emoji: f.icon, note: f.rarity })),
   },
   {
-    id: 'companion-acc', size: '256 × 256', name: 'Companion accessories', tip: 'Tiny accessories that sit on top of a companion\'s head, 256 × 256 px, transparent, drawn so the bottom edge sits on the head.',
+    id: 'companion-acc', size: '256 × 256', name: 'Companion accessories', tip: 'One picture per accessory, 256 × 256 px (or 512 × 512), transparent. The game lines it up on every companion (head, eyes or neck) and sizes it to fit, so follow the guide picture in the `_templates` folder: hats, bows, crowns and flower crowns sit with the bottom edge on the head; the bandana\'s middle goes on the red dot; the specs\' lenses go on the two red dots. Want one made just for a single companion? Add `<accessory>-<companion>` (e.g. `tophat-crab`), 512 × 512 drawn right on top of that companion\'s picture, and it is used for that companion only.',
     slots: Object.entries(COMP_ACCS).map(([id, a]) => ({ id, name: a.name, emoji: a.icon })),
   },
   {
