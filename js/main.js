@@ -17,7 +17,7 @@ import { happeningsAt, npcWhere, npcsAt, npcLine, merchantDocked, crittersFor, C
 import { MASTERIES, TIERS, RANKS, LEGACY_LEVEL, legacyStars, rankOf, nextRank } from './legacy.js';
 import { STAGES, stageOf, nextStage, TRICKS, isBirthday, nextBirthday, birthdayLabel } from './growth.js';
 import { FURNITURE, WALLPAPERS, FLOORS, DEN_CATS } from './den-data.js';
-import { denSVG, furniturePreviewSVG } from './den.js';
+import { denSVG, furniturePreviewSVG, PATTERNS as DEN_PATTERNS } from './den.js';
 import { LOCATIONS, LOC, RARITY, FINDS, TOTAL_FINDS, EXPLORE_ENERGY, SET_REWARD } from './world.js';
 import { mapSVG } from './map.js';
 import { heartsText, friendLevel, GIFT_PEARL_OPTIONS, GIFT_PEARLS_PER_DAY, POSTCARD_ART } from './social.js';
@@ -544,8 +544,8 @@ function previewArt(kind, id) {
   const trial = JSON.parse(JSON.stringify(state));
   trial.sleeping = false;
   let sel = null;
-  if (kind === 'wall') trial.den.wallpaper = id;
-  else if (kind === 'floor') trial.den.floor = id;
+  if (kind === 'wall') core.room(trial).wallpaper = id;
+  else if (kind === 'floor') core.room(trial).floor = id;
   else {
     trial.furniture[id] = (trial.furniture[id] || 0) + 1;
     sel = core.placeFurniture(trial, id).uid || null;
@@ -1678,7 +1678,7 @@ function panelDenInside() {
   let shop;
   if (denShop === 'walls') {
     const sw = (kind, id, it, owned, active) => `<div class="swatch-wrap"><button class="swatch ${active ? 'on' : ''}" data-action="den-${kind}" data-id="${id}" ${!owned && state.pearls < it.price ? 'disabled' : ''}>
-        ${it.pattern ? `<svg class="swatch-chip" viewBox="0 0 40 40"><defs>${it.pattern.replace(/id="([^"]+)"/, 'id="sw-$1"')}</defs><rect width="40" height="40" fill="url(#sw-${kind === 'wall' ? 'wp' : 'fl'}-${id})"/></svg>` : `<span class="swatch-chip" style="background:${it.swatch}"></span>`}<b>${it.name}</b>
+        ${(() => { const pat = it.pattern || DEN_PATTERNS[`${kind === 'wall' ? 'wp' : 'fl'}-${id}`]; return pat ? `<svg class="swatch-chip" viewBox="0 0 40 40"><defs>${pat.replace(/id="([^"]+)"/, 'id="sw-$1"')}</defs><rect width="40" height="40" fill="url(#sw-${kind === 'wall' ? 'wp' : 'fl'}-${id})"/></svg>` : `<span class="swatch-chip" style="background:${it.swatch}"></span>`; })()}<b>${it.name}</b>
         <small>${active ? 'In use ✓' : owned ? 'Owned' : `<span class="pearl-icon"></span> ${it.price}`}</small></button>
         ${owned ? '' : `<button class="link small" data-action="try" data-kind="${kind === 'wall' ? 'wall' : 'floor'}" data-id="${id}">👀 Preview</button>`}</div>`;
     shop = `<h3 class="den-sub">Wallpaper</h3><div class="swatches">${Object.entries(WALLPAPERS).map(([id, it]) => sw('wall', id, it, state.wallpapers.includes(id), curRoom().wallpaper === id)).join('')}</div>

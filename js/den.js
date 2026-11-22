@@ -41,7 +41,7 @@ const furnitureArt = (id, it) => { const u = artUrl(`furniture/${id}`); if (!u) 
 
 const WALL_BOTTOM = 196;
 
-const PATTERNS = {
+export const PATTERNS = {
   'wp-moss': `<pattern id="wp-moss" width="60" height="44" patternUnits="userSpaceOnUse"><rect width="60" height="44" fill="#4f6b4a"/>
     <ellipse cx="14" cy="12" rx="12" ry="8" fill="#587652"/><ellipse cx="44" cy="30" rx="14" ry="9" fill="#587652"/><ellipse cx="46" cy="6" rx="7" ry="4" fill="#5f7d56"/>
     <circle cx="28" cy="38" r="2" fill="#6f8f60"/><circle cx="8" cy="30" r="1.5" fill="#6f8f60"/></pattern>`,
