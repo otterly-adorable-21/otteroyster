@@ -1,7 +1,7 @@
 // Shared game rules. Pure logic with no DOM access, so both the website and
 // the Discord bot (server/) use exactly the same rules on the same save data.
 import { ITEMS, SNACKS, MISSIONS, GAME_LIST } from './data.js';
-import { FURNITURE, WALLPAPERS, FLOORS, STARTER_DEN, ZONES, zoneOf, clampPos } from './den-data.js';
+import { FURNITURE, WALLPAPERS, FLOORS, STARTER_DEN, ZONES, zoneOf, clampPos, itemSize, isSmall, isSurface, surfaceTopY } from './den-data.js';
 import { LOC, FINDS, RARITY, MISSION_LOC, EXPLORE_ENERGY, EXPLORE_COOLDOWN_MIN, SET_REWARD } from './world.js';
 import { activeEvent, questsFor, EVENT, EVENT_FIND_CHANCE, TOKENS_PER_ACTIVITY } from './events.js';
 import { TRAITS, TRAIT_IDS, blankPersona, favoritesFor, traitOf, hasTrait } from './personality.js';
@@ -561,7 +561,40 @@ export function moveItem(s, uid, x, y) {
   }
   const p = room(s).items.find((q) => q.uid === uid);
   if (!p) return no('That item is gone.');
+  if (isSmall(p.id)) {
+    // Small things can be lifted anywhere while dragging; dropItem decides
+    // whether they land on a tabletop or the floor.
+    const { w } = itemSize(p.id);
+    p.x = Math.round(Math.max(w / 2 - 10, Math.min(400 - w / 2 + 10, Number(x) || 0)));
+    p.y = Math.round(Math.max(60, Math.min(ZONES.floor.maxY, Number(y) || 0)));
+    p.on = null;
+    return ok('');
+  }
+  const bx = p.x;
+  const by = p.y;
   Object.assign(p, clampPos(p.id, x, y));
+  // Whatever sits on a table moves with it.
+  if (isSurface(p.id)) for (const q of room(s).items) if (q.on === uid) { q.x += p.x - bx; q.y += p.y - by; }
+  return ok('');
+}
+
+// Drop a dragged item: small things snap onto a tabletop they're over, or
+// settle on the floor.
+export function dropItem(s, uid) {
+  const den = room(s);
+  const p = den.items.find((q) => q.uid === uid);
+  if (!p || !isSmall(p.id)) return ok('');
+  let best = null;
+  for (const t of den.items) {
+    if (t === p || !isSurface(t.id)) continue;
+    const half = itemSize(t.id).w / 2;
+    const top = surfaceTopY(t);
+    const d = Math.abs(p.y - top);
+    if (p.x >= t.x - half + 2 && p.x <= t.x + half - 2 && d < 26 && (!best || d < best.d)) best = { t, top, d };
+  }
+  if (best) { p.y = Math.round(best.top); p.on = best.t.uid; return ok('', { on: best.t.id }); }
+  p.on = null;
+  Object.assign(p, clampPos(p.id, p.x, p.y));
   return ok('');
 }
 
@@ -576,6 +609,8 @@ export function storeItem(s, uid) {
   const i = room(s).items.findIndex((q) => q.uid === uid);
   if (i < 0) return no('That item is gone.');
   const [p] = room(s).items.splice(i, 1);
+  // Anything that was on it drops to the floor.
+  for (const q of room(s).items) if (q.on === uid) { q.on = null; Object.assign(q, clampPos(q.id, q.x, q.y + 30)); }
   return ok(`Put the ${FURNITURE[p.id].name} in storage.`);
 }
 

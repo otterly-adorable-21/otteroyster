@@ -1700,7 +1700,7 @@ function panelDenInside() {
         ${sel ? `<span class="den-sel-name">${FURNITURE[sel.id].name}</span>
           <button class="btn small" data-action="den-flip">↔️ Flip</button>
           <button class="btn small" data-action="den-store">📦 Put away</button>`
-        : '<span class="den-sel-name muted">Drag things around · tap one to flip or put it away</span>'}
+        : '<span class="den-sel-name muted">Drag things around · drop small decor and plushies onto tables and shelves · tap one to flip or put it away</span>'}
         <button class="btn small primary" data-action="den-edit">✅ Done</button></div>`
     : `<div class="den-toolbar"><span class="den-sel-name muted">${state.mission ? `${esc(state.name)} is out exploring.` : `Tap ${esc(state.name)} for a cuddle.`}</span>
         <button class="btn small primary" data-action="den-edit">✏️ Decorate</button></div>`;
@@ -1790,8 +1790,13 @@ document.addEventListener('pointermove', (e) => {
 document.addEventListener('pointerup', () => {
   if (!drag) return;
   const moved = drag.moved;
+  const uid = drag.uid;
   drag = null;
-  if (moved) commit();
+  if (moved) {
+    const r = core.dropItem(state, uid);
+    if (r.on) toast(`✨ Placed on the ${FURNITURE[r.on].name}.`);
+    commit();
+  }
 });
 
 const PANELS = { event: panelEvent, home: panelHome, den: panelDen, closet: panelCloset, missions: panelMissions, arcade: panelArcade, friends: panelFriends };

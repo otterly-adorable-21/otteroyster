@@ -278,3 +278,17 @@ export function clampPos(id, x, y) {
     y: Math.round(Math.max(z.minY, Math.min(z.maxY, Number(y) || 0))),
   };
 }
+
+// ---------- tabletops ----------
+// Furniture with a flat top that small decor and plushies can sit on. The
+// number is where the top is, as a fraction of the item's height from its top.
+export const SURFACES = {
+  table: 14 / 62, coffeetable: 12 / 50, oystertable: 14 / 70, chestdresser: 16 / 90, mushroomstand: 6 / 70,
+  fishbowltable: 40 / 90, vanity: 66 / 120, stool: 5 / 56, chest: 8 / 62, bookshelf: 3 / 102, coralshelf: 6 / 120,
+  bottlecabinet: 5 / 120, trophycabinet: 5 / 120, shellcabinet: 5 / 110,
+};
+export const isSurface = (id) => SURFACES[id] != null;
+// Small enough to go on a table: decor and plushies up to 56 den-units wide.
+export const isSmall = (id) => !isSurface(id) && ['decor', 'plush'].includes(FURNITURE[id]?.cat) && FURNITURE[id].w <= 56;
+// The y (den units) of a surface's top, given where it stands.
+export const surfaceTopY = (p) => p.y - itemSize(p.id).h * (1 - SURFACES[p.id]);

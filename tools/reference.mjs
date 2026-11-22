@@ -53,6 +53,7 @@ const WEBSITE = [
   ]],
   ['Den tab', [
     '**Inside**: drag furniture, flip, put away to storage; coziness score (counts every room); tap your otter to cuddle',
+    '**Tabletops**: drop small decor and plushies onto tables, dressers, stools, nightstands and shelves; they move with the table, and drop to the floor if it\'s put away',
     '**Rooms**: the main den plus up to 3 more (250 pearls at Lv 3, 500 at Lv 6, 900 at Lv 10); each has its own name, wallpaper, floor and furniture; storage is shared; your otter follows you from room to room. Visitors and Discord see the main den',
     `Furniture shop: ${shopFurn.length} pieces in tabs (${byCat}), plus Collections and Walls & floors (${Object.keys(WALLPAPERS).length} wallpapers, ${Object.keys(FLOORS).length} floors), all with previews`,
     `**Collections**: ${SETS.length} themed sets (${SETS.map((x) => x.name).join(', ')}) mixing den, door and closet pieces; complete one for a pearl reward`,

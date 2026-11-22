@@ -116,7 +116,7 @@ function itemSVG(p, { selected = false, editable = false, state = null } = {}) {
   const x = p.x - w / 2;
   const y = p.y - h;
   const flip = p.flip ? ` transform="translate(${p.x * 2} 0) scale(-1 1)"` : '';
-  const shadow = zoneOf(p.id) === 'floor' ? `<ellipse cx="${p.x}" cy="${p.y - 1}" rx="${w * 0.42}" ry="${Math.max(3, w * 0.07)}" fill="#000" opacity=".22"/>` : '';
+  const shadow = zoneOf(p.id) === 'floor' && !p.on ? `<ellipse cx="${p.x}" cy="${p.y - 1}" rx="${w * 0.42}" ry="${Math.max(3, w * 0.07)}" fill="#000" opacity=".22"/>` : '';
   const sel = selected ? `<rect x="${x - 4}" y="${y - 4}" width="${w + 8}" height="${h + 8}" rx="8" fill="none" stroke="#f3d98c" stroke-width="2.5" stroke-dasharray="6 4"/>` : '';
   return `<g class="den-item${editable ? ' editable' : ''}" data-uid="${p.uid}">${shadow}<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="transparent"/><g${flip}><svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="${it.vb}" overflow="visible">${furnitureArt(p.id, it)}${state ? displayContents(it, p.id, state) : ''}</svg></g>${sel}</g>`;
 }
@@ -149,7 +149,9 @@ export function denSVG(state, opts = {}) {
   const items = den.items.filter((p) => FURNITURE[p.id]);
   const layer = (z) => items.filter((p) => zoneOf(p.id) === z).sort((a, b) => a.y - b.y);
   const pos = otterPos(state);
-  const floorThings = layer('floor').map((p) => ({ y: p.y, html: itemSVG(p, { selected: opts.selected === p.uid, editable: opts.editable, state }) }));
+  // Things on a tabletop are drawn just after their table.
+  const byUid = Object.fromEntries(items.map((p) => [p.uid, p]));
+  const floorThings = layer('floor').map((p) => ({ y: p.on && byUid[p.on] ? byUid[p.on].y + 0.01 : p.y, html: itemSVG(p, { selected: opts.selected === p.uid, editable: opts.editable, state }) }));
   for (const [k, g] of (opts.guests || []).entries()) {
     const gx = Math.max(60, Math.min(340, pos.x + (k % 2 ? -1 : 1) * (70 + k * 20)));
     const gstate = { ...state, name: g.name, equipped: g.equipped || {}, sleeping: state.sleeping, stats: { hunger: 90, happiness: 90, energy: 90, clean: 90 }, persona: state.persona };
