@@ -251,6 +251,17 @@ export const FLOORS = {
   ...MORE_FLOORS,
 };
 
+// Taken out of the shop. Anyone who already bought one keeps it and can still use it.
+export const RETIRED = {
+  wallpaper: ['tidepools', 'fernmoss', 'enchanted', 'runes', 'bigoysters', 'fishhats', 'newsprint', 'retro', 'clamfaces', 'beachgrass', 'pressedflowers', 'tinyotters', 'cheese'],
+  floor: ['undersand'],
+  furniture: ['bubblebed', 'pearlbed', 'floatlounger', 'lantern'],
+};
+for (const id of RETIRED.wallpaper) if (WALLPAPERS[id]) WALLPAPERS[id].retired = true;
+for (const id of RETIRED.floor) if (FLOORS[id]) FLOORS[id].retired = true;
+for (const id of RETIRED.furniture) if (FURNITURE[id]) FURNITURE[id].retired = true;
+
+
 // Every new otter starts with a little furnished den.
 export const STARTER_DEN = [
   { id: 'padrug', x: 200, y: 268 },

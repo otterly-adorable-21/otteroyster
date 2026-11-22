@@ -1758,10 +1758,10 @@ function panelDenInside() {
         ${(() => { const art = artUrl(`${kind === 'wall' ? 'wallpaper' : 'floor'}/${id}`); if (art) return `<img class="swatch-chip swatch-art" src="${art}" alt="" loading="lazy">`; const pat = it.pattern || DEN_PATTERNS[`${kind === 'wall' ? 'wp' : 'fl'}-${id}`]; return pat ? `<svg class="swatch-chip" viewBox="0 0 40 40"><defs>${pat.replace(/id="([^"]+)"/, 'id="sw-$1"')}</defs><rect width="40" height="40" fill="url(#sw-${kind === 'wall' ? 'wp' : 'fl'}-${id})"/></svg>` : `<span class="swatch-chip" style="background:${it.swatch}"></span>`; })()}<b>${it.name}</b>
         <small>${active ? 'In use ✓' : owned ? 'Owned' : `<span class="pearl-icon"></span> ${it.price}`}</small></button>
         ${owned ? '' : `<button class="link small" data-action="try" data-kind="${kind === 'wall' ? 'wall' : 'floor'}" data-id="${id}">👀 Preview</button>`}</div>`;
-    shop = `<h3 class="den-sub">Wallpaper</h3><div class="swatches">${Object.entries(WALLPAPERS).map(([id, it]) => sw('wall', id, it, state.wallpapers.includes(id), curRoom().wallpaper === id)).join('')}</div>
-      <h3 class="den-sub">Floors</h3><div class="swatches">${Object.entries(FLOORS).map(([id, it]) => sw('floor', id, it, state.floors.includes(id), curRoom().floor === id)).join('')}</div>`;
+    shop = `<h3 class="den-sub">Wallpaper</h3><div class="swatches">${Object.entries(WALLPAPERS).filter(([id, it]) => !it.retired || state.wallpapers.includes(id)).map(([id, it]) => sw('wall', id, it, state.wallpapers.includes(id), curRoom().wallpaper === id)).join('')}</div>
+      <h3 class="den-sub">Floors</h3><div class="swatches">${Object.entries(FLOORS).filter(([id, it]) => !it.retired || state.floors.includes(id)).map(([id, it]) => sw('floor', id, it, state.floors.includes(id), curRoom().floor === id)).join('')}</div>`;
   } else {
-    shop = `<div class="grid">${Object.entries(FURNITURE).filter(([, it]) => it.cat === denShop && !it.event).map(([id, it]) => {
+    shop = `<div class="grid">${Object.entries(FURNITURE).filter(([, it]) => it.cat === denShop && !it.event && !it.retired).map(([id, it]) => {
       const owned = state.furniture[id] || 0;
       const locked = state.level < it.level;
       return `<div class="card item"><div class="item-art den-art">${furniturePreviewSVG(id)}</div><div class="item-name">${it.name}</div>

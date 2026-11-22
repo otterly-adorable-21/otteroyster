@@ -24,7 +24,6 @@ any spot left empty, the drawn version stays.
 | ⬜ | `mat-welcome` | 🟫 Welcome Mat | 480 × 520 | mat |
 | ⬜ | `mat-shell` | 🐚 Shell Mat | 480 × 520 | mat |
 | ⬜ | `mat-paw` | 🐾 Paw Print Mat | 480 × 520 | mat |
-| ⬜ | `lights-lantern` | 🏮 Pearl Lantern | 480 × 520 | lights |
 | ⬜ | `lights-fairy` | ✨ Fairy Lights | 480 × 520 | lights |
 | ⬜ | `lights-firefly` | 🫙 Firefly Jar | 480 × 520 | lights |
 | ⬜ | `plant-fern` | 🌿 Potted Fern | 480 × 520 | plant |
@@ -52,7 +51,6 @@ any spot left empty, the drawn version stays.
 | ⬜ | `plant-lavender` | 💜 Lavender Pot | 480 × 520 | plant |
 | ⬜ | `plant-cherry` | 🌸 Cherry Blossom Tree | 480 × 520 | plant |
 | ⬜ | `mat-fish` | 🟫 School of Fish Mat | 480 × 520 | mat |
-| ⬜ | `mat-moon` | 🟫 Moon Mat | 480 × 520 | mat |
 | ⬜ | `mat-seaglass` | 🟫 Sea Glass Mat | 480 × 520 | mat |
 | ⬜ | `mat-tidepool` | 🟫 Tidepool Mat | 480 × 520 | mat |
 | ⬜ | `mat-whale` | 🟫 Whale Tail Mat | 480 × 520 | mat |

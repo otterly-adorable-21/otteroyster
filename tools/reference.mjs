@@ -15,7 +15,7 @@ import { SETS } from '../js/sets.js';
 // Live counts, so the reference never goes stale.
 const shopItems = Object.values(ITEMS).filter((it) => it.price != null && !it.event);
 const bySlot = SLOTS.map((sl) => `${sl.name} ${shopItems.filter((it) => it.slot === sl.id).length}`).join(', ');
-const shopFurn = Object.values(FURNITURE).filter((f) => !f.event);
+const shopFurn = Object.values(FURNITURE).filter((f) => !f.event && !f.retired);
 const byCat = DEN_CATS.map((c) => `${c.name} ${shopFurn.filter((f) => f.cat === c.id).length}`).join(', ');
 const byDoor = DOOR_KINDS.map((k) => `${Object.values(DOOR_ITEMS).filter((d) => d.kind === k.id && !d.retired).length} ${k.name.toLowerCase()}`).join(', ');
 import { TRICKS } from '../js/growth.js';
@@ -55,7 +55,7 @@ const WEBSITE = [
     '**Inside**: drag furniture, flip, put away to storage; coziness score (counts every room); tap your otter to cuddle',
     '**Tabletops**: drop small decor and plushies onto tables, dressers, stools, nightstands and shelves; they move with the table, and drop to the floor if it\'s put away',
     '**Rooms**: the main den plus up to 3 more (250 pearls at Lv 3, 500 at Lv 6, 900 at Lv 10); each has its own name, wallpaper, floor and furniture; storage is shared; your otter follows you from room to room. Visitors and Discord see the main den',
-    `Furniture shop: ${shopFurn.length} pieces in tabs (${byCat}), plus Collections and Walls & floors (${Object.keys(WALLPAPERS).length} wallpapers, ${Object.keys(FLOORS).length} floors), all with previews`,
+    `Furniture shop: ${shopFurn.length} pieces in tabs (${byCat}), plus Collections and Walls & floors (${Object.values(WALLPAPERS).filter((w) => !w.retired).length} wallpapers, ${Object.values(FLOORS).filter((f) => !f.retired).length} floors), all with previews`,
     `**Collections**: ${SETS.length} themed sets (${SETS.map((x) => x.name).join(', ')}) mixing den, door and closet pieces; complete one for a pearl reward`,
     '**Rare**: the glowing Anglerfish Lamp can only be found while exploring the Moonlit Trench',
     'Some pieces have little animations: jellyfish pulse, lures glow, the pinwheel spins, the shoulder octopus waves',

@@ -22,6 +22,5 @@ any spot left empty, the drawn version stays.
 | ⬜ | `mossystone` | Mossy Stone | 1600 × 416 |  |
 | ⬜ | `shellmosaic` | Seashell Mosaic | 1600 × 416 |  |
 | ⬜ | `shipdeck` | Wooden Ship Deck | 1600 × 416 |  |
-| ⬜ | `undersand` | Underwater Sand | 1600 × 416 |  |
 | ⬜ | `checker` | Checkerboard | 1600 × 416 |  |
 | ⬜ | `plush` | Plush Carpeting | 1600 × 416 |  |

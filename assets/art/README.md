@@ -2,7 +2,7 @@
 
 Drop a picture into the right folder with the right name and it replaces the
 drawn version on the website (and in Shelly's Discord pictures for the otter,
-clothes and den). **12 of 790** spots have art so far.
+clothes and den). **12 of 770** spots have art so far.
 
 See every spot with a live preview on the site's art checklist page: `/art.html`.
 
@@ -19,10 +19,10 @@ See every spot with a live preview on the site's art checklist page: `/art.html`
 | [`companion-acc/`](companion-acc/) | Companion accessories | 0/6 |
 | [`garden/`](garden/) | Garden | 0/3 |
 | [`crops/`](crops/) | Garden crops | 0/35 |
-| [`door/`](door/) | Front door | 0/80 |
-| [`furniture/`](furniture/) | Den furniture | 4/150 |
-| [`wallpaper/`](wallpaper/) | Wallpapers | 4/46 |
-| [`floor/`](floor/) | Floors | 0/16 |
+| [`door/`](door/) | Front door | 0/78 |
+| [`furniture/`](furniture/) | Den furniture | 4/146 |
+| [`wallpaper/`](wallpaper/) | Wallpapers | 4/33 |
+| [`floor/`](floor/) | Floors | 0/15 |
 | [`den/`](den/) | The den room | 0/2 |
 | [`scene/`](scene/) | The pond scene | 0/7 |
 | [`weather/`](weather/) | Weather overlays | 0/5 |

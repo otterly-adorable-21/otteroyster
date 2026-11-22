@@ -16,7 +16,6 @@ any spot left empty, the drawn version stays.
 | ⬜ | `clamchair` | Clam Armchair | 320 × 320 | furniture |
 | ⬜ | `bookshelf` | Driftwood Shelf | 280 × 408 | furniture |
 | ⬜ | `lilylamp` | Lily Lamp | 200 × 416 | furniture |
-| ⬜ | `lantern` | Pearl Lantern | 160 × 288 | decor |
 | ⬜ | `pottedlily` | Potted Water Lily | 240 × 288 | decor |
 | ⬜ | `fern` | Riverbank Fern | 280 × 328 | decor |
 | ⬜ | `chest` | Treasure Chest | 320 × 248 | decor |
@@ -42,7 +41,6 @@ any spot left empty, the drawn version stays.
 | ⬜ | `jellybeanbag` | Jellyfish Beanbag | 400 × 320 | seating |
 | ⬜ | `shellloveseat` | Seashell Loveseat | 600 × 360 | seating |
 | ⬜ | `coralthrone` | Coral Throne | 400 × 520 | seating |
-| ⬜ | `floatlounger` | Floating Lounger | 520 × 200 | seating |
 | ⬜ | `whalesofa` | Whale Sofa | 640 × 360 | seating |
 | ⬜ | `kelpchair` | Woven Kelp Chair | 360 × 400 | seating |
 | ⬜ | `clambed` | Giant Clam Bed | 600 × 360 | beds |
@@ -50,9 +48,7 @@ any spot left empty, the drawn version stays.
 | ⬜ | `mushroombed` | Mushroom Bed | 560 × 440 | beds |
 | ⬜ | `shellcradle` | Seashell Cradle | 480 × 320 | beds |
 | ⬜ | `netbed` | Hammock Bed | 600 × 360 | beds |
-| ⬜ | `pearlbed` | Pearl Cushion Bed | 520 × 360 | beds |
 | ⬜ | `chestbed` | Sunken Treasure Chest Bed | 560 × 400 | beds |
-| ⬜ | `bubblebed` | Underwater Bubble Bed | 520 × 480 | beds |
 | ⬜ | `cloudbed` | Cloud Bed | 600 × 360 | beds |
 | ⬜ | `knitnest` | Cozy Knitted Nest | 480 × 280 | beds |
 | ⬜ | `coffeetable` | Driftwood Coffee Table | 480 × 200 | tables |

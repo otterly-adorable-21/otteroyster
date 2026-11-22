@@ -70,7 +70,7 @@ export const DOOR_ITEMS = {
 };
 
 // Taken out of the shop. Anyone who already bought one keeps it and can still put it up.
-export const RETIRED_DOOR = ['lights-angler', 'lights-moonbeam', 'plant-pinetree', 'plant-coralarr', 'mat-rainbow', 'mat-kelp', 'mat-pearl', 'mat-jelly'];
+export const RETIRED_DOOR = ['lights-angler', 'lights-moonbeam', 'plant-pinetree', 'plant-coralarr', 'mat-rainbow', 'mat-kelp', 'mat-pearl', 'mat-jelly', 'mat-moon', 'lights-lantern'];
 for (const id of RETIRED_DOOR) if (DOOR_ITEMS[id]) DOOR_ITEMS[id].retired = true;
 
 export const DOOR_COZY = 1; // per decoration (paint not counted)

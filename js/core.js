@@ -337,6 +337,7 @@ export function buy(s, id) {
   if (s.owned.includes(id)) return no(`You already own the ${it.name}.`);
   if (it.birthday && !isBirthday(s)) return no(`The ${it.name} is only sold on ${s.name || 'your otter'}'s birthday. 🎂`);
   if (s.level < it.level) return no(`Reach level ${it.level} to buy this.`);
+  if (it.retired) return no('That isn\'t sold any more.');
   if (s.pearls < it.price) return no('Not enough pearls.');
   s.pearls -= it.price;
   s.owned.push(id);
@@ -617,6 +618,7 @@ export function setWallpaper(s, id) {
   const w = WALLPAPERS[id];
   if (!w) return no('Unknown wallpaper.');
   if (!s.wallpapers.includes(id)) {
+    if (w.retired) return no('That wallpaper isn\'t sold any more.');
     if (s.pearls < w.price) return no('Not enough pearls.');
     s.pearls -= w.price;
     s.wallpapers.push(id);
@@ -630,6 +632,7 @@ export function setFloor(s, id) {
   const f = FLOORS[id];
   if (!f) return no('Unknown floor.');
   if (!s.floors.includes(id)) {
+    if (f.retired) return no('That floor isn\'t sold any more.');
     if (s.pearls < f.price) return no('Not enough pearls.');
     s.pearls -= f.price;
     s.floors.push(id);
@@ -1283,7 +1286,7 @@ export function investigate(s, mysteryId, place, now = Date.now()) {
 // ---------- the living world ----------
 const merchantPool = () => [
   ...Object.entries(ITEMS).filter(([, it]) => it.price > 0 && !it.event && !it.birthday).map(([id]) => `item:${id}`),
-  ...Object.entries(FURNITURE).filter(([, it]) => it.price > 0 && !it.event).map(([id]) => `furn:${id}`),
+  ...Object.entries(FURNITURE).filter(([, it]) => it.price > 0 && !it.event && !it.retired).map(([id]) => `furn:${id}`),
   ...Object.entries(DOOR_ITEMS).filter(([, it]) => it.price > 0 && !it.retired).map(([id]) => `door:${id}`),
 ];
 export function merchantWares(now = Date.now()) {
