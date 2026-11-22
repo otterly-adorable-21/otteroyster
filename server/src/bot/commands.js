@@ -62,7 +62,7 @@ export const commands = [
   everywhere(new SlashCommandBuilder().setName('leaderboard').setDescription('Top scores across the website and Discord')
     .addStringOption((o) => o.setName('game').setDescription('Which game?').setRequired(true)
       .addChoices(
-        ...GAME_LIST.map((g) => ({ name: `${g.icon} ${g.name} (website)`, value: g.id })),
+        ...GAME_LIST.filter((g) => !g.board && !g.noBoard).map((g) => ({ name: `${g.icon} ${g.name} (website)`, value: g.id })),
         ...Object.entries(BOT_BOARDS).map(([id, b]) => ({ name: b.name, value: id })),
       ))),
   everywhere(new SlashCommandBuilder().setName('profile').setDescription("Show off your otter, or peek at a friend's")

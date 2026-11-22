@@ -348,7 +348,7 @@ function endGame(g, r) {
   const res = core.rewardGame(state, g.id, r.pearls, r.best, !!g.lowerIsBetter);
   if (res.ups) levelUp();
   commit();
-  sync.score(g.id, r.best);
+  if (r.best != null) sync.score(g.board || g.id, r.best);
   if (sync.linked && sync.online && socialData?.challenges?.some((c) => c.game === g.id)) {
     sync.challengeAnswer(g.id, r.best).then((ans) => {
       for (const x of ans.results || []) toast(x.won ? `🏆 You beat ${x.from}'s ${x.target}! They'll hear about it.` : `So close! ${x.from}'s ${x.target} still stands.`);
@@ -1350,7 +1350,7 @@ function bestLabel(g) {
 
 function panelArcade() {
   return GAME_CATEGORIES.map((cat) => `
-    <h2 class="section-title">${cat.name} <small>${cat.desc}</small></h2>
+    <h2 class="section-title">${cat.id === 'pond' ? '💬 ' : ''}${cat.name} <small>${cat.desc}</small></h2>
     <div class="arcade">${GAME_LIST.filter((g) => g.category === cat.id).map((g) => `
       <div class="card arcade-card">
         <button class="arcade-play" data-action="game" data-id="${g.id}" aria-label="Play ${g.name}">
@@ -1359,7 +1359,7 @@ function panelArcade() {
           <span class="muted">${g.desc}</span>
         </button>
         <div class="arcade-foot"><span class="muted">⚡ ${g.energy}${bestLabel(g) ? ` · ${bestLabel(g)}` : ''}</span>
-        ${sync.online ? `<button class="link small" data-action="board" data-id="${g.id}">Leaderboard</button>` : ''}</div>
+        ${sync.online && !g.noBoard ? `<button class="link small" data-action="board" data-id="${g.id}">Leaderboard</button>` : ''}</div>
       </div>`).join('')}
     </div>`).join('') + `<p class="note">Games cost just a little energy (Discord games are free), earn pearls and make ${esc(state.name || 'your otter')} happy.</p>`;
 }
@@ -2050,7 +2050,7 @@ async function showLeaderboard(id) {
   const g = GAME_LIST.find((x) => x.id === id);
   showModal(`<div class="result"><div class="result-icon">${ic(`games/${g.id}`, g.icon)}</div><h2>${g.name}</h2><p>Loading top scores…</p></div>`);
   let top = null;
-  try { top = await sync.leaderboard(id); } catch { /* offline */ }
+  try { top = await sync.leaderboard(g.board || id); } catch { /* offline */ }
   if ($('#modal').hidden) return;
   $('#modal-card').innerHTML = `<div class="result"><div class="result-icon">${ic(`games/${g.id}`, g.icon)}</div><h2>${g.name} leaderboard</h2>
     ${top && top.length ? `<ol class="board">${top.map((r) => `<li><span>${esc(r.name)}</span><b>${r.score} ${g.scoreLabel}</b></li>`).join('')}</ol>`

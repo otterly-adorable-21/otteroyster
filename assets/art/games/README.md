@@ -19,3 +19,12 @@ any spot left empty, the drawn version stays.
 | ⬜ | `pop` | 💎 Pearl Pop | 256 × 256 |  |
 | ⬜ | `shuffle` | 🥚 Shell Shuffle | 256 × 256 |  |
 | ⬜ | `words` | 🔤 Word Tide | 256 × 256 |  |
+| ⬜ | `trivia` | 🧠 Trivia | 256 × 256 |  |
+| ⬜ | `emoji` | 🔮 Emoji Mystery | 256 × 256 |  |
+| ⬜ | `scramble` | 🔤 Word Scramble | 256 × 256 |  |
+| ⬜ | `hangman` | 🛶 Raft Rescue | 256 × 256 |  |
+| ⬜ | `numberhunt` | 🌡️ Number Hunt | 256 × 256 |  |
+| ⬜ | `higherlower` | 🃏 Higher or Lower | 256 × 256 |  |
+| ⬜ | `rps` | ✂️ Rock Paper Scissors | 256 × 256 |  |
+| ⬜ | `minesweeper` | 💣 Urchin Sweeper | 256 × 256 |  |
+| ⬜ | `quickcast` | 🪝 Quick Cast | 256 × 256 |  |

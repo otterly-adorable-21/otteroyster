@@ -315,6 +315,7 @@ export const GAME_CATEGORIES = [
   { id: 'arcade', name: 'Arcade', desc: 'Quick, fast and frantic' },
   { id: 'skill', name: 'Skill & Reflex', desc: 'Timing and quick fingers' },
   { id: 'puzzle', name: 'Puzzle & Brain', desc: 'Think it through' },
+  { id: 'pond', name: 'Pond Games', desc: 'Quizzes, words and luck. Also playable on Discord!' },
 ];
 
 // Website arcade. maxPearls caps rewards per round; scoreLabel describes `best`.
@@ -339,6 +340,25 @@ export const GAME_LIST = [
     desc: 'Watch the pearl go under a shell, then follow it as the shells get shuffled.' },
   { id: 'words', name: 'Word Tide', icon: '🔤', category: 'puzzle', energy: 2, maxPearls: 60, scoreLabel: 's', lowerIsBetter: true,
     desc: 'Find all the hidden ocean words in the grid. Drag across letters to select.' },
+  // Pond Games: the Discord solo games. `board` = a leaderboard shared with Discord.
+  { id: 'trivia', name: 'Trivia', icon: '🧠', category: 'pond', energy: 2, maxPearls: 40, scoreLabel: 'right', board: 'd-trivia',
+    desc: '5 questions about the ocean, animals and the world.' },
+  { id: 'emoji', name: 'Emoji Mystery', icon: '🔮', category: 'pond', energy: 2, maxPearls: 30, scoreLabel: 'right',
+    desc: 'Decode the emoji clues. 5 mysteries.' },
+  { id: 'scramble', name: 'Word Scramble', icon: '🔤', category: 'pond', energy: 2, maxPearls: 40, scoreLabel: 'pts',
+    desc: 'Unscramble 5 ocean words. Hints cost half the points.' },
+  { id: 'hangman', name: 'Raft Rescue', icon: '🛶', category: 'pond', energy: 2, maxPearls: 40, scoreLabel: 'splashes left',
+    desc: 'Guess the word one letter at a time before the raft sinks!' },
+  { id: 'numberhunt', name: 'Number Hunt', icon: '🌡️', category: 'pond', energy: 2, maxPearls: 40, scoreLabel: 'tries', lowerIsBetter: true,
+    desc: 'Find the hidden number from 1 to 100 with hot and cold clues. 7 tries.' },
+  { id: 'higherlower', name: 'Higher or Lower', icon: '🃏', category: 'pond', energy: 2, maxPearls: 60, scoreLabel: 'streak', board: 'd-higherlower',
+    desc: 'Is the next card higher or lower? Cash out before your luck runs out!' },
+  { id: 'rps', name: 'Rock Paper Scissors', icon: '✂️', category: 'pond', energy: 2, maxPearls: 12, scoreLabel: 'wins', noBoard: true,
+    desc: 'Best of 3 against Otto the otter.' },
+  { id: 'minesweeper', name: 'Urchin Sweeper', icon: '💣', category: 'pond', energy: 3, maxPearls: 30, scoreLabel: 's', lowerIsBetter: true,
+    desc: 'Uncover the sand without touching the 6 sea urchins.' },
+  { id: 'quickcast', name: 'Quick Cast', icon: '🪝', category: 'pond', energy: 3, maxPearls: 60, scoreLabel: 'pts', board: 'd-fishing',
+    desc: 'Cast 3 times and reel in the moment something bites. Same as Fishing on Discord.' },
 ];
 
 export const NAME_IDEAS = ['Pebble', 'Kelpie', 'Barnacle', 'Mochi', 'Clamsy', 'Biscuit', 'Waffles', 'Nori', 'Pippin', 'Marbles'];

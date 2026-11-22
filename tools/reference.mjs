@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { commands } from '../server/src/bot/commands.js';
 import { GROUPS } from '../js/art.js';
 import { SLOTS as ANIM } from '../js/animations.js';
-import { SNACKS, ITEMS, SLOTS } from '../js/data.js';
+import { SNACKS, ITEMS, SLOTS, GAME_LIST } from '../js/data.js';
 import { FURNITURE, WALLPAPERS, FLOORS, DEN_CATS } from '../js/den-data.js';
 import { DOOR_ITEMS, DOOR_KINDS } from '../js/door.js';
 import { SETS } from '../js/sets.js';
@@ -85,7 +85,8 @@ const WEBSITE = [
     '**Seasonal events** (11 a year): tokens, daily quests, limited shop, limited discoveries',
   ]],
   ['Arcade tab', [
-    '10 games: Oyster Dive, Fish Frenzy, Bubble Hop, Tide Fishing, Bubble Burst, Crab Catcher, Shell Match, Pearl Pop, Shell Shuffle, Word Tide',
+    `${GAME_LIST.length} games, each costing 2–5 energy: ${GAME_LIST.filter((g) => g.category !== 'pond').map((g) => g.name).join(', ')}`,
+    `**Pond Games** (the Discord solo games, so players without Discord can play them too): ${GAME_LIST.filter((g) => g.category === 'pond').map((g) => g.name).join(', ')}. Same questions and word lists as Discord (\`js/game-words.js\`); Trivia, Higher or Lower and Quick Cast share their leaderboards with Discord`,
     'Pearls, personal bests, shared leaderboards with Discord, challenge a friend to beat your score',
   ]],
   ['Friends tab', [

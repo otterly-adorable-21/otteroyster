@@ -2,7 +2,7 @@
 
 Drop a picture into the right folder with the right name and it replaces the
 drawn version on the website (and in Shelly's Discord pictures for the otter,
-clothes and den). **12 of 789** spots have art so far.
+clothes and den). **12 of 798** spots have art so far.
 
 See every spot with a live preview on the site's art checklist page: `/art.html`.
 
@@ -32,7 +32,7 @@ See every spot with a live preview on the site's art checklist page: `/art.html`
 | [`finds/`](finds/) | Discoveries | 1/57 |
 | [`missions/`](missions/) | Missions | 0/5 |
 | [`snacks/`](snacks/) | Snacks | 0/4 |
-| [`games/`](games/) | Arcade games | 0/10 |
+| [`games/`](games/) | Arcade games | 0/19 |
 | [`badges/`](badges/) | Achievement badges | 0/18 |
 | [`events/`](events/) | Seasonal events | 0/22 |
 | [`traits/`](traits/) | Personality traits | 0/6 |

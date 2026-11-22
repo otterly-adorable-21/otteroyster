@@ -513,6 +513,59 @@ code { background: #e3f1ec; padding: 1px 6px; border-radius: 6px; font-size: 0.8
 .pearl-ball { position: absolute; bottom: 34px; width: 26px; height: 26px; margin-left: -13px; border-radius: 50%; opacity: 0; z-index: 1;
   background: radial-gradient(circle at 32% 30%, #fff 0 22%, #f4ede0 45%, #d6c8b4 100%); box-shadow: 0 0 10px #fff3bf; transition: opacity .2s; }
 .pearl-ball.show { opacity: 1; }
+/* Pond Games (the Discord games in the arcade) */
+.pg-card { display: grid; gap: 12px; justify-items: center; text-align: center; padding: 8px 4px 4px; }
+.pg-prompt { font-size: 1.05rem; line-height: 1.4; }
+.pg-emoji { font-size: 2.6rem; margin-top: 6px; letter-spacing: 0.08em; }
+.pg-opts { display: grid; gap: 8px; width: 100%; max-width: 440px; }
+.pg-opt { display: flex; align-items: center; gap: 10px; text-align: left; font: inherit; font-weight: 700; padding: 10px 12px; border-radius: 12px; border: 2px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; }
+.pg-opt:hover:not(:disabled) { border-color: var(--aqua); }
+.pg-opt span { font-size: 1.1rem; }
+.pg-opt.right { background: #d3f9d8; border-color: var(--good); }
+.pg-opt.wrong { background: #ffe3e3; border-color: var(--bad); }
+.pg-opt:disabled { cursor: default; }
+.pg-note { margin: 0; min-height: 1.3em; }
+.pg-note.good { color: var(--good); font-weight: 800; }
+.pg-note.bad { color: var(--bad); font-weight: 800; }
+.pg-note.big { font-size: 1.1rem; }
+.pg-tiles, .pg-word { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.pg-tiles span, .pg-word span { display: grid; place-items: center; width: 2.2em; height: 2.4em; border-radius: 10px; font-weight: 900; font-size: 1.2rem; color: var(--ink); }
+.pg-tiles span { background: var(--pearl-grad, #fff); border: 2px solid var(--gold); box-shadow: 0 2px 0 rgba(0,0,0,.15); }
+.pg-word span { width: 1.6em; border-radius: 0; border-bottom: 3px solid var(--ink); }
+.pg-form { display: flex; gap: 8px; width: 100%; max-width: 360px; }
+.pg-form input { flex: 1; min-width: 0; font: inherit; font-weight: 800; font-size: 1.1rem; text-align: center; padding: 10px; border-radius: 12px; border: 2px solid var(--line); background: #fff; color: var(--ink); text-transform: uppercase; }
+.pg-form input:focus { outline: none; border-color: var(--aqua); }
+.pg-raft { font-size: 2rem; letter-spacing: 0.05em; }
+.pg-keys { display: grid; grid-template-columns: repeat(9, 1fr); gap: 5px; width: 100%; max-width: 420px; }
+.pg-keys button { font: inherit; font-weight: 800; padding: 8px 0; border-radius: 8px; border: 2px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; }
+.pg-keys button.right { background: #d3f9d8; border-color: var(--good); }
+.pg-keys button.wrong { background: #ffe3e3; border-color: var(--bad); opacity: 0.6; }
+.pg-log { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 0.95rem; }
+.pg-cards { display: flex; gap: 14px; justify-content: center; }
+.pg-cardface { width: 86px; height: 120px; border-radius: 12px; background: #fff; border: 3px solid var(--gold); display: grid; place-items: center; align-content: center; gap: 4px; color: var(--ink); box-shadow: 0 4px 10px rgba(0,0,0,.2); }
+.pg-cardface b { font-size: 2rem; }
+.pg-cardface span { font-size: 1.6rem; }
+.pg-cardface.back { background: repeating-linear-gradient(45deg, var(--teal), var(--teal) 8px, var(--deep) 8px, var(--deep) 16px); color: #fff; font-size: 2.2rem; font-weight: 900; }
+.pg-cardface.flip { animation: pg-flip 0.35s ease-out; }
+@keyframes pg-flip { from { transform: rotateY(90deg); } to { transform: none; } }
+.pg-rps { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.pg-rps button { display: grid; gap: 4px; justify-items: center; font: inherit; font-weight: 800; padding: 12px 16px; border-radius: 14px; border: 2px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; min-width: 92px; }
+.pg-rps button span { font-size: 2.2rem; }
+.pg-rps button:hover:not(:disabled) { border-color: var(--aqua); transform: translateY(-2px); }
+.pg-sweep { display: grid; grid-template-columns: repeat(var(--c), 1fr); gap: 4px; width: 100%; max-width: 360px; margin: 6px auto 0; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.pg-sweep button { aspect-ratio: 1; font: inherit; font-weight: 900; font-size: 1.1rem; border: none; border-radius: 8px; background: linear-gradient(#e9d8a6, #d4b483); box-shadow: inset 0 -3px 0 rgba(0,0,0,.15); color: var(--ink); cursor: pointer; padding: 0; }
+.pg-sweep button.open { background: #fdf6e3; box-shadow: none; cursor: default; }
+.pg-sweep .n1 { color: #1971c2; } .pg-sweep .n2 { color: #2f9e44; } .pg-sweep .n3 { color: #e03131; } .pg-sweep .n4, .pg-sweep .n5 { color: #6741d9; }
+.pg-water { position: relative; width: 100%; max-width: 380px; height: 110px; border-radius: 16px; background: linear-gradient(#74c0fc, #1971c2); overflow: hidden; }
+.pg-water::after { content: ''; position: absolute; inset: auto 0 0; height: 40%; background: repeating-radial-gradient(circle at 50% 0, rgba(255,255,255,.25) 0 6px, transparent 6px 18px); }
+.pg-water .bob { position: absolute; left: 50%; top: 38%; transform: translateX(-50%); font-size: 1.6rem; }
+.pg-water.waiting .bob { animation: pg-bob 1.4s ease-in-out infinite; }
+.pg-water.bite .bob { animation: pg-shake 0.15s linear infinite; font-size: 2.2rem; }
+@keyframes pg-bob { 50% { transform: translate(-50%, 4px); } }
+@keyframes pg-shake { 25% { transform: translate(-54%, 2px); } 75% { transform: translate(-46%, -2px); } }
+.pg-big { font-size: 1.15rem; padding: 14px; max-width: 300px; }
+.pg-bag { margin: 0; font-size: 1.2rem; }
+@media (prefers-reduced-motion: reduce) { .pg-water .bob, .pg-cardface.flip { animation: none !important; } }
 .shuffle-msg { text-align: center; font-weight: 800; margin-top: 10px; min-height: 1.4em; }
 
 /* ---------- game: word tide ---------- */

@@ -57,7 +57,8 @@ Made by `node tools/reference.mjs` from the game itself. Contents: [Website](#we
 - **Seasonal events** (11 a year): tokens, daily quests, limited shop, limited discoveries
 
 ### Arcade tab
-- 10 games: Oyster Dive, Fish Frenzy, Bubble Hop, Tide Fishing, Bubble Burst, Crab Catcher, Shell Match, Pearl Pop, Shell Shuffle, Word Tide
+- 19 games, each costing 2–5 energy: Oyster Dive, Fish Frenzy, Bubble Hop, Tide Fishing, Bubble Burst, Crab Catcher, Shell Match, Pearl Pop, Shell Shuffle, Word Tide
+- **Pond Games** (the Discord solo games, so players without Discord can play them too): Trivia, Emoji Mystery, Word Scramble, Raft Rescue, Number Hunt, Higher or Lower, Rock Paper Scissors, Urchin Sweeper, Quick Cast. Same questions and word lists as Discord (`js/game-words.js`); Trivia, Higher or Lower and Quick Cast share their leaderboards with Discord
 - Pearls, personal bests, shared leaderboards with Discord, challenge a friend to beat your score
 
 ### Friends tab
@@ -106,14 +107,14 @@ Every command works in servers, in DMs with Shelly, and in any chat if the app i
 - **`/party <game>`**: Start a group game, great in voice chat
   - game: 🕵️ Impostor (3+ players), 🧠 Trivia Battle (1+ players), 🥔 Hot Potato Categories (2+ players), 🤔 Would You Rather (1+ players), 🤐 Forbidden Word (2+ players)
 - **`/leaderboard <game>`**: Top scores across the website and Discord
-  - game: 🦪 Oyster Dive (website), 🐟 Fish Frenzy (website), 🫧 Bubble Hop (website), 🎣 Tide Fishing (website), 🔵 Bubble Burst (website), 🦀 Crab Catcher (website), 🐚 Shell Match (website), 💎 Pearl Pop (website), 🥚 Shell Shuffle (website), 🔤 Word Tide (website), Discord Trivia, Higher or Lower, Discord Fishing, Challenge Wins
+  - game: 🦪 Oyster Dive (website), 🐟 Fish Frenzy (website), 🫧 Bubble Hop (website), 🎣 Tide Fishing (website), 🔵 Bubble Burst (website), 🦀 Crab Catcher (website), 🐚 Shell Match (website), 💎 Pearl Pop (website), 🥚 Shell Shuffle (website), 🔤 Word Tide (website), 🔮 Emoji Mystery (website), 🔤 Word Scramble (website), 🛶 Raft Rescue (website), 🌡️ Number Hunt (website), 💣 Urchin Sweeper (website), Trivia (website & Discord), Higher or Lower (website & Discord), Fishing / Quick Cast (website & Discord), Challenge Wins
 - **`/profile [user]`**: Show off your otter, or peek at a friend's
 - **`/link`**: Connect your Discord otter with otteroyster.online
 - **`/help`**: How to play OtterOyster on Discord
 
 ## Art
 
-**789 picture spots** plus the brand art. Upload each file to the folder shown, named like the code (plus `.png`). PNG works everywhere; WebP/GIF only on the website. Until a spot has art, a drawn version shows. Live checklist with previews: `/art.html`.
+**798 picture spots** plus the brand art. Upload each file to the folder shown, named like the code (plus `.png`). PNG works everywhere; WebP/GIF only on the website. Until a spot has art, a drawn version shows. Live checklist with previews: `/art.html`.
 
 ### Brand art (`assets/`)
 | File | Size | Where |
@@ -322,10 +323,10 @@ Transparent.
 
 - **256 × 256**: `kelp` 🥬 Kelp Chips · `clam` 🐚 Clam · `fish` 🐟 Fresh Fish · `cake` 🍰 Oyster Cake
 
-### Arcade games (`assets/art/games/`) · 10
+### Arcade games (`assets/art/games/`) · 19
 Game icon, 256 × 256 px, transparent.
 
-- **256 × 256**: `dive` 🦪 Oyster Dive · `frenzy` 🐟 Fish Frenzy · `hop` 🫧 Bubble Hop · `fishing` 🎣 Tide Fishing · `bubbles` 🔵 Bubble Burst · `crabs` 🦀 Crab Catcher · `memory` 🐚 Shell Match · `pop` 💎 Pearl Pop · `shuffle` 🥚 Shell Shuffle · `words` 🔤 Word Tide
+- **256 × 256**: `dive` 🦪 Oyster Dive · `frenzy` 🐟 Fish Frenzy · `hop` 🫧 Bubble Hop · `fishing` 🎣 Tide Fishing · `bubbles` 🔵 Bubble Burst · `crabs` 🦀 Crab Catcher · `memory` 🐚 Shell Match · `pop` 💎 Pearl Pop · `shuffle` 🥚 Shell Shuffle · `words` 🔤 Word Tide · `trivia` 🧠 Trivia · `emoji` 🔮 Emoji Mystery · `scramble` 🔤 Word Scramble · `hangman` 🛶 Raft Rescue · `numberhunt` 🌡️ Number Hunt · `higherlower` 🃏 Higher or Lower · `rps` ✂️ Rock Paper Scissors · `minesweeper` 💣 Urchin Sweeper · `quickcast` 🪝 Quick Cast
 
 ### Achievement badges (`assets/art/badges/`) · 18
 256 × 256 px, transparent.

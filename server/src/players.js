@@ -31,11 +31,12 @@ const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const CODE_TTL = 10 * 60 * 1000;
 export const BOT_DAILY_CAP = 300;
 
-// Discord-only games that also have leaderboards.
+// Leaderboards kept by name rather than by website game: the Discord games, three of
+// which the website's Pond Games share (GAME_LIST `board`).
 export const BOT_BOARDS = {
-  'd-trivia': { name: 'Discord Trivia', scoreLabel: 'correct' },
-  'd-higherlower': { name: 'Higher or Lower', scoreLabel: 'streak' },
-  'd-fishing': { name: 'Discord Fishing', scoreLabel: 'pts' },
+  'd-trivia': { name: 'Trivia (website & Discord)', scoreLabel: 'correct' },
+  'd-higherlower': { name: 'Higher or Lower (website & Discord)', scoreLabel: 'streak' },
+  'd-fishing': { name: 'Fishing / Quick Cast (website & Discord)', scoreLabel: 'pts' },
   'd-wins': { name: 'Challenge Wins', scoreLabel: 'wins' },
 };
 
