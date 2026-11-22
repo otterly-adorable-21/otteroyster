@@ -978,7 +978,7 @@ textarea.note-input { resize: vertical; font: inherit; }
 .milestone { display: grid; justify-items: center; gap: 2px; padding: 8px 2px; border-radius: 12px; background: rgba(255,250,240,.08); color: var(--aqua-light); box-shadow: inset 0 0 0 1px rgba(155,232,222,.2); text-align: center; font-size: .8rem; }
 .milestone.on { background: var(--card); color: var(--ink); box-shadow: 0 0 0 2px var(--gold); }
 .milestone .btn { padding: 4px 8px; font-size: .72rem; }
-.spares { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.spares { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-bottom: 18px; }
 .spare { display: grid; justify-items: center; gap: 2px; text-align: center; }
 .new-tag { color: #d9480f; font-weight: 800; font-size: .7rem; }
 /* ---------- Otter Lane ---------- */
