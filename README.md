@@ -62,7 +62,7 @@ assets/               brand artwork
 1. Create `js/games/mygame.js` exporting `start(root, onEnd)`. It returns a cleanup function and calls `onEnd({ pearls, best, summary })` once.
 2. Add it to `LOADERS` in `js/games/index.js` and to `GAME_LIST` in `js/data.js`.
 
-Rewards, records and leaderboards come for free.
+Rewards, energy, records and leaderboards come for free.
 
 ## Running locally
 

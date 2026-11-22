@@ -422,12 +422,14 @@ export function canPlay(s, gameId) {
   const b = busy(s);
   if (b) return no(b);
   if (!g) return no('That game doesn\'t exist.');
-  return ok(''); // games are free: no energy needed
+  if (s.stats.energy < g.energy) return no(`${s.name} is too tired. Try a nap first!`);
+  return ok('');
 }
 
 export function payForGame(s, gameId) {
   const r = canPlay(s, gameId);
   if (!r.ok) return r;
+  stat(s, 'energy', -GAME_LIST.find((x) => x.id === gameId).energy);
   return r;
 }
 

@@ -332,8 +332,11 @@ async function playGame(id) {
     gameCleanup = mod.start(root, (r) => endGame(g, r));
   } catch (err) {
     console.error(`[arcade] ${id} failed to load`, err);
+    // Give the energy back: the player never got to play.
+    state.stats.energy = clamp(state.stats.energy + g.energy);
+    commit();
     root.innerHTML = `<div class="result"><div class="result-icon">🫧</div><h2>This game didn't load</h2>
-      <p>This is usually a connection hiccup or an old copy of the site stuck in your browser.</p>
+      <p>Your energy was refunded. This is usually a connection hiccup or an old copy of the site stuck in your browser.</p>
       <p class="err-detail">${esc(err?.message || String(err))}</p>
       <div class="row"><button class="btn" data-action="hardreload">Refresh site</button><button class="btn primary" data-action="game" data-id="${id}">Try again</button></div></div>`;
   }
@@ -1112,7 +1115,7 @@ function panelMissions() {
       <div class="finds">${loc.finds.map(findTile).join('')}</div>
       ${missions.length ? `<h4 class="loc-sub">Missions here</h4><div class="missions">${missions.map(missionCard).join('')}</div>` : ''}
       <h4 class="loc-sub">Games here</h4>
-      <div class="loc-games">${games.map((g) => `<button class="loc-game" data-action="game" data-id="${g.id}"><span>${ic(`games/${g.id}`, g.icon)}</span><b>${g.name}</b><small>Free</small></button>`).join('')}</div>
+      <div class="loc-games">${games.map((g) => `<button class="loc-game" data-action="game" data-id="${g.id}"><span>${ic(`games/${g.id}`, g.icon)}</span><b>${g.name}</b><small>⚡${g.energy}</small></button>`).join('')}</div>
     </div>
     <p class="note">Missions run in real time, even when this page is closed. Explore from Discord with <code>/explore</code>.</p>`;
 }
@@ -1355,10 +1358,10 @@ function panelArcade() {
           <b>${g.name}${state.persona?.fav.game === g.id ? ' <span class="fav-tag">❤️ favorite</span>' : ''}</b>
           <span class="muted">${g.desc}</span>
         </button>
-        <div class="arcade-foot"><span class="muted">${bestLabel(g) || 'Free to play'}</span>
+        <div class="arcade-foot"><span class="muted">⚡ ${g.energy}${bestLabel(g) ? ` · ${bestLabel(g)}` : ''}</span>
         ${sync.online ? `<button class="link small" data-action="board" data-id="${g.id}">Leaderboard</button>` : ''}</div>
       </div>`).join('')}
-    </div>`).join('') + `<p class="note">Games are free to play, earn pearls and make ${esc(state.name || 'your otter')} happy.</p>`;
+    </div>`).join('') + `<p class="note">Games cost just a little energy (Discord games are free), earn pearls and make ${esc(state.name || 'your otter')} happy.</p>`;
 }
 
 // ---------- friends ----------
