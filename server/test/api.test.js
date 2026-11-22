@@ -413,7 +413,7 @@ test('shareable without signing in: public lane, den links, leaderboard', async 
   const code = a.data.code;
   const lanePub = await call('/api/public/lane');
   assert.equal(lanePub.status, 200);
-  assert.ok(lanePub.data.neighbors.some((h) => h.name === 'Shelby'));
+  assert.ok(lanePub.data.neighbors.length > 0 && lanePub.data.neighbors.length <= 12); // a random dozen of the public dens
   const den = await call(`/api/public/den?code=${code.toLowerCase()}`);
   assert.equal(den.status, 200);
   assert.equal(den.data.otter.name, 'Shelby');
@@ -424,4 +424,16 @@ test('shareable without signing in: public lane, den links, leaderboard', async 
   const lb = await call('/api/leaderboard?game=dive');
   assert.equal(lb.status, 200);
   assert.ok(lb.data.top.every((r) => !('owner' in r)));
+});
+
+test('deleted shop items are taken back and refunded once', async () => {
+  const st = { ...core.defaultState(), name: 'Refundy', pearls: 5, wallpapers: ['moss', 'cheese'], floors: ['earth', 'undersand'], furniture: { pearlbed: 1 }, doorItems: ['paint-moss', 'mat-moon'], door: { paint: 'paint-moss', mat: 'mat-moon' } };
+  st.den = { ...st.den, wallpaper: 'cheese' };
+  const r = await call('/api/register', { method: 'POST', ip: '10.8.8.8', body: { state: st } });
+  assert.equal(r.status, 200);
+  assert.equal(r.data.state.pearls, 5 + 60 + 50 + 200 + 40);
+  assert.ok(!r.data.state.wallpapers.includes('cheese'));
+  assert.equal(r.data.state.den.wallpaper, 'moss');
+  assert.equal(r.data.state.door.mat, null);
+  assert.equal((await call('/api/save', { token: r.data.token })).data.state.pearls, 355);
 });

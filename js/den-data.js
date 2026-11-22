@@ -88,15 +88,7 @@ export const FURNITURE = {
       <circle cx="25" cy="24" r="5" fill="#ffe27a"/>`,
   },
   // ---------------- decor
-  lantern: {
-    name: 'Pearl Lantern', cat: 'decor', price: 50, level: 1, cozy: 2, vb: '0 0 40 72', w: 26,
-    svg: `${glow(20, 40, 20, '#f3ecff')}
-      <path d="M20,2 L20,12" stroke="#d9b45a" stroke-width="2"/><circle cx="20" cy="4" r="3" fill="none" stroke="#d9b45a" stroke-width="2"/>
-      <path d="M8,14 L32,14 L34,64 L6,64Z" fill="#0c3440" fill-opacity=".25" stroke="#d9b45a" stroke-width="2.5"/>
-      <path d="M20,14 L20,64 M8,40 L32,40" stroke="#d9b45a" stroke-width="1.2" opacity=".6"/>
-      <circle cx="20" cy="40" r="9" fill="url(#den-pearl)"/>
-      <rect x="4" y="62" width="32" height="8" rx="2" fill="#d9b45a"/>`,
-  },
+
   pottedlily: {
     name: 'Potted Water Lily', cat: 'decor', price: 15, level: 1, cozy: 1, vb: '0 0 60 72', w: 36,
     svg: `<path d="M10,40 L50,40 L44,70 L16,70Z" fill="#b5653f"/><rect x="7" y="36" width="46" height="8" rx="3" fill="#c97b52"/>
@@ -251,15 +243,6 @@ export const FLOORS = {
   ...MORE_FLOORS,
 };
 
-// Taken out of the shop. Anyone who already bought one keeps it and can still use it.
-export const RETIRED = {
-  wallpaper: ['tidepools', 'fernmoss', 'enchanted', 'runes', 'bigoysters', 'fishhats', 'newsprint', 'retro', 'clamfaces', 'beachgrass', 'pressedflowers', 'tinyotters', 'cheese'],
-  floor: ['undersand'],
-  furniture: ['bubblebed', 'pearlbed', 'floatlounger', 'lantern'],
-};
-for (const id of RETIRED.wallpaper) if (WALLPAPERS[id]) WALLPAPERS[id].retired = true;
-for (const id of RETIRED.floor) if (FLOORS[id]) FLOORS[id].retired = true;
-for (const id of RETIRED.furniture) if (FURNITURE[id]) FURNITURE[id].retired = true;
 
 
 // Every new otter starts with a little furnished den.

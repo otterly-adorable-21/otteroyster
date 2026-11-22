@@ -84,10 +84,40 @@ function starterDen() {
   return { wallpaper: 'moss', floor: 'earth', items: STARTER_DEN.map((p) => ({ uid: newUid(), id: p.id, x: p.x, y: p.y, flip: false })), otter: { x: 196, y: 286 } };
 }
 
+// Shop items that were deleted, with what they cost. Saves that still have one
+// get it taken away and the pearls back, once (the ids are gone afterwards).
+export const REMOVED_ITEMS = {
+  wallpaper: { tidepools: 55, beachgrass: 40, fernmoss: 45, pressedflowers: 55, enchanted: 75, runes: 90, tinyotters: 99, bigoysters: 77, fishhats: 66, clamfaces: 66, cheese: 60, newsprint: 40, retro: 88 },
+  floor: { undersand: 50 },
+  furniture: { lantern: 50, floatlounger: 70, pearlbed: 200, bubblebed: 260 },
+  door: { 'mat-rainbow': 50, 'lights-lantern': 45, 'lights-angler': 80, 'lights-moonbeam': 60, 'mat-moon': 40, 'mat-kelp': 35, 'mat-pearl': 50, 'mat-jelly': 40, 'plant-pinetree': 50, 'plant-coralarr': 55 },
+};
+function refundRemoved(saved) {
+  const R = REMOVED_ITEMS;
+  let pearls = 0;
+  const take = (list, table) => (Array.isArray(list) ? list.filter((id) => (table[id] != null ? ((pearls += table[id]), false) : true)) : list);
+  const out = { ...saved };
+  out.wallpapers = take(saved.wallpapers, R.wallpaper);
+  out.floors = take(saved.floors, R.floor);
+  out.doorItems = take(saved.doorItems, R.door);
+  if (saved.furniture && typeof saved.furniture === 'object') {
+    out.furniture = { ...saved.furniture };
+    for (const [id, price] of Object.entries(R.furniture)) {
+      const n = Math.max(0, Math.floor(Number(out.furniture[id]) || 0));
+      pearls += n * price;
+      delete out.furniture[id];
+    }
+  }
+  if (pearls) out.pearls = (Number(saved.pearls) || 0) + pearls;
+  return { out, pearls };
+}
+
 // Bring any older/partial save up to the current shape.
 export function normalize(saved) {
   const base = defaultState();
   if (!saved || typeof saved !== 'object') return base;
+  const refund = refundRemoved(saved);
+  saved = refund.out;
   const s = {
     ...base,
     ...saved,
@@ -106,9 +136,9 @@ export function normalize(saved) {
     s.den = { wallpaper: 'moss', floor: 'earth', otter: { x: 196, y: 286 }, ...saved.den, items: saved.den.items.filter((p) => FURNITURE[p.id]) };
     s.furniture = { ...(saved.furniture || {}) };
   }
-  s.wallpapers = Array.isArray(saved.wallpapers) ? saved.wallpapers : ['moss'];
+  s.wallpapers = Array.isArray(saved.wallpapers) ? saved.wallpapers.filter((id) => WALLPAPERS[id]) : ['moss'];
   s.rooms = (Array.isArray(saved.rooms) ? saved.rooms : []).slice(0, ROOM_COSTS.length).map((r, k) => ({
-    id: r.id || `room${k}`, name: String(r.name || ROOM_NAMES[k]).slice(0, 18), wallpaper: r.wallpaper || 'moss', floor: r.floor || 'earth',
+    id: r.id || `room${k}`, name: String(r.name || ROOM_NAMES[k]).slice(0, 18), wallpaper: WALLPAPERS[r.wallpaper] ? r.wallpaper : 'moss', floor: FLOORS[r.floor] ? r.floor : 'earth',
     items: Array.isArray(r.items) ? r.items.filter((p) => FURNITURE[p.id]) : [], otter: r.otter || { x: 200, y: 286 },
   }));
   s.room = Number.isInteger(saved.room) && saved.room >= 0 && saved.room <= s.rooms.length ? saved.room : 0;
@@ -129,7 +159,7 @@ export function normalize(saved) {
   s.newAch = Array.isArray(saved.newAch) ? saved.newAch : [];
   s.explored = { ...(saved.explored || {}) };
   s.sets = Array.isArray(saved.sets) ? saved.sets : [];
-  s.floors = Array.isArray(saved.floors) ? saved.floors : ['earth'];
+  s.floors = Array.isArray(saved.floors) ? saved.floors.filter((id) => FLOORS[id]) : ['earth'];
   const co = saved.companions || {};
   s.companions = { owned: Object.fromEntries(Object.entries(co.owned || {}).filter(([id]) => COMPANIONS[id])), active: COMPANIONS[co.active] ? co.active : null, accs: Array.isArray(co.accs) ? co.accs.filter((a) => COMP_ACCS[a]) : [] };
   for (const [id, c] of Object.entries(s.companions.owned)) {
@@ -158,6 +188,11 @@ export function normalize(saved) {
   s.titles = Array.isArray(saved.titles) ? saved.titles : [];
   s.lastSeen = saved.lastSeen || s.lastTick || Date.now();
   s.setsClaimed = Array.isArray(saved.setsClaimed) ? saved.setsClaimed.filter((id) => SET[id]) : [];
+  if (!WALLPAPERS[s.den.wallpaper]) s.den.wallpaper = 'moss';
+  if (!FLOORS[s.den.floor]) s.den.floor = 'earth';
+  if (!s.wallpapers.includes('moss')) s.wallpapers.unshift('moss');
+  if (!s.floors.includes('earth')) s.floors.unshift('earth');
+  if (refund.pearls && s.name) log(s, `🪙 Some decorations left the shop for good. You got ${refund.pearls} pearls back for yours.`);
   s.trinkets = Object.fromEntries(Object.entries(saved.trinkets || {}).filter(([id, n]) => TRINKETS[id] && n > 0));
   s.books = Array.isArray(saved.books) ? saved.books.filter((id) => BOOKS[id]) : [];
   s.aquarium = { fish: Object.fromEntries(Object.entries(saved.aquarium?.fish || {}).filter(([id]) => FISH[id])), lastFish: saved.aquarium?.lastFish || 0 };
@@ -337,7 +372,6 @@ export function buy(s, id) {
   if (s.owned.includes(id)) return no(`You already own the ${it.name}.`);
   if (it.birthday && !isBirthday(s)) return no(`The ${it.name} is only sold on ${s.name || 'your otter'}'s birthday. 🎂`);
   if (s.level < it.level) return no(`Reach level ${it.level} to buy this.`);
-  if (it.retired) return no('That isn\'t sold any more.');
   if (s.pearls < it.price) return no('Not enough pearls.');
   s.pearls -= it.price;
   s.owned.push(id);
@@ -618,7 +652,6 @@ export function setWallpaper(s, id) {
   const w = WALLPAPERS[id];
   if (!w) return no('Unknown wallpaper.');
   if (!s.wallpapers.includes(id)) {
-    if (w.retired) return no('That wallpaper isn\'t sold any more.');
     if (s.pearls < w.price) return no('Not enough pearls.');
     s.pearls -= w.price;
     s.wallpapers.push(id);
@@ -632,7 +665,6 @@ export function setFloor(s, id) {
   const f = FLOORS[id];
   if (!f) return no('Unknown floor.');
   if (!s.floors.includes(id)) {
-    if (f.retired) return no('That floor isn\'t sold any more.');
     if (s.pearls < f.price) return no('Not enough pearls.');
     s.pearls -= f.price;
     s.floors.push(id);
@@ -1144,7 +1176,6 @@ export function buyDoorItem(s, id) {
   const it = DOOR_ITEMS[id];
   if (!it) return no('Unknown decoration.');
   if (s.doorItems.includes(id)) return setDoor(s, id);
-  if (it.retired) return no('That decoration isn\'t sold any more.');
   if (s.pearls < it.price) return no('Not enough pearls.');
   s.pearls -= it.price;
   s.doorItems.push(id);
@@ -1286,8 +1317,8 @@ export function investigate(s, mysteryId, place, now = Date.now()) {
 // ---------- the living world ----------
 const merchantPool = () => [
   ...Object.entries(ITEMS).filter(([, it]) => it.price > 0 && !it.event && !it.birthday).map(([id]) => `item:${id}`),
-  ...Object.entries(FURNITURE).filter(([, it]) => it.price > 0 && !it.event && !it.retired).map(([id]) => `furn:${id}`),
-  ...Object.entries(DOOR_ITEMS).filter(([, it]) => it.price > 0 && !it.retired).map(([id]) => `door:${id}`),
+  ...Object.entries(FURNITURE).filter(([, it]) => it.price > 0 && !it.event).map(([id]) => `furn:${id}`),
+  ...Object.entries(DOOR_ITEMS).filter(([, it]) => it.price > 0).map(([id]) => `door:${id}`),
 ];
 export function merchantWares(now = Date.now()) {
   return merchantStock(merchantPool(), now).map((key) => {

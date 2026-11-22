@@ -31,9 +31,7 @@ export const DOOR_ITEMS = {
   'mat-welcome': { kind: 'mat', name: 'Welcome Mat', price: 25, icon: '🟫', colors: ['#a8865f', '#fff3bf'] },
   'mat-shell': { kind: 'mat', name: 'Shell Mat', price: 35, icon: '🐚', colors: ['#3cc7c0', '#fffaf0'] },
   'mat-paw': { kind: 'mat', name: 'Paw Print Mat', price: 35, icon: '🐾', colors: ['#6b4d34', '#e8d6a8'] },
-  'mat-rainbow': { kind: 'mat', name: 'Rainbow Mat', price: 50, icon: '🌈', colors: ['#ff8787', '#74c0fc'] },
   // lights
-  'lights-lantern': { kind: 'lights', name: 'Pearl Lantern', price: 45, icon: '🏮', colors: ['#fff3bf', '#d9b45a'] },
   'lights-fairy': { kind: 'lights', name: 'Fairy Lights', price: 55, icon: '✨', colors: ['#fff3bf', '#ffd43b'] },
   'lights-firefly': { kind: 'lights', name: 'Firefly Jar', price: 65, icon: '🫙', colors: ['#e6ff9c', '#9be8de'] },
   // plants
@@ -51,13 +49,11 @@ export const DOOR_ITEMS = {
   'mat-flower': { kind: 'mat', name: 'Flower Mat', price: 35, icon: '🌸', svg: `<rect x="34" y="116" width="52" height="10" rx="5" fill="#fff0f6"/>${[42, 52, 62, 72, 80].map((x, k) => `<circle cx="${x}" cy="121" r="2.2" fill="${['#ff8fab', '#ffd43b', '#b197fc', '#74c0fc', '#ff8fab'][k]}"/>`).join('')}` },
   'mat-shellyeah': { kind: 'mat', name: '"Shell Yeah!" Mat', price: 45, icon: '💬', svg: `<rect x="34" y="116" width="52" height="10" rx="2" fill="#c9a66b"/><text x="60" y="123.2" font-size="5" text-anchor="middle" fill="#3b2a1e" font-family="Georgia, serif" font-weight="bold">Shell Yeah!</text>` },
   // ---------- more lights ----------
-  'lights-angler': { kind: 'lights', name: 'Anglerfish Light', price: 80, icon: '🎣', svg: `<path d="M92,56 v6" stroke="#5a3f2a" stroke-width="1.2"/><ellipse cx="94" cy="68" rx="8" ry="6" fill="#495057"/><path d="M88,70 l2,-2 l2,2 l2,-2 l2,2" stroke="#fff" stroke-width=".8" fill="none"/><circle cx="91" cy="66" r="1.4" fill="#fff"/><path d="M95,62 q-1,-6 -6,-6" stroke="#343a40" stroke-width="1" fill="none"/><g class="ani-glow"><circle cx="89" cy="56" r="2.2" fill="#ffd43b"/><circle cx="89" cy="56" r="5" fill="#fff3bf" opacity=".35"/></g>` },
   'lights-jelly': { kind: 'lights', name: 'Jellyfish Pendant', price: 60, icon: '🪼', svg: `<path d="M93,52 v8" stroke="#5a3f2a" stroke-width="1.2"/><g class="ani-pulse"><path d="M86,68 Q86,59 93,59 Q100,59 100,68Z" fill="#e599f7" opacity=".9"/><circle cx="93" cy="65" r="9" fill="#f3d9fa" opacity=".35"/><path d="M89,68 q-1,6 1,10 M93,68 q1,7 0,12 M97,68 q1,6 -1,10" stroke="#e599f7" stroke-width="1.2" fill="none"/></g>` },
   'lights-seaglass': { kind: 'lights', name: 'Sea Glass Lantern', price: 55, icon: '🏮', svg: `<path d="M92,58 v5" stroke="#5a3f2a" stroke-width="1.2"/><rect x="86" y="63" width="12" height="15" rx="2" fill="#5a3f2a"/><rect x="88" y="65" width="4" height="11" fill="#63e6be" opacity=".85"/><rect x="92" y="65" width="4" height="11" fill="#74c0fc" opacity=".85"/><circle cx="92" cy="70" r="9" fill="#c3fae8" opacity=".25"/>` },
   'lights-minilighthouse': { kind: 'lights', name: 'Mini Lighthouse Lamp', price: 65, icon: '🗼', svg: `<path d="M91,118 L93,92 L99,92 L101,118Z" fill="#fff"/><path d="M92,110 h9 M92.5,100 h8" stroke="#e03131" stroke-width="3"/><rect x="92" y="86" width="8" height="6" fill="#0c3440"/><path d="M91,86 L96,81 L101,86Z" fill="#e03131"/><g class="ani-glow"><circle cx="96" cy="89" r="2" fill="#fff3bf"/><path d="M100,89 l14,-4 v8Z" fill="#fff3bf" opacity=".4"/></g>` },
   'lights-bottle': { kind: 'lights', name: 'Message Bottle Light', price: 45, icon: '🍾', svg: `<path d="M92,56 v6" stroke="#5a3f2a" stroke-width="1.2"/><rect x="89" y="62" width="6" height="3" fill="#a8865f"/><rect x="87" y="65" width="10" height="15" rx="4" fill="#c5f6fa" opacity=".7" stroke="#66d9e8"/><rect x="89" y="70" width="6" height="5" fill="#fff3bf"/><circle cx="92" cy="72" r="8" fill="#fff3bf" opacity=".3"/>` },
   'lights-buoy': { kind: 'lights', name: 'Buoy Lights', price: 55, icon: '🛟', svg: `<path d="M30,70 Q60,52 90,70" stroke="#5a3f2a" stroke-width="1" fill="none"/>${[36, 48, 60, 72, 84].map((x, k) => `<ellipse cx="${x}" cy="${70 - Math.sin(((x - 30) / 60) * Math.PI) * 12 + 3}" rx="2.6" ry="3.4" fill="${['#e03131', '#ffd43b', '#fff', '#e03131', '#ffd43b'][k]}" stroke="#212529" stroke-width=".4"/>`).join('')}` },
-  'lights-moonbeam': { kind: 'lights', name: 'Moonbeam Light', price: 60, icon: '🌙', svg: `<g class="ani-glow"><path d="M98,58 A10,10 0 1,0 98,76 A7,7 0 1,1 98,58Z" fill="#fff3bf"/><circle cx="94" cy="67" r="11" fill="#fff3bf" opacity=".22"/></g>` },
   'lights-glowcap': { kind: 'lights', name: 'Glowcap Lamp', price: 50, icon: '🍄', svg: `<path d="M90,118 v-8 M96,118 v-12 M101,118 v-6" stroke="#f8f9fa" stroke-width="2"/><g class="ani-pulse"><path d="M85,111 q5,-8 10,0Z M91,107 q5,-9 10,0Z M97,113 q4,-6 8,0Z" fill="#69db7c"/><circle cx="95" cy="108" r="10" fill="#d3f9d8" opacity=".3"/></g>` },
   // ---------- more porch plants ----------
   'plant-hydrangea': { kind: 'plant', name: 'Blue Hydrangeas', price: 45, icon: '💐', svg: `<path d="M14,118 l3,-12 h14 l3,12Z" fill="#f1f3f5"/>${[[18, 98], [26, 96], [22, 90], [30, 101]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5.5" fill="#74c0fc"/><circle cx="${x - 1}" cy="${y - 1}" r="2" fill="#a5d8ff"/>`).join('')}<path d="M16,104 l-4,-2 M32,104 l4,-2" stroke="#5c940d" stroke-width="2"/>` },
@@ -69,9 +65,6 @@ export const DOOR_ITEMS = {
   ...BATCH2_DOOR,
 };
 
-// Taken out of the shop. Anyone who already bought one keeps it and can still put it up.
-export const RETIRED_DOOR = ['lights-angler', 'lights-moonbeam', 'plant-pinetree', 'plant-coralarr', 'mat-rainbow', 'mat-kelp', 'mat-pearl', 'mat-jelly', 'mat-moon', 'lights-lantern'];
-for (const id of RETIRED_DOOR) if (DOOR_ITEMS[id]) DOOR_ITEMS[id].retired = true;
 
 export const DOOR_COZY = 1; // per decoration (paint not counted)
 export const defaultDoor = () => ({ paint: 'paint-moss', wreath: null, mat: null, lights: null, plant: null });

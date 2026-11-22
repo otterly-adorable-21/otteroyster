@@ -239,6 +239,11 @@ export function createSocial(db, store) {
           const from = store.get(g.from_id)?.state.name || 'a friend';
           if (g.kind === 'pearls') { s.pearls += g.amount; got.push(`${g.amount} pearls from ${from}`); }
           if (g.kind === 'furniture' && FURNITURE[g.item]) { s.furniture[g.item] = (s.furniture[g.item] || 0) + 1; got.push(`a ${FURNITURE[g.item].name} from ${from}`); }
+          else if (g.kind === 'furniture' && core.REMOVED_ITEMS.furniture[g.item]) {
+            // That piece left the shop before it was opened: the pearls instead.
+            s.pearls += core.REMOVED_ITEMS.furniture[g.item];
+            got.push(`${core.REMOVED_ITEMS.furniture[g.item]} pearls from ${from} (their gift left the shop)`);
+          }
           core.log(s, `Opened a gift: ${got[got.length - 1]}. 🎁`);
           q.giftClaim.run(g.id);
         }

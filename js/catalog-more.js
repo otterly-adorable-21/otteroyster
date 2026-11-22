@@ -57,14 +57,10 @@ const matBase = (c, inner, rx = 2) => `<rect x="34" y="116" width="52" height="1
 const matText = (c, t, size = 4.4, fill = '#3b2a1e') => matBase(c, `<text x="60" y="123" font-size="${size}" text-anchor="middle" fill="${fill}" font-family="Georgia, serif" font-weight="bold">${t}</text>`);
 const MAT = {
   'mat-fish': ['School of Fish Mat', 40, matBase('#e7f5ff', [42, 52, 62, 72].map((x) => `<path d="M${x},121 q3,-3 6,0 q-3,3 -6,0 l-2,-1.5 v3Z" fill="#339af0"/>`).join(''))],
-  'mat-moon': ['Moon Mat', 40, matBase('#1b2a6b', `<path d="M62,117 a4.5,4.5 0 1,0 0,8 a3.4,3.4 0 1,1 0,-8Z" fill="#fff3bf"/>${star5(48, 121, 1.6, '#fff3bf')}${star5(74, 120, 1.4, '#fff3bf')}`)],
   'mat-seaglass': ['Sea Glass Mat', 45, matBase('#f8f9fa', Array.from({ length: 8 }, (_, k) => `<rect x="${37 + k * 6}" y="${118 + (k % 2) * 2}" width="5" height="4" rx="1" fill="${['#63e6be', '#74c0fc', '#b2f2bb', '#99e9f2'][k % 4]}"/>`).join(''))],
   'mat-tidepool': ['Tidepool Mat', 40, matBase('#8c8070', `<ellipse cx="60" cy="121" rx="14" ry="3.5" fill="#3cc7c0"/>${star5(56, 121, 2, '#ff922b')}`)],
   'mat-whale': ['Whale Tail Mat', 40, matBase('#e7f5ff', '<path d="M60,125 Q58,121 54,119 Q48,117 44,120 Q48,115 54,116 Q58,117 60,119 Q62,117 66,116 Q72,115 76,120 Q72,117 66,119 Q62,121 60,125Z" fill="#4c6ef5"/>')],
-  'mat-kelp': ['Kelp Forest Mat', 35, matBase('#2b5d3a', [42, 50, 58, 66, 74].map((x) => `<path d="M${x},125 q2,-3 0,-6 q-2,-2 0,-4" stroke="#82c91e" stroke-width="1.5" fill="none"/>`).join(''))],
-  'mat-pearl': ['Pearl Mat', 50, matBase('#f3f0ff', [40, 46, 52, 58, 64, 70, 76, 82].map((x) => `<circle cx="${x}" cy="121" r="2" fill="#fff" stroke="#d0bfff" stroke-width=".6"/>`).join(''), 5)],
   'mat-boat': ['Fishing Boat Mat', 40, matBase('#d0ebff', '<path d="M50,122 L70,122 L67,125 L53,125Z" fill="#c92a2a"/><path d="M60,122 V116 M60,117 L66,121 H60Z" stroke="#6b4d34" fill="#fff" stroke-width=".8"/>')],
-  'mat-jelly': ['Jellyfish Mat', 40, matBase('#1b2a6b', [48, 60, 72].map((x) => `<path d="M${x - 3},121 q3,-5 6,0Z" fill="#e599f7"/><path d="M${x - 1.5},121 v3 M${x + 1.5},121 v3" stroke="#e599f7" stroke-width=".8"/>`).join(''))],
   'mat-gull': ['Seagull Mat', 35, matBase('#f1f3f5', '<path d="M52,121 q4,-4 8,0 q4,-4 8,0" stroke="#495057" stroke-width="1.4" fill="none"/><path d="M44,123 q2,-2 4,0 q2,-2 4,0" stroke="#868e96" stroke-width="1" fill="none"/>')],
   'mat-mermaid': ['Mermaid Tail Mat', 50, matBase('#c3fae8', '<path d="M50,121 Q58,117 66,121 L72,117 L72,125 L66,121" fill="#20c997"/>')],
   'mat-driftwood': ['Driftwood Mat', 35, '<path d="M34,118 Q60,113 86,118 L86,125 Q60,128 34,125Z" fill="#c9a66b"/><path d="M38,120 Q60,117 82,120 M38,123 Q60,121 82,123" stroke="#a8865f" stroke-width="1" fill="none"/>'],
@@ -93,7 +89,6 @@ const LIGHT = {
 const pot = (c = '#a8865f') => `<path d="M14,118 l3,-12 h14 l3,12Z" fill="${c}"/>`;
 const stems = (xs, top, c = '#5c940d') => xs.map((x, k) => `<path d="M${x},106 V${top - (k % 2) * 4}" stroke="${c}" stroke-width="1.4"/>`).join('');
 const PLANT = {
-  'plant-pinetree': ['Pinecone Tree', 50, `${pot()}<path d="M24,72 L34,92 H28 L36,106 H12 L20,92 H14Z" fill="#2b8a3e"/><ellipse cx="30" cy="100" rx="2" ry="3" fill="#8a6644"/>`],
   'plant-delphinium': ['Blue Delphiniums', 45, `${pot()}${stems([18, 24, 30], 84)}${[18, 24, 30].map((x, k) => [0, 4, 8, 12].map((d) => `<circle cx="${x}" cy="${84 - (k % 2) * 4 + d}" r="2.2" fill="#4263eb"/>`).join('')).join('')}`],
   'plant-thrift': ['Sea Thrift', 35, `${pot('#c9b084')}${stems([18, 22, 26, 30], 96, '#94d82d')}${[18, 22, 26, 30].map((x, k) => `<circle cx="${x}" cy="${96 - (k % 2) * 4}" r="3" fill="#f783ac"/>`).join('')}`],
   'plant-bluestar': ['Blue Star Fern', 40, `${pot('#e9ecef')}<path d="M24,106 q-12,-6 -12,-16 M24,106 q-4,-14 0,-22 M24,106 q10,-8 12,-18" stroke="#63a4a0" stroke-width="5" fill="none" stroke-linecap="round"/>`],
@@ -109,7 +104,6 @@ const PLANT = {
   'plant-flytrap': ['Venus Flytrap', 50, `${pot()}<path d="M24,106 V94 M20,106 q-4,-6 -6,-10 M28,106 q4,-6 6,-10" stroke="#5c940d" stroke-width="1.6" fill="none"/>${[[24, 92], [14, 94], [34, 94]].map(([x, y]) => `<path d="M${x - 4},${y} q4,-6 8,0" fill="#e03131"/><path d="M${x - 4},${y} l1,-2 m2,1 l0,-2 m2,2 l1,-2" stroke="#a9e34b" stroke-width=".7"/>`).join('')}`],
   'plant-kelp': ['Potted Kelp', 35, `<path d="M12,118 Q12,104 24,104 Q36,104 36,118Z" fill="#c5f6fa" opacity=".7" stroke="#66d9e8"/>${[18, 24, 30].map((x) => `<path d="M${x},116 q4,-8 0,-14 q-4,-6 0,-14" stroke="#5c940d" stroke-width="3" fill="none"/>`).join('')}`],
   'plant-driftplanter': ['Driftwood Planter', 45, `<path d="M8,118 Q24,110 40,118 L38,112 Q24,104 10,112Z" fill="#a8865f"/>${[16, 24, 32].map((x) => flower(x, 104, 2.5, '#ffd43b', '#fff')).join('')}<path d="M14,110 l4,-4 M30,110 l-4,-4" stroke="#5c940d" stroke-width="1.2"/>`],
-  'plant-coralarr': ['Coral Arrangement', 55, `<path d="M12,118 h24 l-2,-8 h-20Z" fill="#e8d6a8"/><path d="M18,110 q-4,-8 0,-16 M24,110 q2,-10 -2,-18 M30,110 q4,-8 2,-14" stroke="#ff8787" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M26,96 q4,-4 6,-10" stroke="#b197fc" stroke-width="3" fill="none" stroke-linecap="round"/>`],
   'plant-lilybowl': ['Water Lily Bowl', 50, `<ellipse cx="24" cy="112" rx="13" ry="6" fill="#1c7ed6"/><ellipse cx="24" cy="110" rx="12" ry="4" fill="#3cc7c0"/><ellipse cx="19" cy="110" rx="5" ry="2" fill="#6f9a3a"/>${flower(29, 108, 2.4, '#fff', '#ffd43b')}`],
 };
 

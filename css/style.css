@@ -692,7 +692,7 @@ body[data-view='den'] .stats, body[data-view='missions'] .stats, body[data-view=
 .signup { display: grid; gap: 6px; }
 .code-card { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 14px; }
 .friend-code { font-family: ui-monospace, 'SFMono-Regular', monospace; font-size: 1.35rem; font-weight: 800; letter-spacing: .08em; color: var(--deep); }
-.add-friend { margin-top: 10px; }
+.add-friend { margin: 10px 0 14px; }
 .add-friend input { letter-spacing: .1em; }
 .friend { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 .friend-art { width: 56px; height: 70px; flex: none; border-radius: 16px; background: radial-gradient(circle at 50% 70%, #9be8de, #3cc7c0 70%); display: grid; place-items: end center; overflow: hidden; box-shadow: var(--gold-ring); }
