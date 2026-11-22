@@ -156,9 +156,22 @@ export const ACC_KIND = { bow: 'head', tophat: 'head', flowers: 'head', crown: '
 // the head and the middle 210 px as wide as the head; the bandana's knot band
 // runs across y = 64 with the middle 210 px as wide as the neck; specs have
 // their lens centres at (80, 128) and (176, 128).
+// Fitting for uploaded head pictures (tuned to the ones in assets/art/companion-acc):
+//   size = share of the 256 px square's width to show it at (the bow and top hat
+//          fill their whole square, so they're shown smaller)
+//   sink = how far (share of its height) it sits down into the head
+//   tall = share of the square, from the bottom, that has drawing in it
+export const ART_FIT_ACC = { bow: { size: 0.62, sink: 0.3, tall: 0.92 }, tophat: { size: 0.72, sink: 0.08, tall: 1 }, flowers: { size: 1, sink: 0.12, tall: 0.46 } };
+const artBox = (acc) => {
+  const { size = 1, sink = 0, tall = 1 } = ART_FIT_ACC[acc] || {};
+  const w = 48.8 * size;
+  return { w, top: -w * (1 - sink), rise: w * (tall - sink) };
+};
+
 function accArt(url, f, kind, acc) {
   if (kind === 'head' || kind === 'neck') {
-    const box = kind === 'head' ? `x="-24.4" y="-48.8" width="48.8" height="48.8"` : `x="-24.4" y="-12.2" width="48.8" height="48.8"`;
+    const hb = artBox(acc);
+    const box = kind === 'head' ? `x="${(-hb.w / 2).toFixed(2)}" y="${hb.top.toFixed(2)}" width="${hb.w.toFixed(2)}" height="${hb.w.toFixed(2)}"` : `x="-24.4" y="-12.2" width="48.8" height="48.8"`;
     return frame(kind === 'head' ? headSpot(acc, f) : f.neck, `<image href="${url}" ${box} preserveAspectRatio="xMidYMid meet"/>`);
   }
   const [a, b] = f.eyes;
@@ -202,7 +215,8 @@ export function companionSVG(id, { sleeping = false, look = {} } = {}) {
   const acc = look.acc ? accessorySVG(look.acc, fit, id) : '';
   // A tall hat on a tall companion: shrink the pair a little (feet stay put) so the hat isn't cut off.
   const spot = look.acc && headSpot(look.acc, fit);
-  const peak = ACC_RISE[look.acc] ? spot[1] - ACC_RISE[look.acc] * (spot[2] / 40) : 100;
+  const rise = ACC_RISE[look.acc] && (artUrl(`companion-acc/${look.acc}`) && !artUrl(`companion-acc/${look.acc}-${id}`) ? artBox(look.acc).rise : ACC_RISE[look.acc]);
+  const peak = rise ? spot[1] - rise * (spot[2] / 40) : 100;
   const k = peak < 1 ? 99 / (100 - peak) : 1;
   const tint = COMP_COLORS[look.color]?.tint;
   return `${filt ? `<defs><filter id="${filt}"><feColorMatrix type="hueRotate" values="${hue}" result="h"/><feFlood flood-color="${tint}" flood-opacity=".38"/><feComposite in2="SourceAlpha" operator="in" result="t"/><feMerge><feMergeNode in="h"/><feMergeNode in="t"/></feMerge></filter></defs>` : ''}${k < 1 ? `<g transform="translate(${50 * (1 - k)} ${100 * (1 - k)}) scale(${k.toFixed(4)})">` : ''}<g${filt ? ` filter="url(#${filt})"` : ''}>${body}${pat}</g>${acc}${k < 1 ? '</g>' : ''}`;
