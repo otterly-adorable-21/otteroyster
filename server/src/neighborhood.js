@@ -74,6 +74,27 @@ export function createNeighborhood(db, store, social, social2 = null) {
       };
     },
 
+    // For anyone, signed in or not: the public dens on the lane.
+    publicLane() {
+      const ids = q.recent.all(Date.now() - ACTIVE_DAYS * 86400000).map((r) => r.id)
+        .filter((id) => store.get(id)?.state.publicDen !== false).slice(0, 12);
+      return { status: 200, you: null, friends: [], neighbors: ids.map((id) => house(id)).filter(Boolean) };
+    },
+
+    // A shared den link (#den=CODE): anyone can look if the den is public.
+    publicPeek(otherId) {
+      const p = otherId && store.get(otherId);
+      if (!p?.state.name) return { status: 404, error: 'That house is empty.' };
+      if (p.state.publicDen === false) return { status: 403, error: 'This den is private.' };
+      const s = p.state;
+      return {
+        status: 200,
+        friend: false,
+        code: social.codeOf(otherId),
+        otter: { name: s.name, species: s.species, title: core.displayTitle(s), level: s.level, stats: s.stats, equipped: s.equipped, sleeping: s.sleeping, mission: s.mission ? { id: s.mission.id } : null, den: s.den, persona: s.persona, created: s.created, sets: s.sets, collection: s.collection },
+      };
+    },
+
     // Water a friend's dry garden plots. Their harvest gets a bonus; you get a few pearls.
     waterFriend(meId, otherId) {
       if (!otherId || !social.areFriends(meId, otherId)) return { status: 403, error: 'You can only water friends\' gardens.' };

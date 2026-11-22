@@ -22,6 +22,7 @@ function limiter(max, windowMs) {
 
 export function startHttp({ store, social, social2, museum, lane, auth, port, siteRoot, allowedOrigins, info }) {
   const linkLimit = limiter(10, 60_000);
+  const loginLimit = limiter(10, 60_000);
   const registerLimit = limiter(20, 60_000);
   const apiLimit = limiter(240, 60_000);
 
@@ -113,7 +114,33 @@ export function startHttp({ store, social, social2, museum, lane, auth, port, si
       case 'GET /api/save': {
         const p = authed(req);
         if (!p) return send(res, 401, { error: 'Not linked' });
-        return send(res, 200, { state: p.state, version: p.version, discordName: p.discordName, code: social.codeOf(p.id) });
+        return send(res, 200, { state: p.state, version: p.version, discordName: p.discordName, username: social.accounts.nameOf(p.id), code: social.codeOf(p.id) });
+      }
+
+      // Sign in with a sign-in name and password (no Discord needed).
+      case 'POST /api/account/login': {
+        if (!loginLimit(ip)) return send(res, 429, { error: 'Too many tries. Wait a minute.' });
+        const { status, ...rest } = social.accounts.login(await body(req));
+        return send(res, status, rest);
+      }
+
+      // Set or change this account's sign-in name and password.
+      case 'POST /api/account/password': {
+        const p = authed(req);
+        if (!p) return send(res, 401, { error: 'Not signed in' });
+        if (!loginLimit(ip)) return send(res, 429, { error: 'Too many tries. Wait a minute.' });
+        const { status, ...rest } = social.accounts.set(p.id, await body(req));
+        return send(res, status, rest);
+      }
+
+      // Shareable, no sign-in needed: the public dens on Otter Lane and one den by link.
+      case 'GET /api/public/lane': {
+        const { status, ...rest } = lane.publicLane();
+        return send(res, status, rest);
+      }
+      case 'GET /api/public/den': {
+        const { status, ...rest } = lane.publicPeek(social.idByCode(String(url.searchParams.get('code') || '').toUpperCase()));
+        return send(res, status, rest);
       }
 
       case 'PUT /api/save': {
@@ -275,7 +302,8 @@ export function startHttp({ store, social, social2, museum, lane, auth, port, si
 
       case 'GET /api/leaderboard': {
         const game = url.searchParams.get('game') || '';
-        return send(res, 200, { top: store.leaderboard(game, 10) });
+        // Discord names stay in Discord: the website (and shared links) show otter names only.
+        return send(res, 200, { top: store.leaderboard(game, 10).map(({ name, score }) => ({ name, score })) });
       }
 
       default:

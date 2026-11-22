@@ -66,5 +66,10 @@ export function openDb(path) {
     db.exec('ALTER TABLE players ADD COLUMN friend_code TEXT');
     db.exec('CREATE UNIQUE INDEX IF NOT EXISTS players_code ON players(friend_code)');
   }
+  if (!cols.includes('username')) {
+    db.exec('ALTER TABLE players ADD COLUMN username TEXT');
+    db.exec('ALTER TABLE players ADD COLUMN pass_hash TEXT');
+    db.exec('CREATE UNIQUE INDEX IF NOT EXISTS players_username ON players(username)');
+  }
   return db;
 }

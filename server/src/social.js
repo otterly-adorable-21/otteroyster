@@ -1,5 +1,6 @@
 // Friends, visits, hugs and gifts. Works for website accounts and Discord users alike.
 import { randomBytes, randomUUID, createHash } from 'node:crypto';
+import { createAccounts } from './accounts.js';
 import * as core from '../../js/core.js';
 import { FURNITURE } from '../../js/den-data.js';
 import { FRIEND_POINTS, HUG_HAPPINESS, GIFT_PEARLS_PER_DAY, MAX_FRIENDS, friendLevel } from '../../js/social.js';
@@ -10,6 +11,7 @@ const pair = (x, y) => (x < y ? [x, y] : [y, x]);
 const err = (status, error) => ({ status, error });
 
 export function createSocial(db, store) {
+  const accounts = createAccounts(db);
   const q = {
     setCode: db.prepare('UPDATE players SET friend_code = ? WHERE id = ?'),
     getCode: db.prepare('SELECT friend_code FROM players WHERE id = ?'),
@@ -81,6 +83,7 @@ export function createSocial(db, store) {
   };
 
   const social = {
+    accounts,
     codeOf,
     idByCode,
     areFriends,
@@ -267,6 +270,7 @@ export function createSocial(db, store) {
             q.friendPoints.run(r.points, a, b);
           }
         }
+        accounts.carry(keepId, dropId);
         const dropCode = q.getCode.get(dropId)?.friend_code;
         q.delPlayer.run(dropId);
         if (dropCode && !q.getCode.get(keepId)?.friend_code) q.setCode.run(dropCode, keepId);

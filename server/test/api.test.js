@@ -22,8 +22,8 @@ await new Promise((r) => server.once('listening', r));
 const base = `http://localhost:${server.address().port}`;
 after(() => server.close());
 
-const call = async (path, { method = 'GET', body, token } = {}) => {
-  const res = await fetch(base + path, { method, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: body && JSON.stringify(body) });
+const call = async (path, { method = 'GET', body, token, ip } = {}) => {
+  const res = await fetch(base + path, { method, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(ip ? { 'X-Forwarded-For': ip } : {}) }, body: body && JSON.stringify(body) });
   return { status: res.status, data: await res.json().catch(() => null), text: res.headers.get('content-type') };
 };
 
@@ -376,4 +376,52 @@ test('the Pond Gazette hears about big moments', async () => {
   assert.ok(w.feed.some((f) => /Moonie found a legendary/.test(f.text)), JSON.stringify(w.feed));
   assert.ok(w.feed.some((f) => /Moonie solved the mystery “The Singing Shell”/.test(f.text)));
   assert.ok(w.activeToday >= 1);
+});
+
+test('sign-in name and password: set, log in elsewhere, mistakes', async () => {
+  const a = await call('/api/register', { method: 'POST', ip: '10.9.9.9', body: { state: { ...core.defaultState(), name: 'Pebble' } } });
+  assert.equal(a.status, 200);
+  const tok = a.data.token;
+  assert.equal((await call('/api/account/password', { method: 'POST', ip: '10.9.9.9', token: tok, body: { username: 'x', password: 'longenough' } })).status, 400);
+  assert.equal((await call('/api/account/password', { method: 'POST', ip: '10.9.9.9', token: tok, body: { username: 'pebble_otter', password: 'short' } })).status, 400);
+  const set = await call('/api/account/password', { method: 'POST', ip: '10.9.9.9', token: tok, body: { username: 'Pebble_Otter', password: 'kelp-forest-9' } });
+  assert.equal(set.status, 200);
+  assert.equal(set.data.username, 'pebble_otter');
+  assert.equal((await call('/api/save', { token: tok })).data.username, 'pebble_otter');
+  // Wrong password, wrong name.
+  assert.equal((await call('/api/account/login', { method: 'POST', ip: '10.9.9.9', body: { username: 'pebble_otter', password: 'nope-nope-nope' } })).status, 401);
+  assert.equal((await call('/api/account/login', { method: 'POST', ip: '10.9.9.9', body: { username: 'nobody_here', password: 'kelp-forest-9' } })).status, 401);
+  // Right: a new token for the same otter.
+  const li = await call('/api/account/login', { method: 'POST', ip: '10.9.9.9', body: { username: 'PEBBLE_OTTER', password: 'kelp-forest-9' } });
+  assert.equal(li.status, 200);
+  assert.notEqual(li.data.token, tok);
+  assert.equal((await call('/api/save', { token: li.data.token })).data.state.name, 'Pebble');
+  // Changing it needs the current password; names are unique.
+  assert.equal((await call('/api/account/password', { method: 'POST', ip: '10.9.9.9', token: tok, body: { username: 'pebble_otter', password: 'new-password-1' } })).status, 403);
+  const b = await call('/api/register', { method: 'POST', ip: '10.9.9.9', body: { state: { ...core.defaultState(), name: 'Rocky' } } });
+  assert.equal((await call('/api/account/password', { method: 'POST', ip: '10.9.9.9', token: b.data.token, body: { username: 'pebble_otter', password: 'another-pass-2' } })).status, 409);
+  // Merging keeps the sign-in name.
+  const m = await call('/api/merge', { method: 'POST', ip: '10.9.9.9', token: b.data.token, body: { token: tok, keep: 'this' } });
+  assert.equal(m.status, 200);
+  const again = await call('/api/account/login', { method: 'POST', ip: '10.9.9.9', body: { username: 'pebble_otter', password: 'kelp-forest-9' } });
+  assert.equal(again.status, 200);
+  assert.equal((await call('/api/save', { token: again.data.token })).data.state.name, 'Rocky');
+});
+
+test('shareable without signing in: public lane, den links, leaderboard', async () => {
+  const a = await call('/api/register', { method: 'POST', ip: '10.9.9.9', body: { state: { ...core.defaultState(), name: 'Shelby' } } });
+  const code = a.data.code;
+  const lanePub = await call('/api/public/lane');
+  assert.equal(lanePub.status, 200);
+  assert.ok(lanePub.data.neighbors.some((h) => h.name === 'Shelby'));
+  const den = await call(`/api/public/den?code=${code.toLowerCase()}`);
+  assert.equal(den.status, 200);
+  assert.equal(den.data.otter.name, 'Shelby');
+  await call('/api/lane/public', { method: 'POST', ip: '10.9.9.9', token: a.data.token, body: { on: false } });
+  assert.equal((await call(`/api/public/den?code=${code}`)).status, 403);
+  assert.ok(!(await call('/api/public/lane')).data.neighbors.some((h) => h.name === 'Shelby'));
+  assert.equal((await call('/api/public/den?code=OTR-ZZZZZ')).status, 404);
+  const lb = await call('/api/leaderboard?game=dive');
+  assert.equal(lb.status, 200);
+  assert.ok(lb.data.top.every((r) => !('owner' in r)));
 });

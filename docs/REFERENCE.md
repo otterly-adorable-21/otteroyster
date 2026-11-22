@@ -53,7 +53,7 @@ Made by `node tools/reference.mjs` from the game itself. Contents: [Website](#we
 - **Mysteries** (4, with 4 chapters each) solved by visiting places at the right time, weather and tide
 - **Lore Book** (44 pages) and **Treasures** pages (like the journal), **Captain Barnacle's boat** (30% off, about 3 days a week)
 - **Pond Museum**: donate spares, first-donor credit, community milestones, top donors
-- **Otter Lane**: stroll past dens, peek inside, add friends, hide your den
+- **Otter Lane**: stroll past dens and peek inside (anyone can, even without saving online), add friends, share your den, hide your den
 - **Seasonal events** (11 a year): tokens, daily quests, limited shop, limited discoveries
 
 ### Arcade tab
@@ -64,11 +64,13 @@ Made by `node tools/reference.mjs` from the game itself. Contents: [Website](#we
 - Friend codes and requests, friendship levels (hearts), visits, daily hugs, gifts
 - Notices inbox (including friends' birthdays), guestbook, Shell Mail postcards (arrive in 30 min), pen pals
 - Visiting: pet-sit (snack/cuddle/bath), sleepover invites, water their garden, sign their guestbook
-- Friend score challenges; sign in with Discord; device codes; account merging; save online without Discord
+- Friend score challenges; sign in with Discord; device codes; account merging
+- **No Discord needed**: save online, then pick a private sign-in name and password to sign in on any device (players only ever see otter names)
 
 ### Saving
 - Saves on the device and to the server automatically; works offline
 - Back up to a file and restore; save chip shows the status
+- **Sharing links** (work for anyone, no sign-in): 🔗 Share on a leaderboard (`#lb=<game>`), and on a den or on Otter Lane (`#den=<friend code>`; private dens stay private). A brand-new visitor adopts first, then the link opens
 
 ## Discord commands
 

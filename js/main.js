@@ -105,15 +105,18 @@ function savePanelHTML(extra = '') {
     <div class="save-rows">
       <div class="save-row"><span>📱</span><div><b>This device</b><div class="muted">${saveInfo.localOk ? `Saved automatically · ${ago(saveInfo.localAt)}` : 'This browser is blocking storage (private mode?). Use an online save or a backup!'}</div></div></div>
       <div class="save-row"><span>☁️</span><div><b>Online save</b><div class="muted">${signedIn ? (online ? `On · saved ${ago(saveInfo.cloudAt)}${linkedName ? ` · linked to Discord (${esc(linkedName)})` : ''}` : 'On, but the server is unreachable right now. Changes are kept here and sync when it is back.') : online ? 'Off. Save online to keep your otter safe and use it on other devices.' : "Unavailable: the server isn't reachable from this page."}</div></div></div>
+      ${online ? `<div class="save-row"><span>🔑</span><div><b>Sign-in name</b><div class="muted">${signedIn ? (loginName ? `<b>${esc(loginName)}</b> · sign in anywhere with your password` : 'Not set yet. Add one to sign in on other devices without Discord.') : 'Have one? Sign in below.'}</div></div></div>` : ''}
       <div class="save-row"><span>🗂️</span><div><b>Backup file</b><div class="muted">${lastBackup ? `Last downloaded ${ago(lastBackup)}` : 'No backup yet'}</div></div></div>
     </div>
     ${extra}
     ${!signedIn || !linkedName ? discordButton(signedIn ? 'Link Discord sign-in' : 'Sign in with Discord') : ''}
     <div class="save-actions">
       <button class="btn primary" data-action="save-now">💾 Save now</button>
-      ${online && !signedIn && !sync.discordLoginUrl ? '<button class="btn" data-action="register">☁️ Save my otter online</button>' : ''}
+      ${online && !signedIn ? '<button class="btn" data-action="register">☁️ Save my otter online</button>' : ''}
+      ${online && signedIn ? `<button class="btn" data-action="setlogin">🔑 ${loginName ? 'Change sign-in' : 'Set sign-in name'}</button>` : ''}
       ${online && signedIn ? '<button class="btn" data-action="device-code">📲 Use on another device</button>' : ''}
     </div>
+    ${online && !signedIn ? `<h3 class="den-sub dark">Sign in</h3>${loginFormHTML()}` : ''}
     ${online ? `<form class="link-form" data-form="link"><input name="code" maxlength="6" autocomplete="off" placeholder="CODE" aria-label="Device or Discord code" required><button class="btn" type="submit">Load otter</button></form>
       <p class="muted small-note">Got a code from another device or from <code>/link</code> in Discord? Enter it to load that otter here.</p>` : ''}
     <h3 class="den-sub dark">Backups</h3>
@@ -125,6 +128,32 @@ function savePanelHTML(extra = '') {
     ${!online ? `<p class="muted small-note">Tried: ${sync.tried.map(esc).join(', ') || '—'}. <button class="link" data-action="recheck">Try again</button></p>` : ''}
   </div>`;
 }
+
+const loginFormHTML = () => `<form class="login-form" data-form="login">
+    <input name="username" autocomplete="username" maxlength="20" placeholder="Sign-in name" aria-label="Sign-in name" required autocapitalize="none" spellcheck="false">
+    <input name="password" type="password" autocomplete="current-password" maxlength="200" placeholder="Password" aria-label="Password" required>
+    <button class="btn" type="submit">🔑 Sign in</button></form>`;
+
+function showSetLogin({ after = false } = {}) {
+  showModal(`<div class="result"><div class="result-icon">🔑</div><h2>${loginName ? 'Change your sign-in' : `Keep ${esc(state.name || 'your otter')} safe`}</h2>
+    <p>${loginName ? 'Change your sign-in name or password.' : 'Pick a sign-in name and password. Then you can sign in on any phone, tablet or computer, even without Discord.'}</p>
+    <form class="login-form" data-form="setlogin">
+      <input name="username" autocomplete="username" maxlength="20" placeholder="Sign-in name" aria-label="Sign-in name" required autocapitalize="none" spellcheck="false" value="${esc(loginName)}">
+      ${loginName ? '<input name="current" type="password" autocomplete="current-password" placeholder="Current password" aria-label="Current password" required>' : ''}
+      <input name="password" type="password" autocomplete="new-password" minlength="8" maxlength="200" placeholder="${loginName ? 'New password' : 'Password'} (8+ characters)" aria-label="Password" required>
+      <input name="password2" type="password" autocomplete="new-password" minlength="8" maxlength="200" placeholder="Type it again" aria-label="Password again" required>
+      <button class="btn primary" type="submit">Save</button></form>
+    <p class="muted small-note">Your sign-in name is private: other players only ever see your otter's name.${after ? '' : ''}</p>
+    <button class="link" data-close>${after ? 'Skip for now' : 'Cancel'}</button></div>`);
+  setTimeout(() => $('#modal input')?.focus(), 50);
+}
+
+// Share a link: the phone's share sheet if there is one, otherwise copy it.
+async function shareLink(url, title, text) {
+  try { if (navigator.share) { await navigator.share({ title, text, url }); return; } } catch (e) { if (e?.name === 'AbortError') return; }
+  try { await navigator.clipboard.writeText(url); toast('🔗 Link copied! Paste it anywhere to share.'); } catch { prompt('Copy this link:', url); }
+}
+const shareUrl = (hash) => `${location.origin}${location.pathname}#${hash}`;
 
 function showSavePanel(extra = '') { showModal(savePanelHTML(extra)); }
 
@@ -142,13 +171,21 @@ async function finishDiscordLogin() {
   if (params.get('login-error')) { toast(`⚠️ ${params.get('login-error')}`); return; }
   const newTok = params.get('login');
   if (!newTok || !(await sync.check())) { toast('⚠️ Could not finish signing in. Please try again.'); return; }
+  await switchToAccount(newTok, { discord: true });
+}
+
+// Use the online account behind newTok on this device (after a Discord or
+// password sign-in), merging with this device's otter if there is one.
+async function switchToAccount(newTok, { discord = false } = {}) {
+  const how = discord ? 'Discord account' : 'online account';
   const acct = await sync.peek(newTok);
   if (!acct) { toast('⚠️ Could not finish signing in. Please try again.'); return; }
 
   const finish = (st, version, msg) => {
     sync.useToken(newTok, version);
-    sync.rememberDiscord(true);
-    linkedName = acct.discordName || linkedName;
+    if (discord) sync.rememberDiscord(true);
+    linkedName = acct.discordName || '';
+    loginName = acct.username || '';
     friendsData = null;
     adoptRemote(st, version, msg);
     saveInfo.cloud = 'ok';
@@ -165,7 +202,7 @@ async function finishDiscordLogin() {
   let oldTok = sync.token;
   if (oldTok) {
     const mine = await sync.peek(oldTok);
-    if (mine?.discordName && mine.discordName === acct.discordName) { finish(acct.state, acct.version, '👋 Signed in with Discord!'); return; }
+    if (mine && mine.code === acct.code) { finish(acct.state, acct.version, discord ? '👋 Signed in with Discord!' : '👋 Signed in!'); return; }
   } else {
     const reg = await sync.register(state);
     if (!reg.token) { toast(reg.error || 'Could not save this otter online.'); return; }
@@ -174,12 +211,12 @@ async function finishDiscordLogin() {
   const doMerge = async (keep) => {
     const r = await sync.merge(newTok, oldTok, keep);
     if (!r.ok) { toast(r.error || 'Could not finish signing in.'); return; }
-    finish(r.state, r.version, `👋 Signed in with Discord! ${r.state.name} is saved to your account.`);
+    finish(r.state, r.version, `👋 Signed in${discord ? ' with Discord' : ''}! ${r.state.name} is saved to your account.`);
   };
   if (!acct.state.name) { await doMerge('other'); return; }
   showModal(`<div class="result"><div class="result-icon">🦦🦦</div><h2>Two otters!</h2>
-    <p>Your Discord account has <b>${esc(acct.state.name)}</b> (level ${acct.state.level}). This device has <b>${esc(state.name)}</b> (level ${state.level}). Which otter do you want to keep?</p>
-    <div class="row"><button class="btn primary" data-login-keep="this">Keep ${esc(acct.state.name)}<br><small>(Discord account)</small></button>
+    <p>Your ${how} has <b>${esc(acct.state.name)}</b> (level ${acct.state.level}). This device has <b>${esc(state.name)}</b> (level ${state.level}). Which otter do you want to keep?</p>
+    <div class="row"><button class="btn primary" data-login-keep="this">Keep ${esc(acct.state.name)}<br><small>(${how})</small></button>
     <button class="btn" data-login-keep="other">Keep ${esc(state.name)}<br><small>(this device)</small></button></div>
     <p class="muted">The other otter will be released back to the sea. Your friends from both are kept.</p></div>`, { locked: true });
   document.querySelectorAll('[data-login-keep]').forEach((b) => b.addEventListener('click', () => doMerge(b.dataset.loginKeep), { once: true }));
@@ -225,6 +262,7 @@ let lastOtter = '';
 let gameCleanup = null;
 let gameOpen = false;
 let linkedName = '';
+let loginName = ''; // sign-in name for signing in without Discord
 
 // ---------- action plumbing ----------
 function act(res) {
@@ -911,8 +949,8 @@ async function loadMuseum() {
   if (tab === 'missions' && placeView === 'museum') renderPanel();
 }
 async function loadLane() {
-  if (!sync.online || !sync.linked) return;
-  try { const r = await sync.lane(); if (r.ok) laneData = r; } catch { /* offline */ }
+  if (!sync.online) return;
+  try { const r = sync.linked ? await sync.lane() : await sync.publicLane(); if (r.ok) laneData = r; } catch { /* offline */ }
   if (tab === 'missions' && placeView === 'lane') renderPanel();
 }
 
@@ -961,7 +999,7 @@ function houseSVG(h, k, you = false) {
 
 function laneView() {
   const back = '<button class="btn small" data-action="place-back">🗺️ Back to map</button>';
-  if (!sync.online || !sync.linked) return `<div class="explore-head"><h2 class="section-title">Otter Lane</h2>${back}</div><div class="empty"><div class="empty-icon">🏘️</div><p>Otter Lane is where everyone's dens are. Sign in on the Friends tab to take a stroll.</p></div>`;
+  if (!sync.online) return `<div class="explore-head"><h2 class="section-title">Otter Lane</h2>${back}</div><div class="empty"><div class="empty-icon">🏘️</div><p>Otter Lane is where everyone's dens are. It needs the server, which isn't reachable right now.</p></div>`;
   if (!laneData) { loadLane(); return `<div class="explore-head"><h2 class="section-title">Otter Lane</h2>${back}</div><div class="empty"><div class="empty-icon">🫧</div><p>Walking over…</p></div>`; }
   const houses = [laneData.you, ...laneData.friends, ...laneData.neighbors].filter(Boolean);
   const pub = state.publicDen !== false;
@@ -973,12 +1011,13 @@ function laneView() {
       <svg class="walker" id="walker" viewBox="0 -24 200 254" aria-hidden="true">${otterSVG({ ...state, sleeping: false }, { idPrefix: 'walker' })}</svg>
     </div></div>
     <div class="row lane-actions"><button class="btn small" data-action="lane-refresh">🔄 New neighbors</button>
-      <label class="skip-check"><input type="checkbox" data-lane-public ${pub ? 'checked' : ''}> Show my den on Otter Lane</label></div>`;
+      ${sync.linked && laneData.you ? `${pub ? `<button class="btn small" data-action="share-den" data-code="${laneData.you.code}">🔗 Share my den</button>` : ''}
+      <label class="skip-check"><input type="checkbox" data-lane-public ${pub ? 'checked' : ''}> Show my den on Otter Lane</label>` : '<span class="muted">Save your otter online (Friends tab) to put your den on the lane.</span>'}</div>`;
 }
 
 async function peekHouse(code) {
   showModal('<div class="result"><div class="result-icon">🚪</div><p>Knock knock…</p></div>', { wide: true });
-  const r = await sync.lanePeek(code);
+  const r = sync.linked ? await sync.lanePeek(code) : await sync.publicDen(code);
   if ($('#modal').hidden) return;
   if (!r.ok) { $('#modal-card').innerHTML = `<div class="result"><p>${esc(r.error || 'Nobody answered.')}</p><button class="btn primary" data-close>OK</button></div>`; return; }
   const o = r.otter;
@@ -988,7 +1027,9 @@ async function peekHouse(code) {
     <div class="game-top"><h2>🏡 ${esc(o.name)}'s Den</h2><button class="icon-btn" data-close aria-label="Close">✕</button></div>
     <div class="den-stage visit-den">${denSVG(st, { extraAttrs: 'class="den-svg" role="img"' }).replace(/den-otter-/g, 'peek-otter-')}</div>
     <div class="visit-info"><div class="visit-persona">${stageOf(o.level).icon} Lv ${o.level} · ${pi.trait ? `${pi.trait.icon} ${pi.trait.name}` : '🌱 Still discovering'} · ✨ coziness ${core.coziness(st)}</div></div>
-    <div class="row">${r.friend ? `<button class="btn primary" data-action="fr-visit" data-code="${r.code}">Visit as a friend</button>` : `<button class="btn primary" data-action="lane-addfriend" data-code="${r.code}">💗 Add ${esc(o.name)} as a friend</button>`}</div>
+    <div class="row">${!sync.linked ? `<button class="btn primary" data-action="go-friends">💗 Save online to add ${esc(o.name)} as a friend</button>`
+      : r.friend ? `<button class="btn primary" data-action="fr-visit" data-code="${r.code}">Visit as a friend</button>` : r.code === laneData?.you?.code ? '' : `<button class="btn primary" data-action="lane-addfriend" data-code="${r.code}">💗 Add ${esc(o.name)} as a friend</button>`}
+      <button class="btn" data-action="share-den-of" data-code="${r.code}" data-name="${esc(o.name)}">🔗 Share</button></div>
   </div>`;
 }
 let journalOpen = false;
@@ -1420,6 +1461,8 @@ function panelFriends() {
       <p class="flush-p">Save ${esc(state.name || 'your otter')} online to add friends, visit their dens, give hugs and send gifts. Your otter then also works on other devices and in Discord.</p>
       ${discordButton()}
       <button class="btn ${sync.discordLoginUrl ? '' : 'primary'} wide" data-action="register">${sync.discordLoginUrl ? 'Or save online without Discord' : 'Save my otter online'}</button>
+      <p class="muted center">Already saved online with a sign-in name?</p>
+      ${loginFormHTML()}
       <p class="muted center">Already use the Discord bot? Link it below instead.</p></div>
       ${discordSection()}`;
   }
@@ -1429,6 +1472,7 @@ function panelFriends() {
   }
   const d = friendsData;
   return `
+    ${!loginName && !linkedName ? `<div class="card nudge"><span class="big-emoji">🔑</span><div><b>Keep ${esc(state.name)} safe</b><div class="muted">Set a sign-in name and password so you can sign in anywhere, no Discord needed.</div></div><button class="btn small primary" data-action="setlogin">Set up</button></div>` : ''}
     <div class="card code-card"><div><small class="muted">Your friend code</small><div class="friend-code">${d.code}</div></div>
       <button class="btn small" data-action="fr-copy" data-code="${d.code}">📋 Copy</button></div>
     <form class="link-form add-friend" data-form="addfriend">
@@ -1908,6 +1952,7 @@ async function pullNow(quiet = true) {
   try {
     const r = await sync.pull();
     if (r?.discordName) linkedName = r.discordName;
+    if (r) loginName = r.username || '';
     if (r && r.version > sync.version) adoptRemote(r.state, r.version, quiet ? '' : 'Synced!');
     else if (!quiet) toast('Already up to date ✓');
   } catch { /* offline */ }
@@ -2009,8 +2054,8 @@ async function showLeaderboard(id) {
   if ($('#modal').hidden) return;
   $('#modal-card').innerHTML = `<div class="result"><div class="result-icon">${ic(`games/${g.id}`, g.icon)}</div><h2>${g.name} leaderboard</h2>
     ${top && top.length ? `<ol class="board">${top.map((r) => `<li><span>${esc(r.name)}</span><b>${r.score} ${g.scoreLabel}</b></li>`).join('')}</ol>`
-    : '<p>No scores yet. Link Discord and be the first!</p>'}
-    <button class="btn primary" data-close>Close</button></div>`;
+    : `<p>No scores yet. ${sync.linked ? 'Play and be the first!' : 'Save your otter online and be the first!'}</p>`}
+    <div class="row"><button class="btn" data-action="share-lb" data-id="${g.id}">🔗 Share</button><button class="btn primary" data-close>Close</button></div></div>`;
 }
 
 async function doLink(code, keep) {
@@ -2210,10 +2255,15 @@ document.addEventListener('click', async (e) => {
       adoptRemote(r.state, r.version, `☁️ ${state.name} is saved online!`);
       saveInfo.cloud = 'ok';
       saveInfo.cloudAt = Date.now();
-      if (!$('#modal').hidden && $('.save-panel')) $('#modal-card').innerHTML = savePanelHTML();
       friendsData = null;
-      return loadFriends();
+      loadFriends();
+      return showSetLogin({ after: true });
     }
+    case 'setlogin': return showSetLogin();
+    case 'share-den-of': return shareLink(shareUrl(`den=${a.dataset.code}`), 'Otter & Oyster', `Come see ${a.dataset.name}'s den!`);
+    case 'go-friends': closeModal(); tab = 'friends'; renderAll(); renderPanel(); return window.scrollTo({ top: 0 });
+    case 'share-lb': return shareLink(shareUrl(`lb=${a.dataset.id}`), 'Otter & Oyster', `Can you beat the top ${GAME_LIST.find((g) => g.id === a.dataset.id)?.name || ''} scores?`);
+    case 'share-den': return shareLink(shareUrl(`den=${a.dataset.code}`), 'Otter & Oyster', `Come see ${state.name}'s den!`);
     case 'fr-copy':
       try { await navigator.clipboard.writeText(a.dataset.code); toast('Friend code copied! 📋'); } catch { toast(a.dataset.code); }
       return null;
@@ -2366,6 +2416,7 @@ document.addEventListener('click', async (e) => {
       if (confirm('Sign out on this device? Your otter stays here, but it stops syncing with your online account, friends and Discord.')) {
         friendsData = null;
         linkedName = '';
+        loginName = '';
         sync.unlink();
         commit({ push: false });
         toast('Unlinked from Discord.');
@@ -2389,7 +2440,7 @@ document.addEventListener('click', async (e) => {
   }
 });
 
-document.addEventListener('submit', (e) => {
+document.addEventListener('submit', async (e) => {
   const form = e.target;
   e.preventDefault();
   if (form.dataset.form === 'name') {
@@ -2400,9 +2451,29 @@ document.addEventListener('submit', (e) => {
     if (first) core.log(state, `You adopted ${name}, a ${state.species} otter! 🦦`);
     closeModal();
     commit();
-    if (first) burst(['💖', '🦦', '✨'], 10);
+    if (first) { burst(['💖', '🦦', '✨'], 10); if (sync.online) setTimeout(openSharedLink, 600); }
   } else if (form.dataset.form === 'link') {
     doLink(form.code.value);
+  } else if (form.dataset.form === 'login') {
+    const btn = form.querySelector('button');
+    btn.disabled = true;
+    const r = await sync.login(form.username.value, form.password.value);
+    btn.disabled = false;
+    if (!r.ok) { toast(r.error || 'Could not sign in right now.'); return; }
+    closeModal();
+    friendsData = null;
+    laneData = null;
+    await switchToAccount(r.token);
+    loadFriends();
+    renderPanel();
+  } else if (form.dataset.form === 'setlogin') {
+    if (form.password.value !== form.password2.value) { toast('The two passwords don\'t match.'); return; }
+    const r = await sync.setLogin(form.username.value, form.password.value, form.current?.value);
+    if (!r.ok) { toast(r.error || 'Could not save that right now.'); return; }
+    loginName = r.username;
+    closeModal();
+    toast(`🔑 All set! Sign in anywhere as ${r.username}.`);
+    renderPanel();
   } else if (form.dataset.form === 'bday') {
     const v = form.d.value; // YYYY-MM-DD
     const r = core.setBirthday(state, v.slice(5));
@@ -2518,11 +2589,20 @@ else if (awayOnBoot.length) showWelcomeBack(awayOnBoot);
 
 finishDiscordLogin();
 window.addEventListener('hashchange', () => { if (location.hash.startsWith('#login')) finishDiscordLogin(); });
+// Shared links: #lb=<game> opens a leaderboard, #den=<friend code> opens a den.
+async function openSharedLink() {
+  const m = location.hash.match(/^#(lb|den)=([\w-]+)$/);
+  if (!m || !state.name) return; // a brand-new visitor adopts first, then the link opens
+  history.replaceState(null, '', location.pathname + location.search);
+  if (m[1] === 'lb' && GAME_LIST.some((g) => g.id === m[2])) showLeaderboard(m[2]);
+  else if (m[1] === 'den' && sync.online) peekHouse(m[2].toUpperCase());
+}
+window.addEventListener('hashchange', () => { if (/^#(lb|den)=/.test(location.hash)) openSharedLink(); });
 sync.check().then(async (online) => {
-  if (!online) return renderAll();
-  if (sync.linked) { await pullNow(); loadFriends(); }
+  if (online && sync.linked) { await pullNow(); loadFriends(); }
   renderAll();
-  renderPanel();
+  if (online) renderPanel();
+  openSharedLink();
 });
 
 let ticks = 0;

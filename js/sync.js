@@ -114,6 +114,18 @@ export const sync = {
     return { status: r.status, ...r.data };
   },
 
+  // Sign in with a sign-in name and password. Returns { ok, token } (not used yet:
+  // the page decides whether to switch or merge, like a Discord sign-in).
+  async login(username, password) {
+    const r = await call('/api/account/login', { method: 'POST', auth: false, body: { username, password } });
+    return { status: r.status, ok: r.ok, ...r.data };
+  },
+  setLogin(username, password, current) { return this.api('/api/account/password', { username, password, current }); },
+
+  // Shareable, no sign-in needed.
+  async publicLane() { const r = await call('/api/public/lane', { auth: false }); return { status: r.status, ok: r.ok, ...r.data }; },
+  async publicDen(code) { const r = await call(`/api/public/den?code=${encodeURIComponent(code)}`, { auth: false }); return { status: r.status, ok: r.ok, ...r.data }; },
+
   // Signed-in API helper: returns { status, ok, ...data }.
   async api(path, body) {
     const r = await call(path, body === undefined ? {} : { method: 'POST', body });

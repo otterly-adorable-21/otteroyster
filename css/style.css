@@ -312,6 +312,11 @@ code { background: #e3f1ec; padding: 1px 6px; border-radius: 6px; font-size: 0.8
 .link-form { display: flex; gap: 8px; }
 .link-form input { flex: 1; min-width: 0; font: inherit; font-size: 1.2rem; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; text-align: center; padding: 10px; border-radius: 12px; border: 2px solid var(--line); background: #fff; color: var(--ink); }
 .link-form input:focus { outline: none; border-color: var(--aqua); }
+.login-form { display: grid; gap: 8px; width: 100%; max-width: 360px; margin: 8px auto; }
+.login-form input { font: inherit; font-weight: 700; padding: 10px 12px; border-radius: 12px; border: 2px solid var(--line); background: #fff; color: var(--ink); min-width: 0; }
+.login-form input:focus { outline: none; border-color: var(--aqua); }
+.nudge { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
+.nudge > div { flex: 1; }
 .cmd-list { display: grid; gap: 8px; font-size: 0.9rem; }
 .linked { display: grid; gap: 12px; }
 .linked-head { display: flex; gap: 12px; align-items: center; }
