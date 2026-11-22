@@ -132,3 +132,38 @@ any spot left empty, the drawn version stays.
 | ⬜ | `balletslippers` | 🩰 Ballet Slippers | 800 × 1016 | feet |
 | ⬜ | `pirateboots` | 🏴‍☠️ Pirate Boots | 800 × 1016 | feet |
 | ⬜ | `sneakers` | 👟 Little Sneakers | 800 × 1016 | feet |
+| ⬜ | `roundframes` | 👓 Vintage Round Frames | 800 × 1016 | eyes |
+| ⬜ | `steampunk` | 👓 Steampunk Goggles | 800 × 1016 | eyes |
+| ⬜ | `pearlsunnies` | 👓 Pearl Sunglasses | 800 × 1016 | eyes |
+| ⬜ | `operaglasses` | 👓 Opera Glasses | 800 × 1016 | eyes |
+| ⬜ | `hexframes` | 👓 Hexagonal Frames | 800 × 1016 | eyes |
+| ⬜ | `academic` | 👓 Square Academic Glasses | 800 × 1016 | eyes |
+| ⬜ | `rimless` | 👓 Rimless Glasses | 800 × 1016 | eyes |
+| ⬜ | `tortoiseshell` | 👓 Tortoiseshell Frames | 800 × 1016 | eyes |
+| ⬜ | `greenframes` | 👓 Round Green Frames | 800 × 1016 | eyes |
+| ⬜ | `frosted` | 👓 Frosted Glasses | 800 × 1016 | eyes |
+| ⬜ | `iridescent` | 👓 Iridescent Sunglasses | 800 × 1016 | eyes |
+| ⬜ | `pearlmonocle` | 👓 Pearl-Rimmed Monocle | 800 × 1016 | eyes |
+| ⬜ | `nightvision` | 👓 Night-Vision Goggles | 800 × 1016 | eyes |
+| ⬜ | `snowgoggles` | 👓 Snow Goggles | 800 × 1016 | eyes |
+| ⬜ | `snorkelmask` | 👓 Diving Mask with Snorkel | 800 × 1016 | eyes |
+| ⬜ | `chainspecs` | 👓 Spectacles with Chain | 800 × 1016 | eyes |
+| ⬜ | `floatcharm` | 🎒 Glass Float Charm | 800 × 1016 | acc |
+| ⬜ | `fishingrod` | 🎒 Tiny Fishing Rod | 800 × 1016 | back |
+| ⬜ | `bouquet` | 🎒 Flower Bouquet | 800 × 1016 | acc |
+| ⬜ | `sleepingbag` | 🎒 Rolled Sleeping Bag | 800 × 1016 | back |
+| ⬜ | `picnicbasket` | 🎒 Little Picnic Basket | 800 × 1016 | acc |
+| ⬜ | `minianchor` | 🎒 Miniature Anchor | 800 × 1016 | acc |
+| ⬜ | `mapsatchel` | 🎒 Treasure Map Satchel | 800 × 1016 | acc |
+| ⬜ | `shellfan` | 🎒 Seashell Fan | 800 × 1016 | acc |
+| ⬜ | `kite` | 🎒 Tiny Kite | 800 × 1016 | back |
+| ⬜ | `bubblewand` | 🎒 Bubble Wand | 800 × 1016 | acc |
+| ⬜ | `pearlbrooch` | 🎒 Pearl Brooch | 800 × 1016 | acc |
+| ⬜ | `friendcharm` | 🎒 Friendship Charm | 800 × 1016 | acc |
+| ⬜ | `snowglobecharm` | 🎒 Little Snow Globe | 800 × 1016 | acc |
+| ⬜ | `compassclip` | 🎒 Compass Clip | 800 × 1016 | acc |
+| ⬜ | `butterflyclip` | 🎒 Butterfly Companion Clip | 800 × 1016 | acc |
+| ⬜ | `stuffedfish` | 🎒 Tiny Stuffed Fish | 800 × 1016 | acc |
+| ⬜ | `kelpribbon` | 🎒 Kelp Ribbon | 800 × 1016 | acc |
+| ⬜ | `walkingstick` | 🎒 Driftwood Walking Stick | 800 × 1016 | acc |
+| ⬜ | `pearlbracelet` | 🎒 Pearl Bracelet | 800 × 1016 | acc |

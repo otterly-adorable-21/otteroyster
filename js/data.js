@@ -33,6 +33,8 @@ function stars() {
 }
 
 import { MORE_ITEMS, MORE_SLOTS } from './catalog-clothes.js';
+import { BATCH2_ITEMS, BATCH2_FURNITURE, BATCH2_DOOR } from './catalog-more.js';
+export { BATCH2_FURNITURE, BATCH2_DOOR };
 
 export const SLOTS = [
   { id: 'hat', name: 'Hats' },
@@ -251,6 +253,7 @@ export const ITEMS = {
       <circle cx="100" cy="-8" r="7" fill="#ffd43b"/><path d="M78,46 Q100,54 122,46" stroke="#1c7ed6" stroke-width="4" fill="none"/>`,
   },
   ...MORE_ITEMS,
+  ...BATCH2_ITEMS,
 };
 
 export const SNACKS = [

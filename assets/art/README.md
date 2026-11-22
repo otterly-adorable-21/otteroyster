@@ -2,14 +2,14 @@
 
 Drop a picture into the right folder with the right name and it replaces the
 drawn version on the website (and in Shelly's Discord pictures for the otter,
-clothes and den). **6 of 679** spots have art so far.
+clothes and den). **6 of 789** spots have art so far.
 
 See every spot with a live preview on the site's art checklist page: `/art.html`.
 
 | Folder | What goes there | Spots |
 | --- | --- | --- |
 | [`otter/`](otter/) | The otter | 0/18 |
-| [`clothes/`](clothes/) | Clothes | 0/123 |
+| [`clothes/`](clothes/) | Clothes | 0/158 |
 | [`companions/`](companions/) | Pet companions | 2/34 |
 | [`npcs/`](npcs/) | Pond folk (characters) | 0/7 |
 | [`happenings/`](happenings/) | World happenings | 0/10 |
@@ -19,8 +19,8 @@ See every spot with a live preview on the site's art checklist page: `/art.html`
 | [`companion-acc/`](companion-acc/) | Companion accessories | 0/6 |
 | [`garden/`](garden/) | Garden | 0/3 |
 | [`crops/`](crops/) | Garden crops | 0/35 |
-| [`door/`](door/) | Front door | 0/45 |
-| [`furniture/`](furniture/) | Den furniture | 0/118 |
+| [`door/`](door/) | Front door | 0/88 |
+| [`furniture/`](furniture/) | Den furniture | 0/150 |
 | [`wallpaper/`](wallpaper/) | Wallpapers | 4/46 |
 | [`floor/`](floor/) | Floors | 0/16 |
 | [`den/`](den/) | The den room | 0/2 |

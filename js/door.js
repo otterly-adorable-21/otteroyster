@@ -1,3 +1,5 @@
+import { BATCH2_DOOR } from './catalog-more.js';
+
 // Front door decorations, shown on your house on Otter Lane and on the Den tab.
 // One of each kind can be up at a time. Each piece adds a little coziness.
 // Shared by the website and the server.
@@ -64,6 +66,7 @@ export const DOOR_ITEMS = {
   'plant-terrarium': { kind: 'plant', name: 'Sea Glass Terrarium', price: 65, icon: '🫙', svg: `<path d="M12,118 Q10,96 24,92 Q38,96 36,118Z" fill="#c3fae8" opacity=".55" stroke="#63e6be" stroke-width="1.5"/><ellipse cx="24" cy="114" rx="10" ry="3" fill="#e8d6a8"/>${[[18, 112, '#63e6be'], [26, 113, '#74c0fc'], [30, 111, '#b197fc']].map(([x, y, c]) => `<rect x="${x}" y="${y}" width="3" height="2" rx=".6" fill="${c}"/>`).join('')}<path d="M22,112 q-2,-8 2,-12 M26,112 q2,-6 0,-10" stroke="#2b8a3e" stroke-width="1.8" fill="none"/>` },
   'plant-lavender': { kind: 'plant', name: 'Lavender Pot', price: 40, icon: '💜', svg: `<path d="M14,118 l3,-12 h14 l3,12Z" fill="#e9ecef"/>${[17, 21, 25, 29].map((x, k) => `<path d="M${x},106 V${88 - (k % 2) * 4}" stroke="#94d82d" stroke-width="1.4"/>${[0, 4, 8].map((d) => `<ellipse cx="${x}" cy="${90 - (k % 2) * 4 + d}" rx="1.6" ry="2.2" fill="#9775fa"/>`).join('')}`).join('')}` },
   'plant-cherry': { kind: 'plant', name: 'Cherry Blossom Tree', price: 70, icon: '🌸', svg: `<path d="M14,118 l3,-10 h14 l3,10Z" fill="#a8865f"/><path d="M24,108 V92 M24,98 l-6,-6 M24,96 l6,-6" stroke="#6b4d34" stroke-width="2"/>${[[16, 88], [22, 84], [30, 86], [26, 92], [18, 94], [32, 92]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="4.5" fill="#ffc9de"/>`).join('')}` },
+  ...BATCH2_DOOR,
 };
 
 export const DOOR_COZY = 1; // per decoration (paint not counted)

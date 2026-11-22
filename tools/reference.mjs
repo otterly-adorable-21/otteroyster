@@ -7,7 +7,17 @@ import { fileURLToPath } from 'node:url';
 import { commands } from '../server/src/bot/commands.js';
 import { GROUPS } from '../js/art.js';
 import { SLOTS as ANIM } from '../js/animations.js';
-import { SNACKS } from '../js/data.js';
+import { SNACKS, ITEMS, SLOTS } from '../js/data.js';
+import { FURNITURE, WALLPAPERS, FLOORS, DEN_CATS } from '../js/den-data.js';
+import { DOOR_ITEMS, DOOR_KINDS } from '../js/door.js';
+import { SETS } from '../js/sets.js';
+
+// Live counts, so the reference never goes stale.
+const shopItems = Object.values(ITEMS).filter((it) => it.price != null && !it.event);
+const bySlot = SLOTS.map((sl) => `${sl.name} ${shopItems.filter((it) => it.slot === sl.id).length}`).join(', ');
+const shopFurn = Object.values(FURNITURE).filter((f) => !f.event);
+const byCat = DEN_CATS.map((c) => `${c.name} ${shopFurn.filter((f) => f.cat === c.id).length}`).join(', ');
+const byDoor = DOOR_KINDS.map((k) => `${Object.values(DOOR_ITEMS).filter((d) => d.kind === k.id).length} ${k.name.toLowerCase()}`).join(', ');
 import { TRICKS } from '../js/growth.js';
 
 // ---------- hand-written parts ----------
@@ -44,20 +54,20 @@ const WEBSITE = [
   ['Den tab', [
     '**Inside**: drag furniture, flip, put away to storage; coziness score (counts every room); tap your otter to cuddle',
     '**Rooms**: the main den plus up to 3 more (250 pearls at Lv 3, 500 at Lv 6, 900 at Lv 10); each has its own name, wallpaper, floor and furniture; storage is shared; your otter follows you from room to room. Visitors and Discord see the main den',
-    'Furniture shop tabs: Collections, Furniture, Decor, Plushies, Rugs, Wall, Seating, Beds, Tables & storage, Display cases, Fun, Walls & floors (46 wallpapers, 16 floors), with previews',
-    '**Collections**: 5 themed sets (Coastal Cottage, Deep Sea, Forest Dweller, Little Explorer, Springtime) mixing den, door and closet pieces; complete one for a pearl reward',
+    `Furniture shop: ${shopFurn.length} pieces in tabs (${byCat}), plus Collections and Walls & floors (${Object.keys(WALLPAPERS).length} wallpapers, ${Object.keys(FLOORS).length} floors), all with previews`,
+    `**Collections**: ${SETS.length} themed sets (${SETS.map((x) => x.name).join(', ')}) mixing den, door and closet pieces; complete one for a pearl reward`,
     '**Rare**: the glowing Anglerfish Lamp can only be found while exploring the Moonlit Trench',
     'Some pieces have little animations: jellyfish pulse, lures glow, the pinwheel spins, the shoulder octopus waves',
     '**Furniture you can use**: bookshelf (storybook library + Shell Mail), aquarium (go fishing every 3 h, 10 fish), arcade machine (opens the arcade), photo booth (picture with up to 3 friends, save or share)',
     '**Display cases** show your trinkets: shell cabinet, rock shelf, fossil display, pearl case, postcard wall, trophy cabinet',
     '**Garden** (Den tab, 🌱 button by the title): 6 plots (unlock by level), 7 crops, watering (rain helps, friends can water for +25%), harvest pearls and pantry snacks',
-    '**Front door** (🚪 button by the title): 7 paints, 5 wreaths, 12 mats, 11 lights, 10 plants; shown on Otter Lane; +1 coziness each',
+    `**Front door** (🚪 button by the title): ${byDoor}; shown on Otter Lane; +1 coziness each (paint excluded)`,
     'Birthday party decorations and sleepover guests appear in the den',
   ]],
   ['Closet tab', [
     'My clothes / Shop, with slot tabs: Hats, Clothing, Eyewear, Neckwear, Accessories, Extras, Footwear',
     'The Party Hat is a birthday special: only sold on your otter\'s birthday',
-    '110+ items; 👀 try on before buying; confirm purchase (can turn off)',
+    `${shopItems.length} shop items (${bySlot}), plus mission and event items; 👀 try on before buying; confirm purchase (can turn off)`,
     'Rare items from missions; limited items from seasonal events',
   ]],
   ['Explore tab', [

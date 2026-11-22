@@ -127,3 +127,35 @@ any spot left empty, the drawn version stays.
 | ⬜ | `rosebouquet` | Rose Bouquet | 200 × 320 | event item |
 | ⬜ | `fireworks` | Fireworks Display | 440 × 280 | event item |
 | ⬜ | `goldgarland` | Golden Garland | 560 × 160 | event item |
+| ⬜ | `otterplush` | Sea Otter Plush | 240 × 240 | plush |
+| ⬜ | `sealplush` | Baby Seal Plush | 240 × 240 | plush |
+| ⬜ | `stingplush` | Stingray Plush | 240 × 240 | plush |
+| ⬜ | `puffinplush` | Puffin Plush | 240 × 240 | plush |
+| ⬜ | `horseshoeplush` | Horseshoe Crab Plush | 240 × 240 | plush |
+| ⬜ | `hatchlingplush` | Sea Turtle Hatchling Plush | 240 × 240 | plush |
+| ⬜ | `orcaplush` | Orca Plush | 240 × 240 | plush |
+| ⬜ | `dolphinplush` | Dolphin Plush | 240 × 240 | plush |
+| ⬜ | `hermitplush` | Hermit Crab Plush | 240 × 240 | plush |
+| ⬜ | `urchinplush` | Sea Urchin Plush | 240 × 240 | plush |
+| ⬜ | `jellyplush` | Jellyfish Plush | 240 × 240 | plush |
+| ⬜ | `shrimpplush` | Shrimp Plush | 240 × 240 | plush |
+| ⬜ | `seahorseplush` | Seahorse Plush | 240 × 240 | plush |
+| ⬜ | `albatrossplush` | Albatross Plush | 240 × 240 | plush |
+| ⬜ | `foxplush` | Arctic Fox Plush | 240 × 240 | plush |
+| ⬜ | `frogplush` | Frog Plush | 240 × 240 | plush |
+| ⬜ | `axolotlplush` | Axolotl Plush | 240 × 240 | plush |
+| ⬜ | `starfishrug` | Starfish Rug | 440 × 200 | rug |
+| ⬜ | `moonrug` | Moonlit Rug | 440 × 200 | rug |
+| ⬜ | `reefrug` | Coral Reef Rug | 440 × 200 | rug |
+| ⬜ | `cloudrug` | Cloud Rug | 440 × 200 | rug |
+| ⬜ | `pebblerug` | Pebble Beach Rug | 440 × 200 | rug |
+| ⬜ | `tidepoolrug` | Tidepool Rug | 440 × 200 | rug |
+| ⬜ | `kelprug` | Kelp Forest Rug | 440 × 200 | rug |
+| ⬜ | `sanddollarrug` | Sand Dollar Rug | 440 × 200 | rug |
+| ⬜ | `whaletailrug` | Whale Tail Rug | 440 × 200 | rug |
+| ⬜ | `stripesrug` | Nautical Stripe Rug | 440 × 200 | rug |
+| ⬜ | `seaglassrug` | Sea Glass Mosaic Rug | 440 × 200 | rug |
+| ⬜ | `netrug` | Fishing Net Rug | 440 × 200 | rug |
+| ⬜ | `frozenrug` | Frozen Pond Rug | 440 × 200 | rug |
+| ⬜ | `shagrug` | Coral Pink Shag Rug | 440 × 200 | rug |
+| ⬜ | `patchworkrug` | Seashell Patchwork Rug | 440 × 200 | rug |

@@ -1,3 +1,4 @@
+import { BATCH2_FURNITURE } from './catalog-more.js';
 import { MORE_FURNITURE, MORE_DEN_CATS, MORE_WALLPAPERS, MORE_FLOORS } from './catalog-den.js';
 // Otter's Den catalog: furniture, decor, plushies, rugs, wall hangings, wallpapers, floors.
 // Each item's `svg` is drawn in its own viewBox `vb` and shown `w` den-units wide
@@ -230,6 +231,7 @@ export const FURNITURE = {
       <path d="M14,16 L22,16" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".8"/>`,
   },
   ...MORE_FURNITURE,
+  ...BATCH2_FURNITURE,
 };
 
 export const WALLPAPERS = {
