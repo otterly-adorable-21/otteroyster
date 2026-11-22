@@ -2,7 +2,7 @@
 
 Drop a picture into the right folder with the right name and it replaces the
 drawn version on the website (and in Shelly's Discord pictures for the otter,
-clothes and den). **13 of 771** spots have art so far.
+clothes and den). **14 of 771** spots have art so far.
 
 See every spot with a live preview on the site's art checklist page: `/art.html`.
 
@@ -39,7 +39,7 @@ See every spot with a live preview on the site's art checklist page: `/art.html`
 | [`stages/`](stages/) | Growth stages | 0/4 |
 | [`tricks/`](tricks/) | Tricks | 0/4 |
 | [`postcards/`](postcards/) | Shell Mail postcards | 0/4 |
-| [`icons/`](icons/) | Interface icons | 0/7 |
+| [`icons/`](icons/) | Interface icons | 1/7 |
 
 Animations live in [`../animations/`](../animations/) (21 moments plus tricks and per-snack ones).
 
