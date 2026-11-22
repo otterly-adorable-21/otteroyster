@@ -9,13 +9,13 @@ any spot left empty, the drawn version stays.
 
 | | File name | What | Size (px) | Notes |
 | --- | --- | --- | --- | --- |
-| ⬜ | `moss` | Mossy Stone | 1600 × 784 |  |
+| ✅ | `moss` | Mossy Stone | 1600 × 784 |  |
 | ⬜ | `willow` | Willow Stripes | 1600 × 784 |  |
-| ⬜ | `stars` | Starry Night | 1600 × 784 |  |
+| ✅ | `stars` | Starry Night | 1600 × 784 |  |
 | ⬜ | `coral` | Coral Blush | 1600 × 784 |  |
 | ⬜ | `sand` | Sandy Plaster | 1600 × 784 |  |
 | ⬜ | `bioglow` | Deep Sea Glow | 1600 × 784 |  |
-| ⬜ | `reef` | Coral Reef | 1600 × 784 |  |
+| ✅ | `reef` | Coral Reef | 1600 × 784 |  |
 | ⬜ | `kelpforest` | Kelp Forest | 1600 × 784 |  |
 | ⬜ | `jellydrift` | Jellyfish Drift | 1600 × 784 |  |
 | ⬜ | `bubbles` | Underwater Bubbles | 1600 × 784 |  |
@@ -43,7 +43,7 @@ any spot left empty, the drawn version stays.
 | ⬜ | `crystals` | Crystal Caves | 1600 × 784 |  |
 | ⬜ | `fairylights` | Fairy Lights | 1600 × 784 |  |
 | ⬜ | `runes` | Magical Runes | 1600 × 784 |  |
-| ⬜ | `aurora` | Aurora Borealis | 1600 × 784 |  |
+| ✅ | `aurora` | Aurora Borealis | 1600 × 784 |  |
 | ⬜ | `clouds` | Celestial Clouds | 1600 × 784 |  |
 | ⬜ | `islands` | Floating Islands | 1600 × 784 |  |
 | ⬜ | `tinyotters` | Hundreds of Tiny Otters | 1600 × 784 |  |

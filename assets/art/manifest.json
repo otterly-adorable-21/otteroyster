@@ -1,4 +1,9 @@
 {
   "note": "Made automatically by tools/art-manifest.mjs. Do not edit.",
-  "files": {}
+  "files": {
+    "wallpaper/aurora": "wallpaper/aurora.jpg",
+    "wallpaper/moss": "wallpaper/moss.jpg",
+    "wallpaper/reef": "wallpaper/reef.jpg",
+    "wallpaper/stars": "wallpaper/stars.jpg"
+  }
 }
