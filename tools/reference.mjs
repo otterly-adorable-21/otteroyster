@@ -17,7 +17,7 @@ const shopItems = Object.values(ITEMS).filter((it) => it.price != null && !it.ev
 const bySlot = SLOTS.map((sl) => `${sl.name} ${shopItems.filter((it) => it.slot === sl.id).length}`).join(', ');
 const shopFurn = Object.values(FURNITURE).filter((f) => !f.event);
 const byCat = DEN_CATS.map((c) => `${c.name} ${shopFurn.filter((f) => f.cat === c.id).length}`).join(', ');
-const byDoor = DOOR_KINDS.map((k) => `${Object.values(DOOR_ITEMS).filter((d) => d.kind === k.id).length} ${k.name.toLowerCase()}`).join(', ');
+const byDoor = DOOR_KINDS.map((k) => `${Object.values(DOOR_ITEMS).filter((d) => d.kind === k.id && !d.retired).length} ${k.name.toLowerCase()}`).join(', ');
 import { TRICKS } from '../js/growth.js';
 
 // ---------- hand-written parts ----------

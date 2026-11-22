@@ -25,8 +25,8 @@ export const SETS = [
   },
   {
     id: 'spring', name: 'Springtime', icon: '🌸', reward: 120,
-    desc: 'Blossoms, moonbeams and heart-shaped sunglasses.',
-    items: [['furn', 'seabunny'], ['furn', 'flowerrug'], ['door', 'plant-cherry'], ['door', 'lights-moonbeam'], ['door', 'mat-flower'], ['item', 'heartsunnies']],
+    desc: 'Blossoms, fairy lights and heart-shaped sunglasses.',
+    items: [['furn', 'seabunny'], ['furn', 'flowerrug'], ['door', 'plant-cherry'], ['door', 'lights-fairy'], ['door', 'mat-flower'], ['item', 'heartsunnies']],
   },
 ];
 export const SET = Object.fromEntries(SETS.map((x) => [x.id, x]));

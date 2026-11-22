@@ -135,7 +135,7 @@ export const GROUPS = [
   },
   {
     id: 'door', size: '480 × 520', name: 'Front door', tip: 'Transparent, 480 × 520 px: the same canvas as the Otter Lane house (lane/house). Draw only the piece, in the spot it goes on the house, so the pieces stack. Paint layers are the door itself.',
-    slots: Object.entries(DOOR_ITEMS).map(([id, it]) => ({ id, name: it.name, emoji: it.icon || '🎨', note: it.kind })),
+    slots: Object.entries(DOOR_ITEMS).filter(([, it]) => !it.retired).map(([id, it]) => ({ id, name: it.name, emoji: it.icon || '🎨', note: it.kind })),
   },
   {
     id: 'furniture', name: 'Den furniture', tip: 'Transparent PNG/WebP at the size shown (4× the den size). The bottom edge of the picture is where it sits on the floor or wall.',

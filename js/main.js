@@ -1692,7 +1692,7 @@ function plotTap(k) {
 // ---------- front door ----------
 function panelDoor() {
   const comp = core.activeCompanion(state);
-  const items = Object.entries(DOOR_ITEMS).filter(([, it]) => it.kind === doorKind);
+  const items = Object.entries(DOOR_ITEMS).filter(([id, it]) => it.kind === doorKind && (!it.retired || state.doorItems.includes(id)));
   return `${denHead('Front Door')}
     <div class="door-stage"><svg viewBox="-20 0 160 130" role="img" aria-label="Your front door">${houseFrontSVG(state.door)}
       ${!state.mission ? `<svg x="84" y="64" width="44" height="58" viewBox="0 -24 200 254" overflow="visible">${otterSVG({ ...state, sleeping: false }, { idPrefix: 'door-otter' })}</svg>` : ''}

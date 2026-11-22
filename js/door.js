@@ -69,6 +69,10 @@ export const DOOR_ITEMS = {
   ...BATCH2_DOOR,
 };
 
+// Taken out of the shop. Anyone who already bought one keeps it and can still put it up.
+export const RETIRED_DOOR = ['lights-angler', 'lights-moonbeam', 'plant-pinetree', 'plant-coralarr', 'mat-rainbow', 'mat-kelp', 'mat-pearl', 'mat-jelly'];
+for (const id of RETIRED_DOOR) if (DOOR_ITEMS[id]) DOOR_ITEMS[id].retired = true;
+
 export const DOOR_COZY = 1; // per decoration (paint not counted)
 export const defaultDoor = () => ({ paint: 'paint-moss', wreath: null, mat: null, lights: null, plant: null });
 export const doorColor = (door) => DOOR_ITEMS[door?.paint]?.color || '#4f6b4a';

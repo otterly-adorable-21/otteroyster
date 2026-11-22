@@ -1141,6 +1141,7 @@ export function buyDoorItem(s, id) {
   const it = DOOR_ITEMS[id];
   if (!it) return no('Unknown decoration.');
   if (s.doorItems.includes(id)) return setDoor(s, id);
+  if (it.retired) return no('That decoration isn\'t sold any more.');
   if (s.pearls < it.price) return no('Not enough pearls.');
   s.pearls -= it.price;
   s.doorItems.push(id);
@@ -1283,7 +1284,7 @@ export function investigate(s, mysteryId, place, now = Date.now()) {
 const merchantPool = () => [
   ...Object.entries(ITEMS).filter(([, it]) => it.price > 0 && !it.event && !it.birthday).map(([id]) => `item:${id}`),
   ...Object.entries(FURNITURE).filter(([, it]) => it.price > 0 && !it.event).map(([id]) => `furn:${id}`),
-  ...Object.entries(DOOR_ITEMS).filter(([, it]) => it.price > 0).map(([id]) => `door:${id}`),
+  ...Object.entries(DOOR_ITEMS).filter(([, it]) => it.price > 0 && !it.retired).map(([id]) => `door:${id}`),
 ];
 export function merchantWares(now = Date.now()) {
   return merchantStock(merchantPool(), now).map((key) => {

@@ -24,7 +24,6 @@ any spot left empty, the drawn version stays.
 | ⬜ | `mat-welcome` | 🟫 Welcome Mat | 480 × 520 | mat |
 | ⬜ | `mat-shell` | 🐚 Shell Mat | 480 × 520 | mat |
 | ⬜ | `mat-paw` | 🐾 Paw Print Mat | 480 × 520 | mat |
-| ⬜ | `mat-rainbow` | 🌈 Rainbow Mat | 480 × 520 | mat |
 | ⬜ | `lights-lantern` | 🏮 Pearl Lantern | 480 × 520 | lights |
 | ⬜ | `lights-fairy` | ✨ Fairy Lights | 480 × 520 | lights |
 | ⬜ | `lights-firefly` | 🫙 Firefly Jar | 480 × 520 | lights |
@@ -40,13 +39,11 @@ any spot left empty, the drawn version stays.
 | ⬜ | `mat-leaf` | 🍃 Leaf Welcome Mat | 480 × 520 | mat |
 | ⬜ | `mat-flower` | 🌸 Flower Mat | 480 × 520 | mat |
 | ⬜ | `mat-shellyeah` | 💬 "Shell Yeah!" Mat | 480 × 520 | mat |
-| ⬜ | `lights-angler` | 🎣 Anglerfish Light | 480 × 520 | lights |
 | ⬜ | `lights-jelly` | 🪼 Jellyfish Pendant | 480 × 520 | lights |
 | ⬜ | `lights-seaglass` | 🏮 Sea Glass Lantern | 480 × 520 | lights |
 | ⬜ | `lights-minilighthouse` | 🗼 Mini Lighthouse Lamp | 480 × 520 | lights |
 | ⬜ | `lights-bottle` | 🍾 Message Bottle Light | 480 × 520 | lights |
 | ⬜ | `lights-buoy` | 🛟 Buoy Lights | 480 × 520 | lights |
-| ⬜ | `lights-moonbeam` | 🌙 Moonbeam Light | 480 × 520 | lights |
 | ⬜ | `lights-glowcap` | 🍄 Glowcap Lamp | 480 × 520 | lights |
 | ⬜ | `plant-hydrangea` | 💐 Blue Hydrangeas | 480 × 520 | plant |
 | ⬜ | `plant-seaholly` | 💠 Sea Holly | 480 × 520 | plant |
@@ -59,10 +56,7 @@ any spot left empty, the drawn version stays.
 | ⬜ | `mat-seaglass` | 🟫 Sea Glass Mat | 480 × 520 | mat |
 | ⬜ | `mat-tidepool` | 🟫 Tidepool Mat | 480 × 520 | mat |
 | ⬜ | `mat-whale` | 🟫 Whale Tail Mat | 480 × 520 | mat |
-| ⬜ | `mat-kelp` | 🟫 Kelp Forest Mat | 480 × 520 | mat |
-| ⬜ | `mat-pearl` | 🟫 Pearl Mat | 480 × 520 | mat |
 | ⬜ | `mat-boat` | 🟫 Fishing Boat Mat | 480 × 520 | mat |
-| ⬜ | `mat-jelly` | 🟫 Jellyfish Mat | 480 × 520 | mat |
 | ⬜ | `mat-gull` | 🟫 Seagull Mat | 480 × 520 | mat |
 | ⬜ | `mat-mermaid` | 🟫 Mermaid Tail Mat | 480 × 520 | mat |
 | ⬜ | `mat-driftwood` | 🟫 Driftwood Mat | 480 × 520 | mat |
@@ -79,7 +73,6 @@ any spot left empty, the drawn version stays.
 | ⬜ | `lights-kelp` | 💡 Kelp-Wrapped Lantern | 480 × 520 | lights |
 | ⬜ | `lights-geode` | 💡 Crystal Geode Lamp | 480 × 520 | lights |
 | ⬜ | `lights-candle` | 💡 Tidal Pool Candle | 480 × 520 | lights |
-| ⬜ | `plant-pinetree` | 🪴 Pinecone Tree | 480 × 520 | plant |
 | ⬜ | `plant-delphinium` | 🪴 Blue Delphiniums | 480 × 520 | plant |
 | ⬜ | `plant-thrift` | 🪴 Sea Thrift | 480 × 520 | plant |
 | ⬜ | `plant-bluestar` | 🪴 Blue Star Fern | 480 × 520 | plant |
@@ -95,5 +88,4 @@ any spot left empty, the drawn version stays.
 | ⬜ | `plant-flytrap` | 🪴 Venus Flytrap | 480 × 520 | plant |
 | ⬜ | `plant-kelp` | 🪴 Potted Kelp | 480 × 520 | plant |
 | ⬜ | `plant-driftplanter` | 🪴 Driftwood Planter | 480 × 520 | plant |
-| ⬜ | `plant-coralarr` | 🪴 Coral Arrangement | 480 × 520 | plant |
 | ⬜ | `plant-lilybowl` | 🪴 Water Lily Bowl | 480 × 520 | plant |
