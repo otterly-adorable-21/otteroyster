@@ -1117,3 +1117,26 @@ svg.swatch-chip { display: block; }
 .swatch-chip.swatch-art { object-fit: cover; }
 .scene-overlay { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
 .scene.has-scene-art .tide-sand { display: none; }
+
+/* ---------- themed collections ---------- */
+.set-card { margin-bottom: 12px; display: grid; gap: 8px; }
+.set-card.done { box-shadow: 0 0 0 3px var(--gold), var(--shadow); }
+.set-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.set-items { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+.set-piece { display: grid; gap: 4px; justify-items: center; text-align: center; padding: 6px; border-radius: 14px; background: #f3faf8; }
+.set-piece.own { background: #ebfbee; }
+.set-piece .item-art { width: 64px; height: 56px; }
+
+/* ---------- little item animations (jellyfish pulse, glowing lures, spinning pinwheel, waving octopus) ---------- */
+.ani-pulse, .ani-glow, .ani-spin, .ani-wave { transform-box: fill-box; transform-origin: center; }
+.ani-pulse { animation: ani-pulse 2.6s ease-in-out infinite; }
+.ani-glow { animation: ani-glow 2.2s ease-in-out infinite; }
+.ani-spin { animation: ani-spin 3s linear infinite; }
+.ani-wave { transform-origin: 0% 100%; animation: ani-wave 3.5s ease-in-out infinite; }
+@keyframes ani-pulse { 0%, 100% { opacity: .85; transform: scale(1); } 50% { opacity: 1; transform: scale(1.06); } }
+@keyframes ani-glow { 0%, 100% { opacity: .65; } 50% { opacity: 1; } }
+@keyframes ani-spin { to { transform: rotate(360deg); } }
+@keyframes ani-wave { 0%, 70%, 100% { transform: rotate(0); } 80% { transform: rotate(-18deg); } 90% { transform: rotate(10deg); } }
+@media (prefers-reduced-motion: reduce) { .ani-pulse, .ani-glow, .ani-spin, .ani-wave { animation: none; } }
+.set-piece .item-art { overflow: hidden; }
+.set-piece .item-art svg { width: 100%; height: 100%; max-width: 64px; max-height: 56px; }

@@ -107,6 +107,19 @@ any spot left empty, the drawn version stays.
 | ⬜ | `bubblehalo` | 🫧 Floating Bubble Halo | 800 × 1016 | acc |
 | ⬜ | `shouldercrab` | 🦀 Miniature Crab Pal | 800 × 1016 | acc |
 | ⬜ | `royalcape` | 👑 Royal Cape | 800 × 1016 | back |
+| ⬜ | `cateye` | 🐱 Cat-Eye Glasses | 800 × 1016 | eyes |
+| ⬜ | `aviators` | 🕶️ Aviators | 800 × 1016 | eyes |
+| ⬜ | `seaglassframes` | 🟢 Sea Glass Frames | 800 × 1016 | eyes |
+| ⬜ | `starframes` | ⭐ Star Frames | 800 × 1016 | eyes |
+| ⬜ | `oceantint` | 🌊 Ocean Tint Glasses | 800 × 1016 | eyes |
+| ⬜ | `heartsunnies` | 💗 Heart Sunglasses | 800 × 1016 | eyes |
+| ⬜ | `parasol` | ⛱️ Mini Parasol | 800 × 1016 | back |
+| ⬜ | `wickerbasket` | 🧺 Wicker Basket | 800 × 1016 | acc |
+| ⬜ | `rolledmap` | 🗺️ Rolled Map | 800 × 1016 | acc |
+| ⬜ | `shoulderstar` | ⭐ Shoulder Starfish | 800 × 1016 | acc |
+| ⬜ | `telescope` | 🔭 Pocket Telescope | 800 × 1016 | acc |
+| ⬜ | `shoulderoctopus` | 🐙 Shoulder Octopus | 800 × 1016 | acc |
+| ⬜ | `pinwheel` | 🎐 Pinwheel | 800 × 1016 | back |
 | ⬜ | `eyepatch` | 🏴‍☠️ Pirate Eyepatch | 800 × 1016 | eyes · event item |
 | ⬜ | `loveglasses` | 💕 Love Glasses | 800 × 1016 | eyes · event item |
 | ⬜ | `partybowtie` | ✨ Glitter Bowtie | 800 × 1016 | neck · event item |

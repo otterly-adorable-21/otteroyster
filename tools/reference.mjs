@@ -44,11 +44,14 @@ const WEBSITE = [
   ['Den tab', [
     '**Inside**: drag furniture, flip, put away to storage; coziness score (counts every room); tap your otter to cuddle',
     '**Rooms**: the main den plus up to 3 more (250 pearls at Lv 3, 500 at Lv 6, 900 at Lv 10); each has its own name, wallpaper, floor and furniture; storage is shared; your otter follows you from room to room. Visitors and Discord see the main den',
-    'Furniture shop tabs: Furniture, Decor, Plushies, Rugs, Wall, Seating, Beds, Tables & storage, Display cases, Fun, Walls & floors (46 wallpapers, 16 floors), with previews',
+    'Furniture shop tabs: Collections, Furniture, Decor, Plushies, Rugs, Wall, Seating, Beds, Tables & storage, Display cases, Fun, Walls & floors (46 wallpapers, 16 floors), with previews',
+    '**Collections**: 5 themed sets (Coastal Cottage, Deep Sea, Forest Dweller, Little Explorer, Springtime) mixing den, door and closet pieces; complete one for a pearl reward',
+    '**Rare**: the glowing Anglerfish Lamp can only be found while exploring the Moonlit Trench',
+    'Some pieces have little animations: jellyfish pulse, lures glow, the pinwheel spins, the shoulder octopus waves',
     '**Furniture you can use**: bookshelf (storybook library + Shell Mail), aquarium (go fishing every 3 h, 10 fish), arcade machine (opens the arcade), photo booth (picture with up to 3 friends, save or share)',
     '**Display cases** show your trinkets: shell cabinet, rock shelf, fossil display, pearl case, postcard wall, trophy cabinet',
     '**Garden** (Den tab, 🌱 button by the title): 6 plots (unlock by level), 7 crops, watering (rain helps, friends can water for +25%), harvest pearls and pantry snacks',
-    '**Front door** (🚪 button by the title): 7 paints, 5 wreaths, 4 mats, 3 lights, 4 plants; shown on Otter Lane; +1 coziness each',
+    '**Front door** (🚪 button by the title): 7 paints, 5 wreaths, 12 mats, 11 lights, 10 plants; shown on Otter Lane; +1 coziness each',
     'Birthday party decorations and sleepover guests appear in the den',
   ]],
   ['Closet tab', [

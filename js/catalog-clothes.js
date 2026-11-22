@@ -116,6 +116,21 @@ const ACC = {
   bubblehalo: ['Floating Bubble Halo', '🫧', 'acc', 90, 6, [[70, 22], [84, 14], [100, 10], [116, 14], [130, 22]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="6" fill="#d0f4ff" opacity=".7" stroke="#99e9f2"/><circle cx="${x - 2}" cy="${y - 2}" r="1.5" fill="#fff"/>`).join('')],
   shouldercrab: ['Miniature Crab Pal', '🦀', 'acc', 80, 4, `<g transform="translate(130 104) scale(.32)"><path d="M22,62 q-12,-20 -2,-30 q2,10 10,12Z M78,62 q12,-20 2,-30 q-2,10 -10,12Z" fill="#e8590c"/><ellipse cx="50" cy="72" rx="30" ry="20" fill="#fa5252"/><circle cx="36" cy="50" r="5" fill="#2b1c14"/><circle cx="64" cy="50" r="5" fill="#2b1c14"/></g>`],
   royalcape: ['Royal Cape', '👑', 'back', 160, 8, `<path d="M64,110 Q26,170 30,226 L170,226 Q174,170 136,110 Z" fill="#c92a2a"/><path d="M60,108 Q100,128 140,108 L144,122 Q100,142 56,122Z" fill="#fff"/>${[70, 86, 100, 114, 130].map((x) => `<circle cx="${x}" cy="${x === 100 ? 132 : 124}" r="2" fill="#212529"/>`).join('')}`],
+  // ---------- more eyewear ----------
+  cateye: ['Cat-Eye Glasses', '🐱', 'eyes', 55, 2, `<path d="M68,70 Q76,66 92,70 Q96,80 86,84 Q72,86 68,74 L62,66Z M132,70 Q124,66 108,70 Q104,80 114,84 Q128,86 132,74 L138,66Z" fill="#fff0f6" opacity=".35" stroke="#c2255c" stroke-width="3" stroke-linejoin="round"/><path d="M92,73 Q100,69 108,73" stroke="#c2255c" stroke-width="2.5" fill="none"/>`],
+  aviators: ['Aviators', '🕶️', 'eyes', 60, 3, `<path d="M68,68 H94 Q96,84 84,86 Q70,86 68,72Z M132,68 H106 Q104,84 116,86 Q130,86 132,72Z" fill="#495057" opacity=".85" stroke="#d9b45a" stroke-width="2"/><path d="M94,69 Q100,66 106,69 M68,68 H132" stroke="#d9b45a" stroke-width="2" fill="none"/>`],
+  seaglassframes: ['Sea Glass Frames', '🟢', 'eyes', 50, 2, `<rect x="68" y="66" width="28" height="20" rx="7" fill="#63e6be" opacity=".35" stroke="#20c997" stroke-width="3.5"/><rect x="104" y="66" width="28" height="20" rx="7" fill="#74c0fc" opacity=".35" stroke="#20c997" stroke-width="3.5"/><path d="M96,73 H104" stroke="#20c997" stroke-width="3"/>`],
+  starframes: ['Star Frames', '⭐', 'eyes', 55, 2, `${[83, 117].map((x) => `<path d="M${x},62 L${x + 4},71 L${x + 13},71 L${x + 6},77 L${x + 9},86 L${x},81 L${x - 9},86 L${x - 6},77 L${x - 13},71 L${x - 4},71Z" fill="#ffd43b" opacity=".75" stroke="#f08c00" stroke-width="2" stroke-linejoin="round"/>`).join('')}<path d="M95,74 H105" stroke="#f08c00" stroke-width="2"/>`],
+  oceantint: ['Ocean Tint Glasses', '🌊', 'eyes', 45, 1, `<circle cx="83" cy="76" r="11" fill="#1c7ed6" opacity=".55" stroke="#1864ab" stroke-width="2"/><circle cx="117" cy="76" r="11" fill="#1c7ed6" opacity=".55" stroke="#1864ab" stroke-width="2"/><path d="M94,75 Q100,71 106,75" stroke="#1864ab" stroke-width="2" fill="none"/><path d="M77,71 l4,-3 M111,71 l4,-3" stroke="#fff" stroke-width="2" opacity=".7"/>`],
+  heartsunnies: ['Heart Sunglasses', '💗', 'eyes', 50, 2, `<path d="M84,90 C62,76 68,60 84,68 C100,60 106,76 84,90Z M116,90 C94,76 100,60 116,68 C132,60 138,76 116,90Z" fill="#f06595" opacity=".8" stroke="#a61e4d" stroke-width="2"/><path d="M98,72 L102,72" stroke="#a61e4d" stroke-width="2"/>`],
+  // ---------- more extras ----------
+  parasol: ['Mini Parasol', '⛱️', 'back', 55, 2, `<path d="M150,140 L120,20" stroke="#6b4d34" stroke-width="3"/><path d="M84,32 Q118,-12 160,22 Q140,22 122,30 Q104,24 84,32Z" fill="#ff8fab"/><path d="M122,30 L120,6" stroke="#fff" stroke-width="2" opacity=".6"/>`],
+  wickerbasket: ['Wicker Basket', '🧺', 'acc', 40, 1, `<path d="M128,112 L58,174" stroke="#a8865f" stroke-width="4"/><path d="M40,172 L46,200 L76,200 L82,172Z" fill="#c9a66b"/>${[178, 186, 194].map((y) => `<path d="M42,${y} H80" stroke="#a8865f" stroke-width="2"/>`).join('')}<path d="M48,172 Q61,156 74,172" stroke="#a8865f" stroke-width="3" fill="none"/><circle cx="54" cy="170" r="4" fill="#fa5252"/><circle cx="62" cy="168" r="4" fill="#ffd43b"/>`],
+  rolledmap: ['Rolled Map', '🗺️', 'acc', 45, 2, `<g transform="rotate(-30 140 170)"><rect x="118" y="164" width="46" height="12" rx="6" fill="#f3e3b8" stroke="#c9a66b" stroke-width="1.5"/><ellipse cx="164" cy="170" rx="3" ry="6" fill="#e8d6a8" stroke="#c9a66b"/><path d="M138,164 v12" stroke="#c92a2a" stroke-width="2"/></g>`],
+  shoulderstar: ['Shoulder Starfish', '⭐', 'acc', 50, 2, `<path d="M140,96 L144,106 L155,106 L146,112 L150,123 L140,116 L130,123 L134,112 L125,106 L136,106Z" fill="#ff922b" stroke="#e8590c" stroke-width="1.5" stroke-linejoin="round"/><circle cx="137" cy="110" r="1.3" fill="#2b1c14"/><circle cx="143" cy="110" r="1.3" fill="#2b1c14"/>`],
+  telescope: ['Pocket Telescope', '🔭', 'acc', 60, 3, `<g transform="rotate(-25 140 176)"><rect x="118" y="170" width="16" height="10" rx="2" fill="#b08d3c"/><rect x="132" y="168" width="16" height="14" rx="2" fill="#d4a017"/><rect x="146" y="166" width="10" height="18" rx="2" fill="#b08d3c"/><circle cx="156" cy="175" r="5" fill="#c5f6fa"/></g>`],
+  shoulderoctopus: ['Shoulder Octopus', '🐙', 'acc', 75, 4, `<g transform="translate(124 88) scale(.34)"><path d="M22,58 q0,-40 28,-40 q28,0 28,40 q0,8 -6,10 Z" fill="#f783ac"/>${[20, 32, 44, 56, 68].map((x, k) => `<path d="M${x},64 q${k % 2 ? 6 : -6},16 0,28" stroke="#f783ac" stroke-width="9" fill="none" stroke-linecap="round"/>`).join('')}<g class="ani-wave"><path d="M80,64 q14,-4 12,-22" stroke="#f783ac" stroke-width="9" fill="none" stroke-linecap="round"/></g><circle cx="40" cy="46" r="4.5" fill="#2b1c14"/><circle cx="60" cy="46" r="4.5" fill="#2b1c14"/></g>`],
+  pinwheel: ['Pinwheel', '🎐', 'back', 35, 1, `<path d="M156,150 L150,40" stroke="#adb5bd" stroke-width="2.5"/><g class="ani-spin"><path d="M150,40 L150,18 Q162,26 150,40Z" fill="#ff6b6b"/><path d="M150,40 L172,40 Q164,52 150,40Z" fill="#ffd43b"/><path d="M150,40 L150,62 Q138,54 150,40Z" fill="#4dabf7"/><path d="M150,40 L128,40 Q136,28 150,40Z" fill="#69db7c"/></g><circle cx="150" cy="40" r="2.5" fill="#fff"/>`],
   // event accessories
   eyepatch: ['Pirate Eyepatch', '🏴‍☠️', 'eyes', null, 1, `<path d="M58,58 L142,86" stroke="#212529" stroke-width="2.5"/><ellipse cx="117" cy="76" rx="11" ry="9" fill="#212529"/>`],
   loveglasses: ['Love Glasses', '💕', 'eyes', null, 1, `<path d="M84,88 C66,76 72,62 84,70 C96,62 102,76 84,88Z M116,88 C98,76 104,62 116,70 C128,62 134,76 116,88Z" fill="#ff8fab" stroke="#e64980" stroke-width="2"/><path d="M96,74 L104,74" stroke="#e64980" stroke-width="2"/>`],
@@ -150,6 +165,13 @@ out.friendbracelet.view = '50 140 40 40';
 out.bubblehalo.view = '56 0 88 36';
 for (const id of ['messengerbag', 'satchel', 'shellpurse']) out[id].view = '30 100 140 110';
 out.royalcape.view = '24 100 152 130';
+out.parasol.view = '78 -10 90 160';
+out.pinwheel.view = '120 10 60 150';
+out.wickerbasket.view = '36 110 100 96';
+out.rolledmap.view = '110 140 64 50';
+out.shoulderstar.view = '120 90 40 40';
+out.telescope.view = '110 150 60 50';
+out.shoulderoctopus.view = '118 80 44 44';
 
 export const MORE_ITEMS = out;
 export const MORE_SLOTS = [

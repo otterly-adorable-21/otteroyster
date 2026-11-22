@@ -13,6 +13,7 @@ import { NPCS, NPC_PAGE_AT, NPC_MAX, MYSTERIES, MYSTERY } from './lore.js';
 import { happeningsAt, happeningLuck, npcWhere, merchantStock, MERCHANT_DISCOUNT, awayStories } from './worldsim.js';
 import { MASTERIES, MASTERY, TIERS, LEGACY_LEVEL, legacyStars, rankOf } from './legacy.js';
 import { timeOfDay, tideAt } from './ambience.js';
+import { SET } from './sets.js';
 import { TRINKETS, TRINKET_CHANCE, trinketFor, BOOKS, BOOK_IDS, BOOK_CHANCE, FISH, fishFor, FISHING_COOLDOWN } from './treasures.js';
 import { ACHIEVEMENTS, ACH } from './achievements.js';
 import { STAGES, stageOf, stageAtLeast, TRICKS, STORIES, WISDOM, mdOf, isBirthday } from './growth.js';
@@ -64,6 +65,7 @@ export function defaultState(now = Date.now()) {
     legacy: { claimed: {}, title: null },
     titles: [],
     lastSeen: now,
+    setsClaimed: [],
     trinkets: {},
     books: [],
     aquarium: { fish: {}, lastFish: 0 },
@@ -155,6 +157,7 @@ export function normalize(saved) {
   s.legacy = { claimed: Object.fromEntries(Object.entries(saved.legacy?.claimed || {}).filter(([id]) => MASTERY[id])), title: saved.legacy?.title || null };
   s.titles = Array.isArray(saved.titles) ? saved.titles : [];
   s.lastSeen = saved.lastSeen || s.lastTick || Date.now();
+  s.setsClaimed = Array.isArray(saved.setsClaimed) ? saved.setsClaimed.filter((id) => SET[id]) : [];
   s.trinkets = Object.fromEntries(Object.entries(saved.trinkets || {}).filter(([id, n]) => TRINKETS[id] && n > 0));
   s.books = Array.isArray(saved.books) ? saved.books.filter((id) => BOOKS[id]) : [];
   s.aquarium = { fish: Object.fromEntries(Object.entries(saved.aquarium?.fish || {}).filter(([id]) => FISH[id])), lastFish: saved.aquarium?.lastFish || 0 };
@@ -663,6 +666,13 @@ export function explore(s, locId, now = Date.now()) {
     s.books.push(id);
     r.book = id;
     extra.push(`${BOOKS[id].icon} A soggy old book: “${BOOKS[id].title}”. It's on your bookshelf.`);
+  }
+  // Rare: the glowing Anglerfish Lamp, only ever found in the Moonlit Trench.
+  if (locId === 'trench' && !s.furniture.anglerlamp && Math.random() < 0.04) {
+    s.furniture.anglerlamp = 1;
+    r.lamp = true;
+    extra.push('🎣 Something glows in the dark… you found a rare Anglerfish Lamp! It\'s in your den storage.');
+    memory(s, '🎣', `${s.name} found a glowing Anglerfish Lamp in the Moonlit Trench.`, now);
   }
   if (extra.length) r.msg = `${r.msg} ${extra.join(' ')}`;
   return r;
@@ -1347,4 +1357,19 @@ export function buyCompanionAcc(s, acc) {
   const id = s.companions.active;
   if (id) s.companions.owned[id].acc = acc;
   return ok(`${a.icon} Bought the ${a.name}!${id ? ` ${s.companions.owned[id].name} is wearing it.` : ''}`, { fx: [a.icon, '✨'] });
+}
+
+// ---------- themed collections ----------
+export const ownsPiece = (s, [kind, id]) => (kind === 'furn' ? (s.furniture?.[id] || 0) > 0 : kind === 'door' ? (s.doorItems || []).includes(id) : (s.owned || []).includes(id));
+export function claimSet(s, id) {
+  const set = SET[id];
+  if (!set) return no('Unknown collection.');
+  if (s.setsClaimed.includes(id)) return no('Already claimed!');
+  const missing = set.items.filter((p) => !ownsPiece(s, p)).length;
+  if (missing) return no(`${missing} more piece${missing === 1 ? '' : 's'} to go!`);
+  s.setsClaimed.push(id);
+  s.pearls += set.reward;
+  const ups = addXP(s, 25);
+  memory(s, set.icon, `${s.name} completed the ${set.name} collection!`);
+  return ok(`${set.icon} ${set.name} collection complete! +${set.reward} pearls`, { fx: [set.icon, '✨', '🎉'], ups });
 }

@@ -7,6 +7,7 @@ import { detectArt, art } from './assets.js';
 import { playCare, setSleeping } from './animations.js';
 import { ic, artUrl, loadArtManifest } from './art.js';
 import { COMPANIONS, BOND_PERK, BOND_NAMES, bondLevel, TREAT_PRICE, TREAT_COOLDOWN, PLAY_COOLDOWN, COMP_COLORS, COMP_PATTERNS, COMP_ACCS, COMP_TRAITS } from './companions.js';
+import { SETS } from './sets.js';
 import { TRINKETS, TRINKET_IDS, TRINKET_GROUPS, BOOKS, BOOK_IDS, FISH, FISH_IDS, FISHING_COOLDOWN } from './treasures.js';
 import { CROPS, PLOT_LEVELS, plotStage, plotReadyAt } from './garden.js';
 import { DOOR_ITEMS, DOOR_KINDS } from './door.js';
@@ -1664,6 +1665,33 @@ function panelDoor() {
   }).join('')}</div>`;
 }
 
+// Themed collections: den, door and closet pieces that go together.
+function setPieceArt([kind, id]) {
+  if (kind === 'furn') return `<div class="item-art den-art">${furniturePreviewSVG(id)}</div>`;
+  if (kind === 'item') return `<div class="item-art">${itemPreviewSVG(id)}</div>`;
+  return `<div class="item-art door-art"><svg viewBox="0 0 120 130">${houseFrontSVG({ paint: state.door.paint, [DOOR_ITEMS[id].kind]: id })}</svg></div>`;
+}
+function setsView() {
+  return `<p class="note">Collect every piece of a set (den, front door and closet) for a bonus. Pieces you already own count.</p>
+    ${SETS.map((set) => {
+    const have = set.items.filter((p) => core.ownsPiece(state, p)).length;
+    const done = state.setsClaimed.includes(set.id);
+    return `<div class="card set-card ${done ? 'done' : ''}"><div class="set-head"><b>${set.icon} ${set.name}</b><small class="muted">${have}/${set.items.length}${done ? ' · ✅ claimed' : ` · reward <span class="pearl-icon"></span> ${set.reward}`}</small></div>
+      <p class="muted">${set.desc}</p>
+      <div class="set-items">${set.items.map((p) => {
+      const [kind, id] = p;
+      const it = kind === 'furn' ? FURNITURE[id] : kind === 'door' ? DOOR_ITEMS[id] : ITEMS[id];
+      const own = core.ownsPiece(state, p);
+      const buyKind = kind === 'furn' ? 'furn' : kind === 'door' ? 'door' : 'item';
+      const where = kind === 'furn' ? 'Den' : kind === 'door' ? 'Door' : 'Closet';
+      const locked = it.level && state.level < it.level;
+      return `<div class="set-piece ${own ? 'own' : ''}">${setPieceArt(p)}<small><b>${it.name}</b><br>${where}</small>
+        ${own ? '<small class="perk-on">✓ Owned</small>' : locked ? `<button class="btn small" disabled>🔒 Lv ${it.level}</button>` : `<div class="buy-row">${tryBtn(buyKind, id)}<button class="btn small primary" data-action="set-buy" data-kind="${buyKind}" data-id="${id}" ${state.pearls < it.price ? 'disabled' : ''}><span class="pearl-icon"></span> ${it.price}</button></div>`}</div>`;
+    }).join('')}</div>
+      ${!done && have === set.items.length ? `<button class="btn primary" data-action="set-claim" data-id="${set.id}">🎁 Claim ${set.reward} pearls</button>` : ''}</div>`;
+  }).join('')}`;
+}
+
 function panelDenInside() {
   const sel = denSel && denSel !== 'otter' ? curRoom().items.find((p) => p.uid === denSel) : null;
   const storage = Object.keys(FURNITURE).filter((id) => core.inStorage(state, id) > 0);
@@ -1677,9 +1705,11 @@ function panelDenInside() {
     : `<div class="den-toolbar"><span class="den-sel-name muted">${state.mission ? `${esc(state.name)} is out exploring.` : `Tap ${esc(state.name)} for a cuddle.`}</span>
         <button class="btn small primary" data-action="den-edit">✏️ Decorate</button></div>`;
 
-  const shopTabs = [...DEN_CATS, { id: 'walls', name: 'Walls & floors', icon: '🎨' }];
+  const shopTabs = [{ id: 'sets', name: 'Collections', icon: '✨' }, ...DEN_CATS, { id: 'walls', name: 'Walls & floors', icon: '🎨' }];
   let shop;
-  if (denShop === 'walls') {
+  if (denShop === 'sets') {
+    shop = setsView();
+  } else if (denShop === 'walls') {
     const sw = (kind, id, it, owned, active) => `<div class="swatch-wrap"><button class="swatch ${active ? 'on' : ''}" data-action="den-${kind}" data-id="${id}" ${!owned && state.pearls < it.price ? 'disabled' : ''}>
         ${(() => { const art = artUrl(`${kind === 'wall' ? 'wallpaper' : 'floor'}/${id}`); if (art) return `<img class="swatch-chip swatch-art" src="${art}" alt="" loading="lazy">`; const pat = it.pattern || DEN_PATTERNS[`${kind === 'wall' ? 'wp' : 'fl'}-${id}`]; return pat ? `<svg class="swatch-chip" viewBox="0 0 40 40"><defs>${pat.replace(/id="([^"]+)"/, 'id="sw-$1"')}</defs><rect width="40" height="40" fill="url(#sw-${kind === 'wall' ? 'wp' : 'fl'}-${id})"/></svg>` : `<span class="swatch-chip" style="background:${it.swatch}"></span>`; })()}<b>${it.name}</b>
         <small>${active ? 'In use ✓' : owned ? 'Owned' : `<span class="pearl-icon"></span> ${it.price}`}</small></button>
@@ -2203,6 +2233,8 @@ document.addEventListener('click', async (e) => {
     case 'journal': journalOpen = !journalOpen; renderPanel(); window.scrollTo({ top: 0 }); return null;
     case 'den-edit': denEdit = !denEdit; denSel = null; return renderPanel();
     case 'closet-slot': closetSlot = id; return renderPanel();
+    case 'set-buy': return requestPurchase(a.dataset.kind, id);
+    case 'set-claim': return act(core.claimSet(state, id));
     case 'comp-style': return openCompanionStyle(id);
     case 'comp-look': { const r = act(core.styleCompanion(state, id, { [a.dataset.k]: a.dataset.v })); if (r.ok) openCompanionStyle(id); return r; }
     case 'comp-acc-buy': return requestPurchase('compacc', id);

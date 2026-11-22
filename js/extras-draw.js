@@ -158,6 +158,7 @@ function decoration(id) {
   if (!it) return '';
   const url = artUrl(`door/${id}`);
   if (url) return img(url, 0, 0, 120, 130);
+  if (it.svg) return it.svg;
   const [a, b] = it.colors || ['#fff', '#ccc'];
   switch (it.kind) {
     case 'wreath': return `<circle cx="60" cy="84" r="10" fill="none" stroke="${a}" stroke-width="5"/><g fill="${b}">${[0, 60, 120, 180, 240, 300].map((d) => `<circle cx="${60 + 10 * Math.cos((d * Math.PI) / 180)}" cy="${84 + 10 * Math.sin((d * Math.PI) / 180)}" r="2.2"/>`).join('')}</g><path d="M57,94 l3,5 l3,-5" fill="${b}"/>`;

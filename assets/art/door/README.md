@@ -32,3 +32,25 @@ any spot left empty, the drawn version stays.
 | ⬜ | `plant-sunflower` | 🌻 Sunflower Pot | 480 × 520 | plant |
 | ⬜ | `plant-mushroom` | 🍄 Mushroom Cluster | 480 × 520 | plant |
 | ⬜ | `plant-cattail` | 🌾 Cattails | 480 × 520 | plant |
+| ⬜ | `mat-otter` | 🦦 Otter Welcome Mat | 480 × 520 | mat |
+| ⬜ | `mat-lighthouse` | 🗼 Lighthouse Mat | 480 × 520 | mat |
+| ⬜ | `mat-anchor` | ⚓ Anchor Mat | 480 × 520 | mat |
+| ⬜ | `mat-crabby` | 🦀 Crabby Mat | 480 × 520 | mat |
+| ⬜ | `mat-scallop` | 🐚 Scallop Shell Mat | 480 × 520 | mat |
+| ⬜ | `mat-leaf` | 🍃 Leaf Welcome Mat | 480 × 520 | mat |
+| ⬜ | `mat-flower` | 🌸 Flower Mat | 480 × 520 | mat |
+| ⬜ | `mat-shellyeah` | 💬 "Shell Yeah!" Mat | 480 × 520 | mat |
+| ⬜ | `lights-angler` | 🎣 Anglerfish Light | 480 × 520 | lights |
+| ⬜ | `lights-jelly` | 🪼 Jellyfish Pendant | 480 × 520 | lights |
+| ⬜ | `lights-seaglass` | 🏮 Sea Glass Lantern | 480 × 520 | lights |
+| ⬜ | `lights-minilighthouse` | 🗼 Mini Lighthouse Lamp | 480 × 520 | lights |
+| ⬜ | `lights-bottle` | 🍾 Message Bottle Light | 480 × 520 | lights |
+| ⬜ | `lights-buoy` | 🛟 Buoy Lights | 480 × 520 | lights |
+| ⬜ | `lights-moonbeam` | 🌙 Moonbeam Light | 480 × 520 | lights |
+| ⬜ | `lights-glowcap` | 🍄 Glowcap Lamp | 480 × 520 | lights |
+| ⬜ | `plant-hydrangea` | 💐 Blue Hydrangeas | 480 × 520 | plant |
+| ⬜ | `plant-seaholly` | 💠 Sea Holly | 480 × 520 | plant |
+| ⬜ | `plant-mangrove` | 🌳 Miniature Mangrove | 480 × 520 | plant |
+| ⬜ | `plant-terrarium` | 🫙 Sea Glass Terrarium | 480 × 520 | plant |
+| ⬜ | `plant-lavender` | 💜 Lavender Pot | 480 × 520 | plant |
+| ⬜ | `plant-cherry` | 🌸 Cherry Blossom Tree | 480 × 520 | plant |

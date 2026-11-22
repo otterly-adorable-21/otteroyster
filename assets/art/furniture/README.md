@@ -90,6 +90,22 @@ any spot left empty, the drawn version stays.
 | ⬜ | `aquarium` | Aquarium | 480 × 360 | fun |
 | ⬜ | `arcademachine` | Arcade Machine | 280 × 520 | fun |
 | ⬜ | `photobooth` | Photo Booth | 360 × 520 | fun |
+| ⬜ | `manateeplush` | Manatee Plush | 360 × 200 | plush |
+| ⬜ | `narwhalplush` | Narwhal Plush | 360 × 240 | plush |
+| ⬜ | `seabunny` | Sea Bunny Plush | 240 × 200 | plush |
+| ⬜ | `mantaplush` | Manta Ray Plush | 360 × 200 | plush |
+| ⬜ | `lobsterplush` | Lobster Plush | 320 × 240 | plush |
+| ⬜ | `anglerplush` | Anglerfish Plush | 280 × 240 | plush |
+| ⬜ | `beaverplush` | Beaver Plush | 240 × 240 | plush |
+| ⬜ | `whaleplush` | Whale Plush | 360 × 240 | plush |
+| ⬜ | `scalloprug` | Scallop Rug | 560 × 200 | rug |
+| ⬜ | `waverug` | Ocean Wave Rug | 480 × 200 | rug |
+| ⬜ | `jellyrug` | Jellyfish Glow Rug | 480 × 200 | rug |
+| ⬜ | `compassrug` | Compass Rug | 440 × 200 | rug |
+| ⬜ | `seagrassrug` | Braided Seagrass Rug | 440 × 200 | rug |
+| ⬜ | `berryrug` | Berry Patch Rug | 440 × 200 | rug |
+| ⬜ | `flowerrug` | Flower Patch Rug | 440 × 200 | rug |
+| ⬜ | `anglerlamp` | Anglerfish Lamp | 280 × 360 | event item |
 | ⬜ | `flowerbed` | Spring Flower Bed | 440 × 200 | event item |
 | ⬜ | `butterflylamp` | Butterfly Lamp | 200 × 400 | event item |
 | ⬜ | `eggbasket` | Egg Basket | 280 × 240 | event item |
