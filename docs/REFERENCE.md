@@ -107,7 +107,7 @@ Every command works in servers, in DMs with Shelly, and in any chat if the app i
 
 ## Art
 
-**626 picture spots** plus the brand art. Upload each file to the folder shown, named like the code (plus `.png`). PNG works everywhere; WebP/GIF only on the website. Until a spot has art, a drawn version shows. Live checklist with previews: `/art.html`.
+**628 picture spots** plus the brand art. Upload each file to the folder shown, named like the code (plus `.png`). PNG works everywhere; WebP/GIF only on the website. Until a spot has art, a drawn version shows. Live checklist with previews: `/art.html`.
 
 ### Brand art (`assets/`)
 | File | Size | Where |
@@ -271,15 +271,15 @@ The whole floor strip, 1600 × 416 px.
 
 - **1600 × 1200**: `back` Window and tunnel _(Sits on the wallpaper, behind furniture)_ · `frame` Burrow frame _(The arch around the den, on top of everything. Keep the middle see-through)_
 
-### The pond scene (`assets/art/scene/`) · 5
-Background behind your otter on the Otter page, 1080 × 1000 px. Replaces the drawn willows, lilies and sky.
+### The pond scene (`assets/art/scene/`) · 7
+The picture behind your otter on the Otter page, 1600 × 1000 px. The pond box is wide on computers and narrower on phones, so keep the important parts in the middle 1100 px; the left and right edges get trimmed on phones. Your otter stands in the bottom middle. Uploading a scene replaces the drawn willows, lily pads, lilies, sky and water shimmer. Optional overlays (transparent, can be animated GIF/WebP) sit on top of the background but under the otter: use them for moving water, bobbing lily pads or swaying reeds.
 
-- **1080 × 1000**: `base` Pond (default) · `dawn` Dawn · `day` Day · `dusk` Dusk · `night` Night
+- **1600 × 1000**: `base` Pond (default) · `dawn` Dawn · `day` Day · `dusk` Dusk · `night` Night · `overlay` Animated overlay (all day) _(transparent; optional)_ · `overlay-night` Animated overlay at night _(transparent; optional, replaces the overlay at night)_
 
 ### Weather overlays (`assets/art/weather/`) · 5
-Transparent, 1080 × 1000 px, drawn over the pond. Animated WebP/GIF works great here.
+Transparent, 1600 × 1000 px, drawn over the pond and the otter (rain falls in front). Animated WebP/GIF works great here. Each one replaces the built-in effect for that weather.
 
-- **1080 × 1000**: `sunny` ☀️ Sunny · `cloudy` ⛅ Cloudy · `rainy` 🌧️ Rainy · `misty` 🌫️ Misty · `breezy` 🍃 Breezy
+- **1600 × 1000**: `sunny` ☀️ Sunny · `cloudy` ⛅ Cloudy · `rainy` 🌧️ Rainy · `misty` 🌫️ Misty · `breezy` 🍃 Breezy
 
 ### World map (`assets/art/map/`) · 1
 The whole map is 1600 × 1840 px. Place pins stay on top at the same spots, so keep each place where it is on the current map.

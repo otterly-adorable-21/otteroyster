@@ -157,14 +157,16 @@ export const GROUPS = [
     ],
   },
   {
-    id: 'scene', size: '1080 × 1000', name: 'The pond scene', tip: 'Background behind your otter on the Otter page, 1080 × 1000 px. Replaces the drawn willows, lilies and sky.',
+    id: 'scene', size: '1600 × 1000', name: 'The pond scene', tip: 'The picture behind your otter on the Otter page, 1600 × 1000 px. The pond box is wide on computers and narrower on phones, so keep the important parts in the middle 1100 px; the left and right edges get trimmed on phones. Your otter stands in the bottom middle. Uploading a scene replaces the drawn willows, lily pads, lilies, sky and water shimmer. Optional overlays (transparent, can be animated GIF/WebP) sit on top of the background but under the otter: use them for moving water, bobbing lily pads or swaying reeds.',
     slots: [
       { id: 'base', name: 'Pond (default)' },
       { id: 'dawn', name: 'Dawn' }, { id: 'day', name: 'Day' }, { id: 'dusk', name: 'Dusk' }, { id: 'night', name: 'Night' },
+      { id: 'overlay', name: 'Animated overlay (all day)', note: 'transparent; optional' },
+      { id: 'overlay-night', name: 'Animated overlay at night', note: 'transparent; optional, replaces the overlay at night' },
     ],
   },
   {
-    id: 'weather', size: '1080 × 1000', name: 'Weather overlays', tip: 'Transparent, 1080 × 1000 px, drawn over the pond. Animated WebP/GIF works great here.',
+    id: 'weather', size: '1600 × 1000', name: 'Weather overlays', tip: 'Transparent, 1600 × 1000 px, drawn over the pond and the otter (rain falls in front). Animated WebP/GIF works great here. Each one replaces the built-in effect for that weather.',
     slots: Object.entries(WEATHER).map(([id, w]) => ({ id, name: w.name, emoji: w.icon })),
   },
   {

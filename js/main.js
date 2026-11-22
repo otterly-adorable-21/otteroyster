@@ -431,6 +431,9 @@ function renderAmbience(scene, away) {
   const sceneArt = artUrl(`scene/${phase}`) || artUrl('scene/base');
   scene.classList.toggle('has-scene-art', !!sceneArt);
   scene.style.setProperty('--scene-art', sceneArt ? `url("${sceneArt}")` : 'none');
+  const ov = $('#scene-overlay');
+  const ovArt = (phase === 'night' && artUrl('scene/overlay-night')) || artUrl('scene/overlay');
+  if (ov) { ov.hidden = !ovArt; if (ovArt && ov.getAttribute('src') !== ovArt) ov.src = ovArt; }
   const drops = { rainy: '', breezy: '🍃', misty: '', cloudy: '', sunny: '' }[weather];
   const wArt = artUrl(`weather/${weather}`);
   if (wArt) { fx.innerHTML = `<img class="weather-art" src="${wArt}" alt="">`; return; }
