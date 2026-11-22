@@ -21,6 +21,7 @@ any spot left empty, the drawn version stays.
 | ⬜ | `bowtie` | 🎀 Bow Tie | 800 × 1016 | neck |
 | ⬜ | `scarf` | 🧣 Knit Scarf | 800 × 1016 | neck |
 | ⬜ | `pearls` | 📿 Pearl Necklace | 800 × 1016 | neck |
+| ✅ | `flowerlei` | 💐 Flower Lei | 800 × 1016 | neck |
 | ⬜ | `balloon` | 🎈 Bubble Balloon | 800 × 1016 | back |
 | ⬜ | `cape` | 🦸 Hero Cape | 800 × 1016 | back |
 | ⬜ | `starcape` | 🌌 Starlight Cape | 800 × 1016 | back |

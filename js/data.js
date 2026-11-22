@@ -123,6 +123,13 @@ export const ITEMS = {
     view: '58 104 84 42',
     svg: pearlStrand(),
   },
+  flowerlei: {
+    name: 'Flower Lei', icon: '💐', slot: 'neck', price: 60, level: 1,
+    view: '52 100 96 48',
+    // Drawn stand-in; the real picture is assets/art/clothes/flowerlei.png.
+    svg: [[60, 118, '#f4a6b8'], [68, 126, '#5c4dd6'], [76, 122, '#3cc7e0'], [84, 130, '#f0a030'], [92, 126, '#e9d83a'], [100, 132, '#f4a6b8'], [108, 126, '#3cc7e0'], [116, 130, '#f0a030'], [124, 126, '#e9d83a'], [132, 128, '#5c4dd6'], [140, 118, '#f0a030']]
+      .map(([x, y, c]) => `<circle cx="${x}" cy="${y}" r="6" fill="${c}"/><circle cx="${x}" cy="${y}" r="1.6" fill="#fff8" />`).join(''),
+  },
   balloon: {
     name: 'Bubble Balloon', icon: '🎈', slot: 'back', price: 30, level: 1,
     view: '132 -6 60 150',
