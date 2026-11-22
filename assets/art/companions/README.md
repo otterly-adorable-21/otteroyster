@@ -31,7 +31,7 @@ any spot left empty, the drawn version stays.
 | ⬜ | `seal-sleeping` | 💤 Baby Seal (sleeping) | 512 × 512 | optional |
 | ⬜ | `puffin` | 🐧 Puffin | 512 × 512 |  |
 | ⬜ | `puffin-sleeping` | 💤 Puffin (sleeping) | 512 × 512 | optional |
-| ⬜ | `axolotl` | 🦎 Axolotl | 512 × 512 |  |
+| ✅ | `axolotl` | 🦎 Axolotl | 512 × 512 |  |
 | ⬜ | `axolotl-sleeping` | 💤 Axolotl (sleeping) | 512 × 512 | optional |
 | ⬜ | `minnow` | 🐟 Little Fish | 512 × 512 |  |
 | ⬜ | `minnow-sleeping` | 💤 Little Fish (sleeping) | 512 × 512 | optional |

@@ -1,6 +1,8 @@
 {
   "note": "Made automatically by tools/art-manifest.mjs. Do not edit.",
   "files": {
+    "companions/axolotl": "companions/axolotl.png",
+    "companions/hermit crab": "companions/hermit crab.png",
     "wallpaper/aurora": "wallpaper/aurora.jpg",
     "wallpaper/moss": "wallpaper/moss.jpg",
     "wallpaper/reef": "wallpaper/reef.jpg",
