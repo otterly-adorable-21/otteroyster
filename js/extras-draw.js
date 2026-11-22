@@ -161,7 +161,16 @@ export const ACC_KIND = { bow: 'head', tophat: 'head', flowers: 'head', crown: '
 //          fill their whole square, so they're shown smaller)
 //   sink = how far (share of its height) it sits down into the head
 //   tall = share of the square, from the bottom, that has drawing in it
-export const ART_FIT_ACC = { bow: { size: 0.62, sink: 0.3, tall: 0.92 }, tophat: { size: 0.72, sink: 0.08, tall: 1 }, flowers: { size: 1, sink: 0.12, tall: 0.46 } };
+// Neck pictures: size as above; band = the y (px) of the band that goes round the neck.
+// Specs: lenses = the two lens centres (px) and lensR = a lens's radius (px).
+export const ART_FIT_ACC = {
+  bow: { size: 0.62, sink: 0.3, tall: 0.92 },
+  tophat: { size: 0.72, sink: 0.08, tall: 1 },
+  flowers: { size: 1, sink: 0.12, tall: 0.46 },
+  crown: { size: 0.6, sink: 0.08, tall: 0.96 },
+  bandana: { size: 0.78, band: 42 },
+  specs: { lenses: [[155, 133], [228, 126]], lensR: 44 },
+};
 const artBox = (acc) => {
   const { size = 1, sink = 0, tall = 1 } = ART_FIT_ACC[acc] || {};
   const w = 48.8 * size;
@@ -171,16 +180,25 @@ const artBox = (acc) => {
 function accArt(url, f, kind, acc) {
   if (kind === 'head' || kind === 'neck') {
     const hb = artBox(acc);
-    const box = kind === 'head' ? `x="${(-hb.w / 2).toFixed(2)}" y="${hb.top.toFixed(2)}" width="${hb.w.toFixed(2)}" height="${hb.w.toFixed(2)}"` : `x="-24.4" y="-12.2" width="48.8" height="48.8"`;
+    const { band = 64 } = ART_FIT_ACC[acc] || {};
+    const box = kind === 'head' ? `x="${(-hb.w / 2).toFixed(2)}" y="${hb.top.toFixed(2)}" width="${hb.w.toFixed(2)}" height="${hb.w.toFixed(2)}"`
+      : `x="${(-hb.w / 2).toFixed(2)}" y="${(-hb.w * band / 256).toFixed(2)}" width="${hb.w.toFixed(2)}" height="${hb.w.toFixed(2)}"`;
     return frame(kind === 'head' ? headSpot(acc, f) : f.neck, `<image href="${url}" ${box} preserveAspectRatio="xMidYMid meet"/>`);
   }
   const [a, b] = f.eyes;
-  if (!b) { // one eye: the right-hand lens on the eye, sized to the lens
-    const k = (f.lens * 2) / 80;
-    return `<g transform="translate(${a[0]} ${a[1]}) scale(${(f.back > 0 ? -k : k).toFixed(4)} ${k.toFixed(4)}) translate(-176 -128)"><image href="${url}" x="128" y="0" width="128" height="256" preserveAspectRatio="xMaxYMid slice"/></g>`;
+  const { lenses: [L1, L2] = [[80, 128], [176, 128]], lensR = 40 } = ART_FIT_ACC[acc] || {};
+  if (!b) { // one eye: the first lens on the eye, sized to the lens
+    const k = (f.lens * 1.15) / lensR;
+    return `<g transform="translate(${a[0]} ${a[1]}) scale(${(f.back > 0 ? -k : k).toFixed(4)} ${k.toFixed(4)}) translate(${-L1[0]} ${-L1[1]})"><image href="${url}" width="256" height="256"/></g>`;
   }
-  const len = Math.hypot(b[0] - a[0], b[1] - a[1]), k = len / 96, ang = Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI;
-  return `<g transform="translate(${a[0]} ${a[1]}) rotate(${ang.toFixed(1)}) scale(${k.toFixed(4)}) translate(-80 -128)"><image href="${url}" width="256" height="256"/></g>`;
+  const lx = L2[0] - L1[0], ly = L2[1] - L1[1];
+  const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  // Stretch to reach both eyes, but never so far that the lenses dwarf the eyes;
+  // then centre the pair between the eyes.
+  const k = Math.min(len / Math.hypot(lx, ly), (f.lens * 1.6) / lensR);
+  const ang = (Math.atan2(b[1] - a[1], b[0] - a[0]) - Math.atan2(ly, lx)) * 180 / Math.PI;
+  const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+  return `<g transform="translate(${mx} ${my}) rotate(${ang.toFixed(1)}) scale(${k.toFixed(4)}) translate(${-(L1[0] + L2[0]) / 2} ${-(L1[1] + L2[1]) / 2})"><image href="${url}" width="256" height="256"/></g>`;
 }
 
 export function accessorySVG(acc, f, compId) {
