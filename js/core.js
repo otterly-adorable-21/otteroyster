@@ -174,7 +174,7 @@ export const xpNeed = (lvl) => 40 + lvl * 30;
 export const dayKey = (now = Date.now()) => new Date(now).toISOString().slice(0, 10);
 
 // Stat change per real-time minute while awake and home.
-export const RATES = { hunger: -0.15, happiness: -0.1, energy: -0.08, clean: -0.06 };
+export const RATES = { hunger: -0.22, happiness: -0.15, energy: -0.08, clean: -0.09 };
 
 export const STAT_INFO = [
   { id: 'hunger', label: 'Full', icon: '🐟' },
@@ -231,7 +231,7 @@ export function tick(s, now = Date.now()) {
     if (s.mission) {
       stat(s, 'hunger', RATES.hunger * 0.5 * mins);
     } else if (s.sleeping) {
-      stat(s, 'energy', 2.5 * (1 + coziness(s) / 60) * (hasTrait(s, 'sleepy') ? 1.3 : 1) * (dailyMood(s, now) === 'dreamy' ? 1.25 : 1) * (perk(s, 'octopus') ? 1.2 : 1) * mins);
+      stat(s, 'energy', 3 * (1 + coziness(s) / 60) * (hasTrait(s, 'sleepy') ? 1.3 : 1) * (dailyMood(s, now) === 'dreamy' ? 1.25 : 1) * (perk(s, 'octopus') ? 1.2 : 1) * mins);
       stat(s, 'hunger', RATES.hunger * 0.5 * mins);
       stat(s, 'clean', RATES.clean * 0.5 * mins);
       if (s.stats.energy >= 100) {
@@ -421,16 +421,13 @@ export function canPlay(s, gameId) {
   const g = GAME_LIST.find((x) => x.id === gameId);
   const b = busy(s);
   if (b) return no(b);
-  const cost = g ? g.energy : 5;
-  if (s.stats.energy < cost) return no(`${s.name} is too tired. Try a nap first!`);
-  return ok('');
+  if (!g) return no('That game doesn\'t exist.');
+  return ok(''); // games are free: no energy needed
 }
 
 export function payForGame(s, gameId) {
   const r = canPlay(s, gameId);
   if (!r.ok) return r;
-  const g = GAME_LIST.find((x) => x.id === gameId);
-  stat(s, 'energy', -(g ? g.energy : 5));
   return r;
 }
 
