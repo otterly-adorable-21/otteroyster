@@ -11,7 +11,7 @@ any spot left empty, the drawn version stays.
 | --- | --- | --- | --- | --- |
 | ⬜ | `duckling` | 🐥 Duckling | 512 × 512 |  |
 | ⬜ | `duckling-sleeping` | 💤 Duckling (sleeping) | 512 × 512 | optional |
-| ⬜ | `crab` | 🦀 Hermit Crab | 512 × 512 |  |
+| ✅ | `crab` | 🦀 Hermit Crab | 512 × 512 |  |
 | ⬜ | `crab-sleeping` | 💤 Hermit Crab (sleeping) | 512 × 512 | optional |
 | ⬜ | `frog` | 🐸 Lily Frog | 512 × 512 |  |
 | ⬜ | `frog-sleeping` | 💤 Lily Frog (sleeping) | 512 × 512 | optional |
@@ -31,7 +31,7 @@ any spot left empty, the drawn version stays.
 | ⬜ | `seal-sleeping` | 💤 Baby Seal (sleeping) | 512 × 512 | optional |
 | ⬜ | `puffin` | 🐧 Puffin | 512 × 512 |  |
 | ⬜ | `puffin-sleeping` | 💤 Puffin (sleeping) | 512 × 512 | optional |
-| ⬜ | `axolotl` | 🦎 Axolotl | 512 × 512 |  |
+| ✅ | `axolotl` | 🦎 Axolotl | 512 × 512 |  |
 | ⬜ | `axolotl-sleeping` | 💤 Axolotl (sleeping) | 512 × 512 | optional |
 | ⬜ | `minnow` | 🐟 Little Fish | 512 × 512 |  |
 | ⬜ | `minnow-sleeping` | 💤 Little Fish (sleeping) | 512 × 512 | optional |
