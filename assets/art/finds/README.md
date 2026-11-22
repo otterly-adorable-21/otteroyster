@@ -19,7 +19,7 @@ any spot left empty, the drawn version stays.
 | ⬜ | `butterfly` | 🦋 Willow Butterfly | 256 × 256 |  |
 | ⬜ | `owl` | 🦉 Sleepy Owl | 256 × 256 |  |
 | ⬜ | `firefly` | ✨ Firefly Queen | 256 × 256 |  |
-| ⬜ | `crab` | 🦀 Hermit Crab | 256 × 256 |  |
+| ✅ | `crab` | 🦀 Hermit Crab | 256 × 256 |  |
 | ⬜ | `spiral` | 🐚 Spiral Shell | 256 × 256 |  |
 | ⬜ | `seastar` | ⭐ Sea Star | 256 × 256 |  |
 | ⬜ | `shrimp` | 🦐 Candy Shrimp | 256 × 256 |  |
