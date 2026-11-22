@@ -9,7 +9,7 @@ any spot left empty, the drawn version stays.
 
 | | File name | What | Size (px) | Notes |
 | --- | --- | --- | --- | --- |
-| ⬜ | `pearl` | Pearl (money) | 128 × 128 |  |
+| ✅ | `pearl` | Pearl (money) | 128 × 128 |  |
 | ⬜ | `tab-home` | 🦦 Tab: Otter | 128 × 128 |  |
 | ⬜ | `tab-den` | 🏡 Tab: Den | 128 × 128 |  |
 | ⬜ | `tab-closet` | 👗 Tab: Closet | 128 × 128 |  |
