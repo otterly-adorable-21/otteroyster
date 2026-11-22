@@ -21,7 +21,6 @@ any spot left empty, the drawn version stays.
 | ⬜ | `bowtie` | 🎀 Bow Tie | 800 × 1016 | neck |
 | ⬜ | `scarf` | 🧣 Knit Scarf | 800 × 1016 | neck |
 | ⬜ | `pearls` | 📿 Pearl Necklace | 800 × 1016 | neck |
-| ✅ | `flowerlei` | 💐 Flower Lei | 800 × 1016 | neck |
 | ⬜ | `balloon` | 🎈 Bubble Balloon | 800 × 1016 | back |
 | ⬜ | `cape` | 🦸 Hero Cape | 800 × 1016 | back |
 | ⬜ | `starcape` | 🌌 Starlight Cape | 800 × 1016 | back |
@@ -34,7 +33,7 @@ any spot left empty, the drawn version stays.
 | ⬜ | `flowercrown` | 🌼 Flower Crown | 800 × 1016 | hat · event item |
 | ⬜ | `butterflywings` | 🦋 Butterfly Wings | 800 × 1016 | back · event item |
 | ⬜ | `sunhat` | 👒 Straw Sun Hat | 800 × 1016 | hat · event item |
-| ⬜ | `lei` | 🌺 Island Flower Lei | 800 × 1016 | neck · event item |
+| ✅ | `lei` | 🌺 Island Flower Lei | 800 × 1016 | neck · event item |
 | ⬜ | `witchhat` | 🎃 Starry Witch Hat | 800 × 1016 | hat · event item |
 | ⬜ | `batwings` | 🦇 Little Bat Wings | 800 × 1016 | back · event item |
 | ⬜ | `pupbib` | 🍼 Pup Bib | 800 × 1016 | neck |

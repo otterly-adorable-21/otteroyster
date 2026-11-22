@@ -1,7 +1,7 @@
 {
   "note": "Made automatically by tools/art-manifest.mjs. Do not edit.",
   "files": {
-    "clothes/flowerlei": "clothes/flowerlei.png",
+    "clothes/lei": "clothes/lei.png",
     "companions/axolotl": "companions/axolotl.png",
     "companions/crab": "companions/crab.png",
     "companions/duckling": "companions/duckling.png",

@@ -87,6 +87,7 @@ function starterDen() {
 // Shop items that were deleted, with what they cost. Saves that still have one
 // get it taken away and the pearls back, once (the ids are gone afterwards).
 export const REMOVED_ITEMS = {
+  item: { flowerlei: 60 },
   wallpaper: { tidepools: 55, beachgrass: 40, fernmoss: 45, pressedflowers: 55, enchanted: 75, runes: 90, tinyotters: 99, bigoysters: 77, fishhats: 66, clamfaces: 66, cheese: 60, newsprint: 40, retro: 88 },
   floor: { undersand: 50 },
   furniture: { lantern: 50, floatlounger: 70, pearlbed: 200, bubblebed: 260 },
@@ -97,6 +98,8 @@ function refundRemoved(saved) {
   let pearls = 0;
   const take = (list, table) => (Array.isArray(list) ? list.filter((id) => (table[id] != null ? ((pearls += table[id]), false) : true)) : list);
   const out = { ...saved };
+  out.owned = take(saved.owned, R.item);
+  if (saved.equipped && Object.values(saved.equipped).some((id) => R.item[id])) out.equipped = Object.fromEntries(Object.entries(saved.equipped).map(([k, id]) => [k, R.item[id] ? null : id]));
   out.wallpapers = take(saved.wallpapers, R.wallpaper);
   out.floors = take(saved.floors, R.floor);
   out.doorItems = take(saved.doorItems, R.door);
