@@ -20,7 +20,7 @@ any spot left empty, the drawn version stays.
 | ⬜ | `fern` | Riverbank Fern | 280 × 328 | decor |
 | ⬜ | `chest` | Treasure Chest | 320 × 248 | decor |
 | ⬜ | `fishbowl` | Little Fishbowl | 240 × 248 | decor |
-| ✅ | `duckplush` | Duckling Plush | 240 × 224 | plush |
+| ⬜ | `duckplush` | Duckling Plush | 240 × 224 | plush |
 | ✅ | `turtleplush` | Turtle Plush | 288 × 200 | plush |
 | ✅ | `starplush` | Starfish Plush | 240 × 232 | plush |
 | ✅ | `octoplush` | Octopus Plush | 240 × 240 | plush |
