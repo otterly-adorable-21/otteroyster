@@ -9,7 +9,7 @@ any spot left empty, the drawn version stays.
 
 | | File name | What | Size (px) | Notes |
 | --- | --- | --- | --- | --- |
-| ⬜ | `duckling` | 🐥 Duckling | 512 × 512 |  |
+| ✅ | `duckling` | 🐥 Duckling | 512 × 512 |  |
 | ⬜ | `duckling-sleeping` | 💤 Duckling (sleeping) | 512 × 512 | optional |
 | ✅ | `crab` | 🦀 Hermit Crab | 512 × 512 |  |
 | ⬜ | `crab-sleeping` | 💤 Hermit Crab (sleeping) | 512 × 512 | optional |
