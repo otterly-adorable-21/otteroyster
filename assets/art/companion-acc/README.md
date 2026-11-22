@@ -12,6 +12,6 @@ any spot left empty, the drawn version stays.
 | ✅ | `bow` | 🎀 Little Bow | 256 × 256 |  |
 | ✅ | `tophat` | 🎩 Teeny Top Hat | 256 × 256 |  |
 | ✅ | `flowers` | 🌸 Flower Crown | 256 × 256 |  |
-| ⬜ | `bandana` | 🧣 Bandana | 256 × 256 |  |
-| ⬜ | `specs` | 👓 Round Specs | 256 × 256 |  |
-| ⬜ | `crown` | 👑 Tiny Crown | 256 × 256 |  |
+| ✅ | `bandana` | 🧣 Bandana | 256 × 256 |  |
+| ✅ | `specs` | 👓 Round Specs | 256 × 256 |  |
+| ✅ | `crown` | 👑 Tiny Crown | 256 × 256 |  |

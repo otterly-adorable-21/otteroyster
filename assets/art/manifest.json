@@ -2,8 +2,11 @@
   "note": "Made automatically by tools/art-manifest.mjs. Do not edit.",
   "files": {
     "clothes/lei": "clothes/lei.png",
+    "companion-acc/bandana": "companion-acc/bandana.png",
     "companion-acc/bow": "companion-acc/bow.png",
+    "companion-acc/crown": "companion-acc/crown.png",
     "companion-acc/flowers": "companion-acc/flowers.png",
+    "companion-acc/specs": "companion-acc/specs.png",
     "companion-acc/tophat": "companion-acc/tophat.png",
     "companions/axolotl": "companions/axolotl.png",
     "companions/crab": "companions/crab.png",
