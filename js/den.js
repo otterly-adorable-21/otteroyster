@@ -164,7 +164,7 @@ export function denSVG(state, opts = {}) {
   if (comp && COMPANIONS[comp] && !state.mission) {
     const cx = Math.max(40, Math.min(360, pos.x + (pos.x > 300 ? -52 : 52)));
     const cy = pos.inBed ? 292 : Math.min(296, pos.y + 4);
-    floorThings.push({ y: cy, html: `<g class="den-companion" pointer-events="none"><ellipse cx="${cx}" cy="${cy - 1}" rx="13" ry="3.5" fill="#000" opacity=".22"/><svg x="${cx - 17}" y="${cy - 34}" width="34" height="34" viewBox="0 0 100 100">${companionSVG(comp, { sleeping: state.sleeping, look: (({ color, pattern, acc }) => ({ color, pattern, acc }))(state.companions.owned[comp] || {}) })}</svg></g>` });
+    floorThings.push({ y: cy, html: `<g class="den-companion" pointer-events="none"><ellipse cx="${cx}" cy="${cy - 1}" rx="13" ry="3.5" fill="#000" opacity=".22"/><svg x="${cx - 17}" y="${cy - 34}" width="34" height="34" viewBox="0 0 100 100">${companionSVG(comp, { sleeping: state.sleeping, look: (({ color, acc }) => ({ color, acc }))(state.companions.owned[comp] || {}) })}</svg></g>` });
   }
   floorThings.sort((a, b) => a.y - b.y);
   const ex = opts.extraAttrs || '';

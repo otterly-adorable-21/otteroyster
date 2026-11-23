@@ -246,9 +246,14 @@ export function accessorySVG(acc, f, compId) {
 // look: { color, acc } from the companion's save.
 export function companionSVG(id, { sleeping = false, look = {} } = {}) {
   if (!COMPANIONS[id]) return '';
-  // Painted color skins first (axolotlnavy.png), then old-style color pictures (<id>-<color>), then the plain picture.
-  const skin = !sleeping && skinArtKey(id, look.color) && artUrl(skinArtKey(id, look.color));
-  const url = (sleeping && artUrl(`companions/${id}-sleeping`)) || skin || (look.color && look.color !== 'natural' && artUrl(`companions/${id}-${look.color}`)) || artUrl(`companions/${id}`);
+  // The chosen color always wins, asleep or awake:
+  //   a painted skin's sleeping pose (axolotlnavy-sleeping), then the painted skin itself
+  //   (axolotlnavy), then old-style color pictures (<id>-<color>); for Natural, the
+  //   sleeping pose and then the plain picture.
+  const skinKey = skinArtKey(id, look.color);
+  const skin = skinKey && ((sleeping && artUrl(`${skinKey}-sleeping`)) || artUrl(skinKey));
+  const colored = skin || (look.color && look.color !== 'natural' && artUrl(`companions/${id}-${look.color}`));
+  const url = colored || (sleeping && artUrl(`companions/${id}-sleeping`)) || artUrl(`companions/${id}`);
   const hue = COMP_SKINS[id] ? 0 : COMP_COLORS[look.color]?.hue || 0; // companions with painted skins are never tinted
   const filt = hue && !(url && artUrl(`companions/${id}-${look.color}`)) ? `cmp-hue-${hue}` : '';
   const body = url ? img(url, 0, 0, 100, 100) : (BODIES[id] || (() => ''))(sleeping ? (x, y) => sleepyEye(x, y) : eye);

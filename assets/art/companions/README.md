@@ -1,6 +1,6 @@
 # Pet companions
 
-Transparent, 512 × 512 px, the companion standing on the bottom edge, facing right. Optional sleeping pose: <id>-sleeping. Color skins: <id><color> (e.g. axolotlnavy), same pose; any you upload show up by themselves (names live in js/companions.js SKIN_NAMES). Companions without skins get tinted colors.
+Transparent, 512 × 512 px, the companion standing on the bottom edge, facing right. Optional sleeping pose: <id>-sleeping. Color skins: <id><color> (e.g. axolotlnavy), same pose, with an optional sleeping pose <id><color>-sleeping; any you upload show up by themselves (names live in js/companions.js SKIN_NAMES). Companions without skins get tinted colors.
 
 Upload files named exactly like the **File name** column, plus the extension
 (`.png` is best: it also works in Shelly's Discord pictures. `.webp` and animated `.gif` work on the website), e.g. `duckling.png`. Use lowercase.

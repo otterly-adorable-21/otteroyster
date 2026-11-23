@@ -91,7 +91,7 @@ export const GROUPS = [
     slots: Object.entries(ITEMS).map(([id, it]) => ({ id, name: it.name, note: `${it.slot}${it.event ? ' · event item' : ''}`, emoji: it.icon })),
   },
   {
-    id: 'companions', size: '512 × 512', name: 'Pet companions', tip: 'Transparent, 512 × 512 px, the companion standing on the bottom edge, facing right. Optional sleeping pose: <id>-sleeping. Color skins: <id><color> (e.g. axolotlnavy), same pose; any you upload show up by themselves (names live in js/companions.js SKIN_NAMES). Companions without skins get tinted colors.',
+    id: 'companions', size: '512 × 512', name: 'Pet companions', tip: 'Transparent, 512 × 512 px, the companion standing on the bottom edge, facing right. Optional sleeping pose: <id>-sleeping. Color skins: <id><color> (e.g. axolotlnavy), same pose, with an optional sleeping pose <id><color>-sleeping; any you upload show up by themselves (names live in js/companions.js SKIN_NAMES). Companions without skins get tinted colors.',
     slots: Object.entries(COMPANIONS).flatMap(([id, c]) => [{ id, name: c.name, emoji: c.icon }, { id: `${id}-sleeping`, name: `${c.name} (sleeping)`, emoji: '💤', note: 'optional' },
       ...Object.entries(SKIN_NAMES[id] || {}).map(([k, name]) => ({ id: `${id}${k}`, name: `${c.name}: ${name}`, emoji: '🎨', note: 'color skin' }))]),
   },
