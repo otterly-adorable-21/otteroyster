@@ -788,7 +788,6 @@ function companionCard() {
       <small class="${on ? 'perk-on' : 'muted'}">${on ? '✨ ' : '🔒 '}${esc(COMPANIONS[c.id].perk)}${on ? '' : ` (bond to ${BOND_PERK} to unlock)`}</small>
       ${COMP_TRAITS[c.trait] ? `<small class="muted">${COMP_TRAITS[c.trait].icon} ${COMP_TRAITS[c.trait].name}: ${esc(c.name)} ${COMP_TRAITS[c.trait].line}</small>` : ''}
       <div class="row left">
-        <button class="btn small" data-action="comp-rename" data-id="${c.id}">✏️ Rename</button>
         <button class="btn small ${wait > 0 ? '' : 'primary'}" data-action="comp-play">${wait > 0 ? `🎾 Play in ${Math.ceil(wait / 60000)}m` : '🎾 Play'}</button>
         ${(() => { const tw = (c.lastTreat || 0) + TREAT_COOLDOWN - Date.now(); return tw > 0 ? `<button class="btn small" disabled>🍪 Treat in ${tw >= 3600000 ? `${Math.ceil(tw / 3600000)}h` : `${Math.ceil(tw / 60000)}m`}</button>` : `<button class="btn small" data-action="comp-treat">🍪 Treat · <span class="pearl-icon"></span> ${TREAT_PRICE}</button>`; })()}
         <button class="btn small" data-action="comp-style" data-id="${c.id}">🎨 Style</button>
