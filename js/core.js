@@ -167,7 +167,7 @@ export function normalize(saved) {
   s.companions = { owned: Object.fromEntries(Object.entries(co.owned || {}).filter(([id]) => COMPANIONS[id])), active: COMPANIONS[co.active] ? co.active : null, accs: Array.isArray(co.accs) ? co.accs.filter((a) => COMP_ACCS[a]) : [] };
   for (const [id, c] of Object.entries(s.companions.owned)) {
     if (!c.trait) c.trait = COMP_TRAIT_IDS[[...id].reduce((a, ch) => a + ch.charCodeAt(0), 0) % COMP_TRAIT_IDS.length];
-    if (!colorsFor(id)[c.color]) c.color = 'natural';
+    if (!colorsFor(id)[c.color] && !/^[a-z]{2,24}$/.test(c.color || '')) c.color = 'natural'; // skins are found once the art list loads, so keep any plain word
     delete c.pattern; // companion patterns were retired
     if (c.acc && !COMP_ACCS[c.acc]) c.acc = null;
   }

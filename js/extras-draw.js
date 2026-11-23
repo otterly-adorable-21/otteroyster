@@ -106,6 +106,8 @@ export const ART_FIT = {
     spots: { bow: [50, 47, 24, 0], tophat: [50.5, 11, 27, -6], flowers: [50.5, 5, 50, 0] }, centered: ['bow'],
     top: [50.5, 9, 30, 0], eyes: [[33.6, 11.3], [68, 11.3]], lens: 6, neck: [50, 46, 62, 0] },
   ghostcrab: { top: [52, 50, 30, 0], eyes: [[37.3, 34.4], [68, 34.7]], lens: 6, shades: 0.55, neck: [52, 62, 46, 0] },
+  firefly: { top: [90, 30, 19, 8], eyes: [[93.4, 33.8]], lens: 3.8, back: -1, neck: [84, 42, 15, 0] },
+  puffin: { top: [37, 3, 28, -4], eyes: [[27.7, 10.7]], lens: 4.8, back: 1, neck: [38, 29, 30, 0] },
   duckling: { threeQuarter: true, top: [63, 4, 38, 4], eyes: [[67.9, 20.8], [82.8, 19.1]], lens: 5.6, neck: [60, 45, 34, 0] },
 };
 export const fitFor = (id, uploaded) => (uploaded && ART_FIT[id]) || FIT[id] || { top: [50, 20, 30, 0], eyes: [[42, 40], [58, 40]], lens: 6, neck: [50, 60, 30, 0] };

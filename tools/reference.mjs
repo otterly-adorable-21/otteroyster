@@ -40,7 +40,7 @@ const WEBSITE = [
   ['Otter tab', [
     '**Care**: Cuddle, Bath, Nap / Wake, and 4 snacks (Kelp Chips, Clam, Fresh Fish, Oyster Cake); snacks from your pantry are free',
     '**Stats**: Full, Happy, Energy, Clean, level, XP, pearls; save status chip',
-    '**Companion card**: play (every 2 hours), treats (5 pearls, every 4 hours), style (colors: painted skins for the axolotl, hermit crab, frog and ghost crab, tints for the rest; accessories with 👀 try-on before buying), switch companions, Companion Cove shop',
+    '**Companion card**: play (every 2 hours), treats (5 pearls, every 4 hours), style (colors: named painted skins for the axolotl, hermit crab, frog, ghost crab, firefly and puffin (new uploads appear by themselves), tints for the rest; accessories with 👀 try-on before buying), switch companions, Companion Cove shop',
     '**Today**: daily gift, birthday party banner, seasonal event banner, today\'s mood, weather, 24-hour forecast, tides',
     '**The living pond**: day/night, shared weather, tides, seasonal effects, thought bubbles, sleeping poses, your companion beside your otter',
     '**Growing up**: Pup → Young (Lv 5) → Grown (Lv 10) → Wise (Lv 20), each with a free item; tell stories, learn 4 tricks, share wisdom; birthday (change once)',
