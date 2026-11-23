@@ -41,7 +41,8 @@ export const commands = [
       .addChoices(...GIFT_PEARL_OPTIONS.map((n) => ({ name: `${n} pearls`, value: n }))))
     .addStringOption((o) => o.setName('note').setDescription('A little note').setMaxLength(80))),
   everywhere(new SlashCommandBuilder().setName('garden').setDescription('Your garden: plant seeds, water and harvest')),
-  everywhere(new SlashCommandBuilder().setName('companion').setDescription('Play with your pet companion')),
+  everywhere(new SlashCommandBuilder().setName('companion').setDescription('Play with your pet companion, or give it a new name')
+    .addStringOption((o) => o.setName('name').setDescription('A new name for your companion').setMaxLength(16))),
   everywhere(new SlashCommandBuilder().setName('world').setDescription("What's happening around the pond today, and who's where")),
   everywhere(new SlashCommandBuilder().setName('lore').setDescription('Your Lore Book: mysteries, the pond folk and their stories')),
   everywhere(new SlashCommandBuilder().setName('legacy').setDescription('Lifelong goals for Wise Otters: Legend ranks and titles')),

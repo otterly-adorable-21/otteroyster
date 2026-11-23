@@ -788,6 +788,7 @@ function companionCard() {
       <small class="${on ? 'perk-on' : 'muted'}">${on ? '✨ ' : '🔒 '}${esc(COMPANIONS[c.id].perk)}${on ? '' : ` (bond to ${BOND_PERK} to unlock)`}</small>
       ${COMP_TRAITS[c.trait] ? `<small class="muted">${COMP_TRAITS[c.trait].icon} ${COMP_TRAITS[c.trait].name}: ${esc(c.name)} ${COMP_TRAITS[c.trait].line}</small>` : ''}
       <div class="row left">
+        <button class="btn small" data-action="comp-rename" data-id="${c.id}">✏️ Rename</button>
         <button class="btn small ${wait > 0 ? '' : 'primary'}" data-action="comp-play">${wait > 0 ? `🎾 Play in ${Math.ceil(wait / 60000)}m` : '🎾 Play'}</button>
         ${(() => { const tw = (c.lastTreat || 0) + TREAT_COOLDOWN - Date.now(); return tw > 0 ? `<button class="btn small" disabled>🍪 Treat in ${tw >= 3600000 ? `${Math.ceil(tw / 3600000)}h` : `${Math.ceil(tw / 60000)}m`}</button>` : `<button class="btn small" data-action="comp-treat">🍪 Treat · <span class="pearl-icon"></span> ${TREAT_PRICE}</button>`; })()}
         <button class="btn small" data-action="comp-style" data-id="${c.id}">🎨 Style</button>
@@ -801,7 +802,7 @@ function openCompanionStyle(id) {
   const c = state.companions.owned[id];
   if (!c) return;
   const look = core.companionLook(c);
-  showModal(`<div class="comp-style"><div class="game-top"><h2>🎨 Style ${esc(c.name)}</h2><button class="icon-btn" data-close aria-label="Close">✕</button></div>
+  showModal(`<div class="comp-style"><div class="game-top"><h2>🎨 Style ${esc(c.name)} <button class="link small" data-action="comp-rename" data-id="${id}">✏️ Rename</button></h2><button class="icon-btn" data-close aria-label="Close">✕</button></div>
     <div class="comp-style-art trait-${COMP_TRAITS[c.trait]?.anim || ''}"><svg viewBox="0 0 100 100">${companionSVG(id, { look })}</svg></div>
     <h3 class="den-sub dark">Color</h3><div class="chips">${Object.entries(colorsFor(id)).map(([k, name]) => `<button class="chip-btn" data-action="comp-look" data-id="${id}" data-k="color" data-v="${k}" aria-pressed="${(look.color || 'natural') === k}">${name}</button>`).join('')}</div>
     <h3 class="den-sub dark">Accessory <small class="muted">buy once, any companion can wear it</small></h3><div class="chips">

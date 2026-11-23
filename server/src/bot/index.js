@@ -330,6 +330,14 @@ export function createBot({ store, social, museum, siteUrl }) {
         return i.reply(gardenView(user));
       }
       case 'companion': {
+        const newName = i.options.getString('name');
+        if (newName != null) {
+          const { state, res } = load(user, (s) => (s.name && s.companions.active ? core.renameCompanion(s, s.companions.active, newName) : null));
+          if (!state.name) return i.reply({ ...adoptPrompt(user.id), flags: EPHEMERAL });
+          if (!res) return whisper(i, 'You don\'t have a companion with you. Adopt or pick one on the website first!');
+          if (!res.ok) return whisper(i, res.msg);
+          return i.reply({ ...companionView(user), content: res.msg });
+        }
         const { state } = load(user);
         if (!state.name) return i.reply({ ...adoptPrompt(user.id), flags: EPHEMERAL });
         return i.reply(companionView(user));

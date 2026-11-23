@@ -377,3 +377,17 @@ test('seasonal event on Discord', async () => {
 test('no handler errors were logged', () => {
   assert.deepEqual(errors, []);
 });
+
+test('/companion name renames your companion, and /profile shows the new name', async () => {
+  const u = { id: '900', username: 'namer', displayName: 'Namer', bot: false };
+  const p = store.forDiscord(u);
+  store.mutate(p.id, (s) => { s.name = 'Namey'; s.level = 5; s.pearls = 999; s.companions.owned.frog = { name: 'Lily Frog', bond: 10, lastPlay: Date.now(), since: Date.now(), trait: 'playful', color: 'purple', acc: null }; s.companions.active = 'frog'; });
+  const r = await cmd(u, 'companion', { name: '  Sir Hops<>  ' });
+  assert.match(JSON.stringify(r.out), /Say hi to Sir Hops/);
+  assert.equal(store.get(p.id).state.companions.owned.frog.name, 'Sir Hops');
+  const prof = await cmd(u, 'profile', {});
+  assert.match(JSON.stringify(prof.out), /Sir Hops/);
+  const none = { id: '901', username: 'nocomp', displayName: 'No', bot: false };
+  store.mutate(store.forDiscord(none).id, (s) => { s.name = 'Solo'; });
+  assert.match(JSON.stringify((await cmd(none, 'companion', { name: 'X' })).out), /don't have a companion/);
+});
