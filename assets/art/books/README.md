@@ -10,7 +10,7 @@ any spot left empty, the drawn version stays.
 | | File name | What | Size (px) | Notes |
 | --- | --- | --- | --- | --- |
 | ✅ | `tidepoet` | 📘 Poems of the Tide | 256 × 256 |  |
-| ⬜ | `barnaclelog` | 📕 Captain's Log of the Saltwind | 256 × 256 |  |
+| ✅ | `barnaclelog` | 📕 Captain's Log of the Saltwind | 256 × 256 |  |
 | ⬜ | `ottercare` | 📗 A Pup’s Guide to Floating | 256 × 256 |  |
 | ⬜ | `stars` | 📙 The Night Sky Over the Pond | 256 × 256 |  |
 | ⬜ | `recipes` | 📒 Willow's Recipe Book | 256 × 256 |  |
