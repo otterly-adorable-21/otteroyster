@@ -92,7 +92,7 @@ Every command works in servers, in DMs with Shelly, and in any chat if the app i
 - **`/gift <friend> <pearls> [note]`**: Send pearls to a friend
   - pearls: 10 pearls, 25 pearls, 50 pearls
 - **`/garden`**: Your garden: plant seeds, water and harvest
-- **`/companion [name]`**: Play with your pet companion, or give it a new name
+- **`/companion`**: Play with your pet companion
 - **`/world`**: What's happening around the pond today, and who's where
 - **`/lore`**: Your Lore Book: mysteries, the pond folk and their stories
 - **`/legacy`**: Lifelong goals for Wise Otters: Legend ranks and titles
