@@ -6,7 +6,7 @@ import { LOC, FINDS, RARITY, MISSION_LOC, EXPLORE_ENERGY, EXPLORE_COOLDOWN_MIN, 
 import { activeEvent, questsFor, EVENT, EVENT_FIND_CHANCE, TOKENS_PER_ACTIVITY } from './events.js';
 import { TRAITS, TRAIT_IDS, blankPersona, favoritesFor, traitOf, hasTrait } from './personality.js';
 import { dailyMood, exploreLuck, weatherAt } from './ambience.js';
-import { COMPANIONS, BOND_PERK, BOND_MAX, PLAY_COOLDOWN, TREAT_PRICE, TREAT_COOLDOWN, BOND_DECAY_PER_DAY, bondLevel, COMP_COLORS, COMP_PATTERNS, COMP_ACCS, COMP_TRAIT_IDS } from './companions.js';
+import { COMPANIONS, BOND_PERK, BOND_MAX, PLAY_COOLDOWN, TREAT_PRICE, TREAT_COOLDOWN, BOND_DECAY_PER_DAY, bondLevel, COMP_ACCS, COMP_TRAIT_IDS, colorsFor } from './companions.js';
 import { CROPS, PLOT_LEVELS, FRIEND_WATER_BONUS, plotStage } from './garden.js';
 import { DOOR_ITEMS, DOOR_COZY, defaultDoor } from './door.js';
 import { NPCS, NPC_PAGE_AT, NPC_MAX, MYSTERIES, MYSTERY } from './lore.js';
@@ -167,8 +167,8 @@ export function normalize(saved) {
   s.companions = { owned: Object.fromEntries(Object.entries(co.owned || {}).filter(([id]) => COMPANIONS[id])), active: COMPANIONS[co.active] ? co.active : null, accs: Array.isArray(co.accs) ? co.accs.filter((a) => COMP_ACCS[a]) : [] };
   for (const [id, c] of Object.entries(s.companions.owned)) {
     if (!c.trait) c.trait = COMP_TRAIT_IDS[[...id].reduce((a, ch) => a + ch.charCodeAt(0), 0) % COMP_TRAIT_IDS.length];
-    if (!COMP_COLORS[c.color]) c.color = 'natural';
-    if (!COMP_PATTERNS[c.pattern]) c.pattern = 'none';
+    if (!colorsFor(id)[c.color]) c.color = 'natural';
+    delete c.pattern; // companion patterns were retired
     if (c.acc && !COMP_ACCS[c.acc]) c.acc = null;
   }
   if (s.companions.active && !s.companions.owned[s.companions.active]) s.companions.active = null;
@@ -1053,7 +1053,7 @@ export function adoptCompanion(s, id, now = Date.now()) {
   if (s.level < c.level) return no(`Reach level ${c.level} to adopt a ${c.name}.`);
   if (s.pearls < c.price) return no('Not enough pearls.');
   s.pearls -= c.price;
-  s.companions.owned[id] = { name: c.name, bond: 10, lastPlay: now, since: now, trait: COMP_TRAIT_IDS[Math.floor(Math.random() * COMP_TRAIT_IDS.length)], color: 'natural', pattern: 'none', acc: null };
+  s.companions.owned[id] = { name: c.name, bond: 10, lastPlay: now, since: now, trait: COMP_TRAIT_IDS[Math.floor(Math.random() * COMP_TRAIT_IDS.length)], color: 'natural', acc: null };
   s.companions.active = id;
   log(s, `${s.name} made a new friend: a ${c.name}!`, now);
   memory(s, c.icon, `${s.name} adopted a ${c.name} companion.`, now);
@@ -1402,17 +1402,11 @@ export function goFishing(s, now = Date.now()) {
 export const readBook = (s, id) => (s.books.includes(id) ? ok('', { book: BOOKS[id] }) : no("You haven't found that book yet."));
 
 // ---------- companion looks ----------
-export const companionLook = (c) => (c ? { color: c.color, pattern: c.pattern, acc: c.acc } : {});
-export function styleCompanion(s, id, { color, pattern, acc } = {}) {
+export const companionLook = (c) => (c ? { color: c.color, acc: c.acc } : {});
+export function styleCompanion(s, id, { color, acc } = {}) {
   const c = s.companions.owned[id];
   if (!c) return no("You don't have that companion.");
-  if (color !== undefined) { if (!COMP_COLORS[color]) return no('Unknown color.'); c.color = color; }
-  if (pattern !== undefined) {
-    const p = COMP_PATTERNS[pattern];
-    if (!p) return no('Unknown pattern.');
-    if (c.bond < p.bond) return no(`Bond to ${p.bond} with ${c.name} to unlock ${p.name.toLowerCase()}.`);
-    c.pattern = pattern;
-  }
+  if (color !== undefined) { if (!colorsFor(id)[color]) return no('Unknown color.'); c.color = color; }
   if (acc !== undefined) {
     if (acc && !s.companions.accs.includes(acc)) return no('Buy that accessory first.');
     c.acc = acc || null;

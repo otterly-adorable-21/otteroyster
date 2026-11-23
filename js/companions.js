@@ -30,10 +30,20 @@ export const COMPANIONS = {
 };
 
 // ---------- personalising your companion ----------
-// Colors are free; patterns unlock as you bond; accessories are bought once and
+// Colors are free; accessories are bought once and
 // can go on any of your companions.
 export const COMP_COLORS = { natural: { name: 'Natural', hue: 0 }, sunset: { name: 'Sunset', hue: 330, tint: '#ff8787' }, ocean: { name: 'Ocean', hue: 180, tint: '#4dabf7' }, mint: { name: 'Mint', hue: 110, tint: '#38d9a9' }, lilac: { name: 'Lilac', hue: 250, tint: '#b197fc' }, golden: { name: 'Golden', hue: 40, tint: '#fcc419' } };
-export const COMP_PATTERNS = { none: { name: 'Plain', bond: 0 }, spots: { name: 'Spots', bond: 10 }, stripes: { name: 'Stripes', bond: 25 }, sparkles: { name: 'Sparkles', bond: 65 }, hearts: { name: 'Hearts', bond: 90 } };
+// Companions with their own painted color skins: assets/art/companions/<id><skin>.png
+// (e.g. axolotlnavy.png). The others get the tinted COMP_COLORS until they have art.
+export const COMP_SKINS = {
+  axolotl: { black: 'Black', blackblue: 'Black & Blue', brown: 'Brown', green: 'Green', mauve: 'Mauve', navy: 'Navy' },
+  crab: { coral: 'Coral', orange: 'Orange', peach: 'Peach', red: 'Red', teal: 'Teal' },
+  frog: { brown: 'Brown', green: 'Green', purple: 'Purple', red: 'Red', teal: 'Teal' },
+  ghostcrab: { coral: 'Coral', golden: 'Golden', ocean: 'Ocean', red: 'Red', sunset: 'Sunset' },
+};
+// The colors one companion can wear: { id: name }.
+export const colorsFor = (id) => (COMP_SKINS[id] ? { natural: 'Natural', ...COMP_SKINS[id] } : Object.fromEntries(Object.entries(COMP_COLORS).map(([k, v]) => [k, v.name])));
+export const skinArtKey = (id, color) => (COMP_SKINS[id]?.[color] ? `companions/${id}${color}` : null);
 export const COMP_ACCS = {
   bow: { name: 'Little Bow', icon: '🎀', price: 30 },
   tophat: { name: 'Teeny Top Hat', icon: '🎩', price: 50 },

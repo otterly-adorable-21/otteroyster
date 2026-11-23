@@ -1,6 +1,6 @@
 // Drawings for companions, the garden and the front door. Uploaded art
 // (assets/art/companions, garden, crops, door) replaces each piece.
-import { COMPANIONS, COMP_COLORS } from './companions.js';
+import { COMPANIONS, COMP_COLORS, COMP_SKINS, skinArtKey } from './companions.js';
 import { CROPS, PLOT_LEVELS, plotStage } from './garden.js';
 import { DOOR_ITEMS, doorColor } from './door.js';
 import { artUrl } from './art.js';
@@ -76,6 +76,7 @@ const BODIES = {
 //   lens: specs lens radius
 //   neck: [x, y, neck width, tilt°]
 //   threeQuarter: two eyes but turned to the side (gets the side-view specs, not the front ones)
+//   shades: size the front-facing specs placeholder up or down (eyes on stalks need smaller ones)
 //   hat:  optional, where hats and crowns go instead of top (e.g. on the hermit crab's shell)
 const FIT = {
   duckling: { top: [56, 18.5, 34, 0], eyes: [[62, 34]], lens: 5, back: -1, neck: [52, 56, 30, 0] },
@@ -104,6 +105,7 @@ export const ART_FIT = {
   frog: {
     spots: { bow: [50, 47, 24, 0], tophat: [50.5, 11, 27, -6], flowers: [50.5, 5, 50, 0] }, centered: ['bow'],
     top: [50.5, 9, 30, 0], eyes: [[33.6, 11.3], [68, 11.3]], lens: 6, neck: [50, 46, 62, 0] },
+  ghostcrab: { top: [52, 50, 30, 0], eyes: [[37.3, 34.4], [68, 34.7]], lens: 6, shades: 0.55, neck: [52, 62, 46, 0] },
   duckling: { threeQuarter: true, top: [63, 4, 38, 4], eyes: [[67.9, 20.8], [82.8, 19.1]], lens: 5.6, neck: [60, 45, 34, 0] },
 };
 export const fitFor = (id, uploaded) => (uploaded && ART_FIT[id]) || FIT[id] || { top: [50, 20, 30, 0], eyes: [[42, 40], [58, 40]], lens: 6, neck: [50, 60, 30, 0] };
@@ -212,7 +214,7 @@ function accArt(url, f, kind, acc) {
 function sunglassesEmoji(f) {
   const [a, b] = f.eyes;
   const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
-  const size = Math.max(len * 1.9, f.lens * 3.2);
+  const size = Math.max(len * 1.9, f.lens * 3.2) * (f.shades || 1);
   const ang = (Math.atan2(b[1] - a[1], b[0] - a[0]) * 180) / Math.PI;
   const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
   return `<text x="${mx.toFixed(1)}" y="${(my + size * 0.05).toFixed(1)}" font-size="${size.toFixed(1)}" text-anchor="middle" dominant-baseline="central" transform="rotate(${ang.toFixed(1)} ${mx.toFixed(1)} ${my.toFixed(1)})">🕶️</text>`;
@@ -238,21 +240,16 @@ export function accessorySVG(acc, f, compId) {
   if (kind === 'neck') return frame(f.neck, ACC_NECK[acc]);
   return specs(f);
 }
-const PATTERN_DRAW = {
-  spots: () => [[38, 66], [56, 74], [64, 60], [46, 80]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="4" fill="#fff" opacity=".55"/>`).join(''),
-  stripes: () => [58, 68, 78].map((y) => `<path d="M28,${y} Q50,${y - 6} 72,${y}" stroke="#fff" stroke-width="3" opacity=".5" fill="none"/>`).join(''),
-  sparkles: () => [[32, 58], [66, 66], [50, 80], [60, 50]].map(([x, y]) => `<path d="M${x},${y - 5} L${x + 1.5},${y - 1.5} L${x + 5},${y} L${x + 1.5},${y + 1.5} L${x},${y + 5} L${x - 1.5},${y + 1.5} L${x - 5},${y} L${x - 1.5},${y - 1.5}Z" fill="#fff3bf"/>`).join(''),
-  hearts: () => [[38, 64], [62, 72], [50, 82]].map(([x, y]) => `<path d="M${x},${y + 4} C${x - 7},${y - 1} ${x - 4},${y - 6} ${x},${y - 2} C${x + 4},${y - 6} ${x + 7},${y - 1} ${x},${y + 4}Z" fill="#ff8fab" opacity=".85"/>`).join(''),
-};
 
-// look: { color, pattern, acc } from the companion's save.
+// look: { color, acc } from the companion's save.
 export function companionSVG(id, { sleeping = false, look = {} } = {}) {
   if (!COMPANIONS[id]) return '';
-  const url = (sleeping && artUrl(`companions/${id}-sleeping`)) || (look.color && look.color !== 'natural' && artUrl(`companions/${id}-${look.color}`)) || artUrl(`companions/${id}`);
-  const hue = COMP_COLORS[look.color]?.hue || 0;
+  // Painted color skins first (axolotlnavy.png), then old-style color pictures (<id>-<color>), then the plain picture.
+  const skin = !sleeping && skinArtKey(id, look.color) && artUrl(skinArtKey(id, look.color));
+  const url = (sleeping && artUrl(`companions/${id}-sleeping`)) || skin || (look.color && look.color !== 'natural' && artUrl(`companions/${id}-${look.color}`)) || artUrl(`companions/${id}`);
+  const hue = COMP_SKINS[id] ? 0 : COMP_COLORS[look.color]?.hue || 0; // companions with painted skins are never tinted
   const filt = hue && !(url && artUrl(`companions/${id}-${look.color}`)) ? `cmp-hue-${hue}` : '';
   const body = url ? img(url, 0, 0, 100, 100) : (BODIES[id] || (() => ''))(sleeping ? (x, y) => sleepyEye(x, y) : eye);
-  const pat = look.pattern && PATTERN_DRAW[look.pattern] ? PATTERN_DRAW[look.pattern]() : '';
   const ownArt = !!(artUrl(`companions/${id}`) || (look.color && artUrl(`companions/${id}-${look.color}`)));
   const fit = fitFor(id, ownArt);
   const acc = look.acc ? accessorySVG(look.acc, fit, id) : '';
@@ -262,7 +259,7 @@ export function companionSVG(id, { sleeping = false, look = {} } = {}) {
   const peak = rise ? spot[1] - rise * (spot[2] / 40) : 100;
   const k = peak < 1 ? 99 / (100 - peak) : 1;
   const tint = COMP_COLORS[look.color]?.tint;
-  return `${filt ? `<defs><filter id="${filt}"><feColorMatrix type="hueRotate" values="${hue}" result="h"/><feFlood flood-color="${tint}" flood-opacity=".38"/><feComposite in2="SourceAlpha" operator="in" result="t"/><feMerge><feMergeNode in="h"/><feMergeNode in="t"/></feMerge></filter></defs>` : ''}${k < 1 ? `<g transform="translate(${50 * (1 - k)} ${100 * (1 - k)}) scale(${k.toFixed(4)})">` : ''}<g${filt ? ` filter="url(#${filt})"` : ''}>${body}${pat}</g>${acc}${k < 1 ? '</g>' : ''}`;
+  return `${filt ? `<defs><filter id="${filt}"><feColorMatrix type="hueRotate" values="${hue}" result="h"/><feFlood flood-color="${tint}" flood-opacity=".38"/><feComposite in2="SourceAlpha" operator="in" result="t"/><feMerge><feMergeNode in="h"/><feMergeNode in="t"/></feMerge></filter></defs>` : ''}${k < 1 ? `<g transform="translate(${50 * (1 - k)} ${100 * (1 - k)}) scale(${k.toFixed(4)})">` : ''}<g${filt ? ` filter="url(#${filt})"` : ''}>${body}</g>${acc}${k < 1 ? '</g>' : ''}`;
 }
 
 // ---------- garden ----------

@@ -6,7 +6,7 @@ import { sync } from './sync.js';
 import { detectArt, art } from './assets.js';
 import { playCare, setSleeping } from './animations.js';
 import { ic, artUrl, loadArtManifest } from './art.js';
-import { COMPANIONS, BOND_PERK, BOND_NAMES, bondLevel, TREAT_PRICE, TREAT_COOLDOWN, PLAY_COOLDOWN, COMP_COLORS, COMP_PATTERNS, COMP_ACCS, COMP_TRAITS } from './companions.js';
+import { COMPANIONS, BOND_PERK, BOND_NAMES, bondLevel, TREAT_PRICE, TREAT_COOLDOWN, PLAY_COOLDOWN, COMP_ACCS, COMP_TRAITS, colorsFor } from './companions.js';
 import { SETS } from './sets.js';
 import { TRINKETS, TRINKET_IDS, TRINKET_GROUPS, BOOKS, BOOK_IDS, FISH, FISH_IDS, FISHING_COOLDOWN } from './treasures.js';
 import { CROPS, PLOT_LEVELS, plotStage, plotReadyAt } from './garden.js';
@@ -803,8 +803,7 @@ function openCompanionStyle(id) {
   const look = core.companionLook(c);
   showModal(`<div class="comp-style"><div class="game-top"><h2>🎨 Style ${esc(c.name)}</h2><button class="icon-btn" data-close aria-label="Close">✕</button></div>
     <div class="comp-style-art trait-${COMP_TRAITS[c.trait]?.anim || ''}"><svg viewBox="0 0 100 100">${companionSVG(id, { look })}</svg></div>
-    <h3 class="den-sub dark">Color</h3><div class="chips">${Object.entries(COMP_COLORS).map(([k, v]) => `<button class="chip-btn" data-action="comp-look" data-id="${id}" data-k="color" data-v="${k}" aria-pressed="${look.color === k}">${v.name}</button>`).join('')}</div>
-    <h3 class="den-sub dark">Pattern <small class="muted">unlocks as you bond</small></h3><div class="chips">${Object.entries(COMP_PATTERNS).map(([k, v]) => `<button class="chip-btn" data-action="comp-look" data-id="${id}" data-k="pattern" data-v="${k}" aria-pressed="${look.pattern === k}" ${c.bond < v.bond ? 'disabled' : ''}>${c.bond < v.bond ? `🔒 ${v.bond}` : ''} ${v.name}</button>`).join('')}</div>
+    <h3 class="den-sub dark">Color</h3><div class="chips">${Object.entries(colorsFor(id)).map(([k, name]) => `<button class="chip-btn" data-action="comp-look" data-id="${id}" data-k="color" data-v="${k}" aria-pressed="${(look.color || 'natural') === k}">${name}</button>`).join('')}</div>
     <h3 class="den-sub dark">Accessory <small class="muted">buy once, any companion can wear it</small></h3><div class="chips">
       <button class="chip-btn" data-action="comp-look" data-id="${id}" data-k="acc" data-v="" aria-pressed="${!look.acc}">None</button>
       ${Object.entries(COMP_ACCS).map(([k, v]) => (state.companions.accs.includes(k) ? `<button class="chip-btn" data-action="comp-look" data-id="${id}" data-k="acc" data-v="${k}" aria-pressed="${look.acc === k}">${v.icon} ${v.name}</button>`

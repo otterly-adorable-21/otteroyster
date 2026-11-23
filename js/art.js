@@ -12,7 +12,7 @@ import { TRAITS } from './personality.js';
 import { STAGES, TRICKS } from './growth.js';
 import { POSTCARD_ART } from './social.js';
 import { WEATHER } from './ambience.js';
-import { COMPANIONS } from './companions.js';
+import { COMPANIONS, COMP_SKINS } from './companions.js';
 import { CROPS } from './garden.js';
 import { DOOR_ITEMS } from './door.js';
 import { NPCS } from './lore.js';
@@ -91,8 +91,9 @@ export const GROUPS = [
     slots: Object.entries(ITEMS).map(([id, it]) => ({ id, name: it.name, note: `${it.slot}${it.event ? ' · event item' : ''}`, emoji: it.icon })),
   },
   {
-    id: 'companions', size: '512 × 512', name: 'Pet companions', tip: 'Transparent, 512 × 512 px, the companion standing on the bottom edge, facing right. Optional sleeping pose: <id>-sleeping. Optional color versions: <id>-sunset, -ocean, -mint, -lilac, -golden (otherwise the colors are tinted automatically).',
-    slots: Object.entries(COMPANIONS).flatMap(([id, c]) => [{ id, name: c.name, emoji: c.icon }, { id: `${id}-sleeping`, name: `${c.name} (sleeping)`, emoji: '💤', note: 'optional' }]),
+    id: 'companions', size: '512 × 512', name: 'Pet companions', tip: 'Transparent, 512 × 512 px, the companion standing on the bottom edge, facing right. Optional sleeping pose: <id>-sleeping. Color skins: <id><color> (e.g. axolotlnavy), same pose; each companion has its own list of colors (js/companions.js COMP_SKINS). Companions without skins get tinted colors.',
+    slots: Object.entries(COMPANIONS).flatMap(([id, c]) => [{ id, name: c.name, emoji: c.icon }, { id: `${id}-sleeping`, name: `${c.name} (sleeping)`, emoji: '💤', note: 'optional' },
+      ...Object.entries(COMP_SKINS[id] || {}).map(([k, name]) => ({ id: `${id}${k}`, name: `${c.name}: ${name}`, emoji: '🎨', note: 'color skin' }))]),
   },
   {
     id: 'npcs', size: '512 × 512', name: 'Pond folk (characters)', tip: 'Transparent portraits, 512 × 512 px, head and shoulders or full body. Shown in conversations, on the map and in the Lore Book.',

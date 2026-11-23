@@ -83,7 +83,7 @@ const STAR = (x, y, r) => `<path d="M${x},${y - r} C${x + r * 0.15},${y - r * 0.
 function sceneSVG(s) {
   const night = s.sleeping;
   const comp = activeCompanion(s);
-  const look = comp ? { color: comp.color, pattern: comp.pattern, acc: comp.acc } : {};
+  const look = comp ? { color: comp.color, acc: comp.acc } : {};
   // On a mission the otter is still shown, smaller and off in the distance.
   const mis = s.mission ? MISSIONS.find((m) => m.id === s.mission.id) : null;
   const otter = mis
