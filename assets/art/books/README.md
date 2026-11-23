@@ -13,7 +13,7 @@ any spot left empty, the drawn version stays.
 | ✅ | `barnaclelog` | 📕 Captain's Log of the Saltwind | 256 × 256 |  |
 | ⬜ | `ottercare` | 📗 A Pup’s Guide to Floating | 256 × 256 |  |
 | ⬜ | `stars` | 📙 The Night Sky Over the Pond | 256 × 256 |  |
-| ⬜ | `recipes` | 📒 Willow's Recipe Book | 256 × 256 |  |
-| ⬜ | `lighthouse` | 📓 How to Keep a Lighthouse | 256 × 256 |  |
+| ✅ | `recipes` | 📒 Willow's Recipe Book | 256 × 256 |  |
+| ✅ | `lighthouse` | 📓 How to Keep a Lighthouse | 256 × 256 |  |
 | ⬜ | `fishtales` | 📔 Fish Tales | 256 × 256 |  |
 | ⬜ | `mapmaker` | 📖 The Mapmaker’s Notebook | 256 × 256 |  |

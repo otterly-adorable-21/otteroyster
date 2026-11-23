@@ -2,6 +2,8 @@
   "note": "Made automatically by tools/art-manifest.mjs. Do not edit.",
   "files": {
     "books/barnaclelog": "books/barnaclelog.png",
+    "books/lighthouse": "books/lighthouse.png",
+    "books/recipes": "books/recipes.png",
     "books/tidepoet": "books/tidepoet.png",
     "clothes/lei": "clothes/lei.png",
     "companion-acc/bandana": "companion-acc/bandana.png",
