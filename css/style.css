@@ -1140,6 +1140,19 @@ details.lore-page summary { cursor: pointer; font-weight: 700; font-family: Nuni
 /* ---------- treasures, library, aquarium, photo booth ---------- */
 .book summary { cursor: pointer; list-style: none; display: flex; gap: 8px; align-items: center; }
 .library .card, .library .btn { margin-top: 8px; }
+.shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); align-items: start; gap: 14px 12px; margin: 10px 0 6px; padding: 14px 12px 10px; border-radius: 16px; background: linear-gradient(#8a6644, #6b4d34); box-shadow: inset 0 -6px 0 rgba(0,0,0,.18); }
+.book-tile { display: grid; gap: 6px; justify-items: center; background: none; border: 0; padding: 0; font: inherit; color: #fffaf0; cursor: pointer; text-align: center; }
+.book-tile:hover:not(.locked) .book-cover, .book-tile:focus-visible .book-cover { transform: translateY(-4px) rotate(-1.5deg); }
+.book-cover { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 4px 10px 10px 4px; box-shadow: 0 6px 12px rgba(0,0,0,.35); transition: transform .18s ease; }
+.book-cover.drawn { display: grid; grid-template-rows: 1fr auto; align-items: center; justify-items: center; padding: 12px 8px 10px 16px; box-sizing: border-box; color: #fff; background: linear-gradient(90deg, rgba(0,0,0,.28) 0 8px, rgba(255,255,255,.12) 8px 10px, transparent 10px), var(--c); }
+.bc-title { font-family: var(--display); font-size: .92rem; line-height: 1.15; text-shadow: 0 1px 2px rgba(0,0,0,.35); }
+.bc-icon { font-size: 1.8rem; }
+.book-cover.blank { display: grid; place-items: center; font-size: 2rem; font-weight: 900; color: rgba(255,255,255,.55); background: repeating-linear-gradient(135deg, rgba(255,255,255,.08) 0 8px, transparent 8px 16px), #5a4030; box-shadow: none; border: 2px dashed rgba(255,255,255,.3); }
+.book-name { font-size: .78rem; font-weight: 800; line-height: 1.2; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
+.book-tile.locked { cursor: default; opacity: .8; }
+.book-read { display: grid; grid-template-columns: 120px 1fr; gap: 16px; align-items: start; margin: 8px 0; }
+@media (max-width: 480px) { .book-read { grid-template-columns: 1fr; justify-items: center; } .book-read-cover { width: 130px; } }
+
 .tank { position: relative; height: 150px; margin: 8px 0 12px; border-radius: 18px; overflow: hidden; background: linear-gradient(#a5d8ff, #1c7ed6); box-shadow: inset 0 -20px 0 #e8d6a8; display: grid; place-items: center; }
 .tank-fish { position: absolute; left: -40px; font-size: 26px; animation: swim calc(9s + var(--k) * 1.7s) linear infinite; animation-delay: calc(var(--k) * -2.3s); }
 .tank-fish .art-icon { width: 34px; height: 34px; }

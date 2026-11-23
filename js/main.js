@@ -1263,10 +1263,28 @@ function treasuresView() {
     ${Object.entries(TRINKET_GROUPS).map(([g, label]) => `<h2 class="section-title">${label}</h2><div class="card journal-loc"><div class="finds">${TRINKET_IDS.filter((id) => TRINKETS[id].group === g).map((id) => `<div class="find ${have[id] ? 'got' : ''}"><span class="find-icon">${have[id] ? trinketIcon(id) : '❔'}</span><span class="find-name">${have[id] ? TRINKETS[id].name : '???'}</span><span class="find-rar">${have[id] ? `×${have[id]}` : TRINKETS[id].rarity}</span></div>`).join('')}</div></div>`).join('')}
   </div>`;
 }
-function openLibrary() {
-  showModal(`<div class="library"><div class="game-top"><h2>📚 Your Bookshelf</h2><button class="icon-btn" data-close aria-label="Close">✕</button></div>
-    <p class="muted">${state.books.length} of ${BOOK_IDS.length} books. Old books sometimes wash up while exploring.</p>
-    ${BOOK_IDS.map((id) => (state.books.includes(id) ? `<details class="card book"><summary>${ic(`books/${id}`, BOOKS[id].icon)} <b>${esc(BOOKS[id].title)}</b></summary><p class="lore-page">${esc(BOOKS[id].text)}</p></details>` : `<p class="muted lore-locked">📕 A book you haven't found yet</p>`)).join('')}
+// The bookshelf: book covers in a grid; tap one to read it.
+const COVER_COLORS = ['#3b5bdb', '#c92a2a', '#2b8a3e', '#e8590c', '#7048e8', '#0c8599', '#a61e4d', '#5c940d'];
+function bookCover(id) {
+  const url = artUrl(`books/${id}`);
+  if (url) return `<img class="book-cover" src="${url}" alt="" loading="lazy">`;
+  const b = BOOKS[id];
+  return `<div class="book-cover drawn" style="--c:${COVER_COLORS[BOOK_IDS.indexOf(id) % COVER_COLORS.length]}"><span class="bc-title">${esc(b.title)}</span><span class="bc-icon">${b.icon}</span></div>`;
+}
+function openLibrary(readId = null) {
+  const back = '<button class="icon-btn" data-close aria-label="Close">✕</button>';
+  if (readId && state.books.includes(readId)) {
+    const b = BOOKS[readId];
+    showModal(`<div class="library"><div class="game-top"><h2>📖 ${esc(b.title)}</h2>${back}</div>
+      <div class="book-read"><div class="book-read-cover">${bookCover(readId)}</div><p class="lore-page">${esc(b.text)}</p></div>
+      <button class="btn" data-action="library">📚 Back to the bookshelf</button></div>`, { wide: true });
+    return;
+  }
+  showModal(`<div class="library"><div class="game-top"><h2>📚 Your Bookshelf</h2>${back}</div>
+    <p class="muted">${state.books.length} of ${BOOK_IDS.length} books. Old books sometimes wash up while exploring. Tap a book to read it.</p>
+    <div class="shelf">${BOOK_IDS.map((id) => (state.books.includes(id)
+    ? `<button class="book-tile" data-action="read-book" data-id="${id}" aria-label="Read ${esc(BOOKS[id].title)}">${bookCover(id)}${artUrl(`books/${id}`) ? `<span class="book-name">${esc(BOOKS[id].title)}</span>` : ''}</button>`
+    : '<div class="book-tile locked" aria-label="A book you haven\'t found yet"><div class="book-cover blank">?</div><span class="book-name">Not found yet</span></div>')).join('')}</div>
     ${sync.linked ? '<button class="btn" data-action="open-mailbox">✉️ Open your Shell Mail</button>' : ''}
     <button class="btn" data-action="lore-book">📜 Open the Lore Book</button></div>`, { wide: true });
 }
@@ -2330,6 +2348,7 @@ document.addEventListener('click', async (e) => {
     case 'treasures': return openSub('treasures');
     case 'sub-back': subView = null; renderPanel(); window.scrollTo({ top: 0 }); return null;
     case 'library': return openLibrary();
+    case 'read-book': return openLibrary(id);
     case 'open-mailbox': return openMailbox();
     case 'aquarium': return openAquarium();
     case 'go-fishing': { const r = act(core.goFishing(state)); if (r.ok) openAquarium(); return r; }
