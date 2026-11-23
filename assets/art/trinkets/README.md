@@ -9,19 +9,19 @@ any spot left empty, the drawn version stays.
 
 | | File name | What | Size (px) | Notes |
 | --- | --- | --- | --- | --- |
-| ⬜ | `seaglassbit` | 🟢 Sea Glass | 256 × 256 | common |
-| ⬜ | `sharktooth` | 🦷 Shark Tooth | 256 × 256 | uncommon |
-| ⬜ | `tinyshells` | 🐚 Tiny Shells | 256 × 256 | common |
-| ⬜ | `sanddollar` | 🪙 Sand Dollar | 256 × 256 | uncommon |
+| ✅ | `seaglassbit` | 🟢 Sea Glass | 256 × 256 | common |
+| ✅ | `sharktooth` | 🦷 Shark Tooth | 256 × 256 | uncommon |
+| ✅ | `tinyshells` | 🐚 Tiny Shells | 256 × 256 | common |
+| ✅ | `sanddollar` | 🪙 Sand Dollar | 256 × 256 | uncommon |
 | ⬜ | `driftwoodbit` | 🪵 Driftwood | 256 × 256 | common |
-| ⬜ | `bottlemsg` | 🍾 Message in a Bottle | 256 × 256 | rare |
+| ✅ | `bottlemsg` | 🍾 Message in a Bottle | 256 × 256 | rare |
 | ⬜ | `coralbit` | 🪸 Coral Fragment | 256 × 256 | common |
 | ⬜ | `ammonite` | 🐌 Ammonite Fossil | 256 × 256 | rare |
 | ⬜ | `trilobite` | 🪲 Trilobite Fossil | 256 × 256 | rare |
 | ⬜ | `fossilfern` | 🌿 Fern Fossil | 256 × 256 | uncommon |
-| ⬜ | `blackpearl` | ⚫ Black Pearl | 256 × 256 | rare |
-| ⬜ | `pinkpearl` | 🩷 Pink Pearl | 256 × 256 | uncommon |
-| ⬜ | `goldpearl` | 🟡 Golden Pearl | 256 × 256 | legendary |
+| ✅ | `blackpearl` | ⚫ Black Pearl | 256 × 256 | rare |
+| ✅ | `pinkpearl` | 🩷 Pink Pearl | 256 × 256 | uncommon |
+| ✅ | `goldpearl` | 🟡 Golden Pearl | 256 × 256 | legendary |
 | ⬜ | `skipstone` | 🪨 Smooth Skipping Stone | 256 × 256 | common |
 | ⬜ | `heartpebble` | 🤎 Heart-Shaped Pebble | 256 × 256 | uncommon |
 | ⬜ | `geode` | 💜 Glittering Geode | 256 × 256 | rare |
