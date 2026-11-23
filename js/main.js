@@ -302,7 +302,7 @@ function showReports() {
   playCare('mission-return');
   showModal(`
     <div class="result">
-      <div class="result-icon">${m.icon}</div>
+      <div class="result-icon">${ic(`missions/${m.id}`, m.icon)}</div>
       <h2>${esc(state.name)} is back!</h2>
       <p>${esc(state.name)} ${r.story}</p>
       <div class="rewards">
@@ -1972,7 +1972,8 @@ function burst(icons, n) {
   for (let i = 0; i < n; i++) {
     const el = document.createElement('span');
     el.className = 'particle';
-    el.textContent = icons[i % icons.length];
+    const icon = icons[i % icons.length];
+    if (String(icon).startsWith('<')) el.innerHTML = icon; else el.textContent = icon; // uploaded art comes as an <img>
     el.style.left = `${40 + Math.random() * 20}%`;
     el.style.top = `${45 + Math.random() * 15}%`;
     el.style.setProperty('--dx', `${(Math.random() - 0.5) * 180}px`);
@@ -1999,9 +2000,9 @@ function bounce() {
 }
 
 let toastTimer = 0;
-function toast(msg) {
+function toast(msg, { html = false } = {}) {
   const t = $('#toast');
-  t.textContent = msg;
+  if (html) t.innerHTML = msg; else t.textContent = msg;
   t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
@@ -2294,7 +2295,16 @@ document.addEventListener('click', async (e) => {
     case 'explore': {
       const r = core.explore(state, id);
       if (!r.ok) return toast(r.msg);
-      act(r);
+      // Show the real pictures (finds, trinkets, books) in the message and sparkles, not emoji.
+      const pics = [];
+      if (r.find) pics.push([r.find.icon, ic(`finds/${r.find.id}`, r.find.icon)]);
+      if (r.trinket) pics.push([TRINKETS[r.trinket].icon, ic(`trinkets/${r.trinket}`, TRINKETS[r.trinket].icon)]);
+      if (r.book) pics.push([BOOKS[r.book].icon, ic(`books/${r.book}`, BOOKS[r.book].icon)]);
+      if (r.lamp) pics.push(['🎣', ic('furniture/anglerlamp', '🎣')]);
+      let html = esc(r.msg);
+      for (const [emoji, pic] of pics) { const at = html.indexOf(emoji); if (at >= 0) html = html.slice(0, at) + pic + html.slice(at + emoji.length); }
+      act({ ...r, msg: '', fx: (r.fx || []).map((x) => pics.find(([emoji]) => emoji === x)?.[1] || x) });
+      toast(html, { html: true });
       if (r.find && (r.isNew || r.setDone)) {
         playCare('discover');
         const rar = RARITY[r.find.rarity];
