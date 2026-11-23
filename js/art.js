@@ -108,7 +108,7 @@ export const GROUPS = [
     slots: Object.entries(TRINKETS).map(([id, t]) => ({ id, name: t.name, emoji: t.icon, note: t.rarity })),
   },
   {
-    id: 'books', size: '240 × 320', name: 'Storybooks', tip: 'Book covers for the bookshelf, portrait, 240 × 320 px (3:4). They show as covers on the shelf and next to the story when it is read.',
+    id: 'books', size: '256 × 256', name: 'Storybooks', tip: 'The book, 256 × 256 px on a transparent background (like tidepoet.png). It stands on the bookshelf and sits next to the story when it is read.',
     slots: Object.entries(BOOKS).map(([id, b]) => ({ id, name: b.title, emoji: b.icon })),
   },
   {
