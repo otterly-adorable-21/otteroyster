@@ -100,6 +100,7 @@ const FIT = {
 export const ART_FIT = {
   axolotl: { top: [62.5, 4, 40, 0], eyes: [[52.7, 17.2], [71.3, 17.2]], lens: 5.5, neck: [63, 40, 38, 0] },
   crab: { hat: [40, 2.5, 26, -12], top: [85, 19, 16, 10], eyes: [[81.6, 29], [87.2, 26.9]], lens: 3.6, neck: [77, 43, 18, -30] },
+  frog: { top: [50.5, 9, 30, 0], eyes: [[33.6, 11.3], [68, 11.3]], lens: 6, neck: [50, 45, 52, 0] },
   duckling: { top: [63, 4, 38, 4], eyes: [[67.9, 20.8], [82.8, 19.1]], lens: 5.6, neck: [60, 45, 34, 0] },
 };
 export const fitFor = (id, uploaded) => (uploaded && ART_FIT[id]) || FIT[id] || { top: [50, 20, 30, 0], eyes: [[42, 40], [58, 40]], lens: 6, neck: [50, 60, 30, 0] };
