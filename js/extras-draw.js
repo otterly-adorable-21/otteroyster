@@ -75,6 +75,7 @@ const BODIES = {
 //   eyes: [[x, y], ...]  one eye = seen from the side; back = which way the specs' arm goes (-1 left, 1 right)
 //   lens: specs lens radius
 //   neck: [x, y, neck width, tilt°]
+//   threeQuarter: two eyes but turned to the side (gets the side-view specs, not the front ones)
 //   hat:  optional, where hats and crowns go instead of top (e.g. on the hermit crab's shell)
 const FIT = {
   duckling: { top: [56, 18.5, 34, 0], eyes: [[62, 34]], lens: 5, back: -1, neck: [52, 56, 30, 0] },
@@ -99,11 +100,11 @@ const FIT = {
 // A new upload without a fit here uses the drawn one above.
 export const ART_FIT = {
   axolotl: { top: [62.5, 4, 40, 0], eyes: [[52.7, 17.2], [71.3, 17.2]], lens: 5.5, neck: [63, 40, 38, 0] },
-  crab: { hat: [40, 2.5, 26, -12], top: [85, 19, 16, 10], eyes: [[81.6, 29], [87.2, 26.9]], lens: 3.6, neck: [77, 43, 18, -30] },
+  crab: { hat: [40, 2.5, 26, -12], threeQuarter: true, top: [85, 19, 16, 10], eyes: [[81.6, 29], [87.2, 26.9]], lens: 3.6, neck: [77, 43, 18, -30] },
   frog: {
     spots: { bow: [50, 47, 24, 0], tophat: [50.5, 11, 27, -6], flowers: [50.5, 5, 50, 0] }, centered: ['bow'],
-    top: [50.5, 9, 30, 0], eyes: [[33.6, 11.3], [68, 11.3]], lens: 6, neck: [50, 45, 52, 0] },
-  duckling: { top: [63, 4, 38, 4], eyes: [[67.9, 20.8], [82.8, 19.1]], lens: 5.6, neck: [60, 45, 34, 0] },
+    top: [50.5, 9, 30, 0], eyes: [[33.6, 11.3], [68, 11.3]], lens: 6, neck: [50, 46, 62, 0] },
+  duckling: { threeQuarter: true, top: [63, 4, 38, 4], eyes: [[67.9, 20.8], [82.8, 19.1]], lens: 5.6, neck: [60, 45, 34, 0] },
 };
 export const fitFor = (id, uploaded) => (uploaded && ART_FIT[id]) || FIT[id] || { top: [50, 20, 30, 0], eyes: [[42, 40], [58, 40]], lens: 6, neck: [50, 60, 30, 0] };
 
@@ -207,12 +208,30 @@ function accArt(url, f, kind, acc) {
   return `<g transform="translate(${mx} ${my}) rotate(${ang.toFixed(1)}) scale(${k.toFixed(4)}) translate(${-(L1[0] + L2[0]) / 2} ${-(L1[1] + L2[1]) / 2})"><image href="${url}" width="256" height="256"/></g>`;
 }
 
+// Placeholder for the front-facing specs: the sunglasses emoji, lenses on the eyes.
+function sunglassesEmoji(f) {
+  const [a, b] = f.eyes;
+  const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  const size = Math.max(len * 1.9, f.lens * 3.2);
+  const ang = (Math.atan2(b[1] - a[1], b[0] - a[0]) * 180) / Math.PI;
+  const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+  return `<text x="${mx.toFixed(1)}" y="${(my + size * 0.05).toFixed(1)}" font-size="${size.toFixed(1)}" text-anchor="middle" dominant-baseline="central" transform="rotate(${ang.toFixed(1)} ${mx.toFixed(1)} ${my.toFixed(1)})">🕶️</text>`;
+}
+
 export function accessorySVG(acc, f, compId) {
   const kind = ACC_KIND[acc];
   if (!kind) return '';
   // A picture made for this exact companion (512 x 512, drawn over it) wins.
   const own = compId && artUrl(`companion-acc/${acc}-${compId}`);
   if (own) return img(own, 0, 0, 100, 100);
+  // Companions looking straight at you get the front-facing specs picture
+  // (a 🕶️ stands in until it's drawn); side-on and three-quarter ones get `specs`.
+  if (acc === 'specs' && f.eyes.length === 2 && !f.threeQuarter) {
+    const front = artUrl('companion-acc/specs-front');
+    if (front) return accArt(front, f, 'eyes', 'specs-front');
+    if (typeof document !== 'undefined') return sunglassesEmoji(f); // Discord pictures can't draw emoji: they use the drawn specs
+    return specs(f);
+  }
   const url = artUrl(`companion-acc/${acc}`);
   if (url) return accArt(url, f, kind, acc);
   if (kind === 'head') return frame(headSpot(acc, f), isCentered(acc, f) ? `<g transform="translate(0 5)">${ACC_HEAD[acc]}</g>` : ACC_HEAD[acc]);
