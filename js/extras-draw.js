@@ -100,7 +100,9 @@ const FIT = {
 export const ART_FIT = {
   axolotl: { top: [62.5, 4, 40, 0], eyes: [[52.7, 17.2], [71.3, 17.2]], lens: 5.5, neck: [63, 40, 38, 0] },
   crab: { hat: [40, 2.5, 26, -12], top: [85, 19, 16, 10], eyes: [[81.6, 29], [87.2, 26.9]], lens: 3.6, neck: [77, 43, 18, -30] },
-  frog: { top: [50.5, 9, 30, 0], eyes: [[33.6, 11.3], [68, 11.3]], lens: 6, neck: [50, 45, 52, 0] },
+  frog: {
+    spots: { bow: [50, 47, 24, 0], tophat: [50.5, 11, 27, -6], flowers: [50.5, 5, 50, 0] }, centered: ['bow'],
+    top: [50.5, 9, 30, 0], eyes: [[33.6, 11.3], [68, 11.3]], lens: 6, neck: [50, 45, 52, 0] },
   duckling: { top: [63, 4, 38, 4], eyes: [[67.9, 20.8], [82.8, 19.1]], lens: 5.6, neck: [60, 45, 34, 0] },
 };
 export const fitFor = (id, uploaded) => (uploaded && ART_FIT[id]) || FIT[id] || { top: [50, 20, 30, 0], eyes: [[42, 40], [58, 40]], lens: 6, neck: [50, 60, 30, 0] };
@@ -150,7 +152,10 @@ function specs(f) {
 // How far each head item rises above the head (for a head 40 wide).
 const ACC_RISE = { bow: 16, tophat: 30, flowers: 8, crown: 21 };
 const ON_HAT = ['tophat', 'flowers', 'crown'];
-const headSpot = (acc, f) => (f.hat && ON_HAT.includes(acc) ? f.hat : f.top);
+// A fit can also give one accessory its own spot (`spots`), and say which are worn
+// centred on that spot instead of sitting on it (`centered`, e.g. a bow worn as a bow tie).
+const headSpot = (acc, f) => f.spots?.[acc] || (f.hat && ON_HAT.includes(acc) ? f.hat : f.top);
+const isCentered = (acc, f) => !!f.centered?.includes(acc);
 export const ACC_KIND = { bow: 'head', tophat: 'head', flowers: 'head', crown: 'head', bandana: 'neck', specs: 'eyes' };
 
 // Uploaded accessory art (256 x 256): head items sit with the bottom middle on
@@ -182,7 +187,7 @@ function accArt(url, f, kind, acc) {
   if (kind === 'head' || kind === 'neck') {
     const hb = artBox(acc);
     const { band = 64 } = ART_FIT_ACC[acc] || {};
-    const box = kind === 'head' ? `x="${(-hb.w / 2).toFixed(2)}" y="${hb.top.toFixed(2)}" width="${hb.w.toFixed(2)}" height="${hb.w.toFixed(2)}"`
+    const box = kind === 'head' ? `x="${(-hb.w / 2).toFixed(2)}" y="${(isCentered(acc, f) ? -hb.w / 2 : hb.top).toFixed(2)}" width="${hb.w.toFixed(2)}" height="${hb.w.toFixed(2)}"`
       : `x="${(-hb.w / 2).toFixed(2)}" y="${(-hb.w * band / 256).toFixed(2)}" width="${hb.w.toFixed(2)}" height="${hb.w.toFixed(2)}"`;
     return frame(kind === 'head' ? headSpot(acc, f) : f.neck, `<image href="${url}" ${box} preserveAspectRatio="xMidYMid meet"/>`);
   }
@@ -210,7 +215,7 @@ export function accessorySVG(acc, f, compId) {
   if (own) return img(own, 0, 0, 100, 100);
   const url = artUrl(`companion-acc/${acc}`);
   if (url) return accArt(url, f, kind, acc);
-  if (kind === 'head') return frame(headSpot(acc, f), ACC_HEAD[acc]);
+  if (kind === 'head') return frame(headSpot(acc, f), isCentered(acc, f) ? `<g transform="translate(0 5)">${ACC_HEAD[acc]}</g>` : ACC_HEAD[acc]);
   if (kind === 'neck') return frame(f.neck, ACC_NECK[acc]);
   return specs(f);
 }
@@ -234,7 +239,7 @@ export function companionSVG(id, { sleeping = false, look = {} } = {}) {
   const acc = look.acc ? accessorySVG(look.acc, fit, id) : '';
   // A tall hat on a tall companion: shrink the pair a little (feet stay put) so the hat isn't cut off.
   const spot = look.acc && headSpot(look.acc, fit);
-  const rise = ACC_RISE[look.acc] && (artUrl(`companion-acc/${look.acc}`) && !artUrl(`companion-acc/${look.acc}-${id}`) ? artBox(look.acc).rise : ACC_RISE[look.acc]);
+  const rise = ACC_RISE[look.acc] && !isCentered(look.acc, fit) && (artUrl(`companion-acc/${look.acc}`) && !artUrl(`companion-acc/${look.acc}-${id}`) ? artBox(look.acc).rise : ACC_RISE[look.acc]);
   const peak = rise ? spot[1] - rise * (spot[2] / 40) : 100;
   const k = peak < 1 ? 99 / (100 - peak) : 1;
   const tint = COMP_COLORS[look.color]?.tint;
