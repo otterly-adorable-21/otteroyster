@@ -31,7 +31,7 @@ any spot left empty, the drawn version stays.
 | ⬜ | `starfish-sleeping` | 💤 Starfish (sleeping) | 512 × 512 | optional |
 | ⬜ | `seahorse` | 🐴 Seahorse | 512 × 512 |  |
 | ⬜ | `seahorse-sleeping` | 💤 Seahorse (sleeping) | 512 × 512 | optional |
-| ⬜ | `firefly` | ✨ Firefly | 512 × 512 |  |
+| ✅ | `firefly` | ✨ Firefly | 512 × 512 |  |
 | ⬜ | `firefly-sleeping` | 💤 Firefly (sleeping) | 512 × 512 | optional |
 | ⬜ | `octopus` | 🐙 Baby Octopus | 512 × 512 |  |
 | ⬜ | `octopus-sleeping` | 💤 Baby Octopus (sleeping) | 512 × 512 | optional |
@@ -39,7 +39,7 @@ any spot left empty, the drawn version stays.
 | ⬜ | `jellyfish-sleeping` | 💤 Jellyfish (sleeping) | 512 × 512 | optional |
 | ⬜ | `seal` | 🦭 Baby Seal | 512 × 512 |  |
 | ⬜ | `seal-sleeping` | 💤 Baby Seal (sleeping) | 512 × 512 | optional |
-| ⬜ | `puffin` | 🐧 Puffin | 512 × 512 |  |
+| ✅ | `puffin` | 🐧 Puffin | 512 × 512 |  |
 | ⬜ | `puffin-sleeping` | 💤 Puffin (sleeping) | 512 × 512 | optional |
 | ✅ | `axolotl` | 🦎 Axolotl | 512 × 512 |  |
 | ⬜ | `axolotl-sleeping` | 💤 Axolotl (sleeping) | 512 × 512 | optional |
