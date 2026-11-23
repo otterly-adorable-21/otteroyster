@@ -498,3 +498,44 @@ test('choosing one of two otters releases the other from friends lists and Otter
   assert.equal(l.data.state.name, 'NewDeviceOtter');
   assert.deepEqual(await friendNames(pal5), []);
 });
+
+test('museum rounds: a full museum resets a day later; lifetime totals carry on; firsts pay 20', async () => {
+  const { createMuseum: make, ALL_FINDS, FIRST_PEARLS, DONATE_PEARLS, RESET_AFTER } = await import('../src/museum.js');
+  const mdb = openDb(':memory:');
+  const mstore = createStore(mdb);
+  const msocial = createSocial(mdb, mstore);
+  const mus = make(mdb, mstore);
+  const ids = Object.keys(ALL_FINDS);
+  const mk = (name) => msocial.register({ ...core.defaultState(), name, collection: Object.fromEntries(ids.map((id) => [id, 5])) });
+  const a = mstore.byToken(mk('Curator').token).id;
+  const b = mstore.byToken(mk('Helper').token).id;
+  const t0 = Date.now();
+  const before = mstore.get(a).state.pearls;
+  const first = mus.donate(a, ids[0], t0);
+  assert.equal(first.first, true);
+  assert.equal(first.pearls, FIRST_PEARLS);
+  assert.ok(mstore.get(a).state.pearls >= before + FIRST_PEARLS); // (achievements can add more)
+  assert.equal(mus.donate(b, ids[0], t0).pearls, DONATE_PEARLS);
+  // Fill every exhibit.
+  for (const id of ids.slice(1)) mus.donate(id.length % 2 ? a : b, id, t0);
+  let v = mus.view(a, t0 + 1000);
+  assert.equal(v.pct, 100);
+  assert.equal(v.round, 1);
+  assert.ok(v.resetsAt >= t0 + RESET_AFTER);
+  assert.equal(mus.claim(a, 100, t0 + 1000).status, 200);
+  // Still full just before a day has passed…
+  assert.equal(mus.view(a, t0 + RESET_AFTER - 5000).round, 1);
+  // …then a new round: empty exhibits, fresh firsts and milestones, totals kept.
+  v = mus.view(a, t0 + RESET_AFTER + 5000);
+  assert.equal(v.round, 2);
+  assert.equal(v.species, 0);
+  assert.equal(v.resetsAt, null);
+  assert.equal(v.donations, 0);
+  assert.equal(v.allTimeDonations, ids.length + 1);
+  assert.equal(v.you.donations + mus.view(b, t0 + RESET_AFTER + 5000).you.donations, ids.length + 1, 'lifetime donations carry over');
+  assert.ok(v.patrons.length === 2);
+  assert.equal(v.milestones.find((m) => m.pct === 100).claimed, false, 'milestones can be earned again');
+  const again = mus.donate(b, ids[0], t0 + RESET_AFTER + 6000);
+  assert.equal(again.first, true, 'firsts are per round');
+  assert.equal(again.pearls, FIRST_PEARLS);
+});

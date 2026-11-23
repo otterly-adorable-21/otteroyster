@@ -339,10 +339,11 @@ export function createBot({ store, social, museum, siteUrl }) {
         const me = store.forDiscord(user);
         const m = museum.view(me.id);
         const filled = Math.round(m.pct / 10);
-        const e = embed('🏛️ The Pond Museum', `${'🟨'.repeat(filled)}${'⬛'.repeat(10 - filled)} **${m.species}/${m.totalSpecies}** exhibits (${m.pct}%)\n${m.donations} donations from the community. Donate your spare discoveries on the website!`, GOLD);
+        const full = m.resetsAt ? `\n🎉 **The museum is full!** It empties <t:${Math.floor(m.resetsAt / 1000)}:R> and round ${m.round + 1} begins.` : '';
+        const e = embed(`🏛️ The Pond Museum · round ${m.round}`, `${'🟨'.repeat(filled)}${'⬛'.repeat(10 - filled)} **${m.species}/${m.totalSpecies}** exhibits (${m.pct}%)\n${m.donations} donations this round (${m.allTimeDonations} all time). Donate spares on the website: +5 pearls, or +20 if you're the first!${full}`, GOLD);
         e.addFields({ name: 'Community milestones', value: m.milestones.map((x) => `${x.reached ? '✅' : '🔒'} ${x.pct}%: ${x.pearls} pearls${x.item ? ' + display case' : ''}${x.claimed ? ' (claimed)' : ''}`).join('\n') });
-        if (m.patrons.length) e.addFields({ name: 'Top donors', value: m.patrons.slice(0, 5).map((x, k) => `${['🥇', '🥈', '🥉'][k] || '▫️'} ${x.name}: ${x.count}`).join('\n') });
-        if (m.you) e.setFooter({ text: `You've donated ${m.you.donations} · ${m.you.firsts} firsts` });
+        if (m.patrons.length) e.addFields({ name: 'Top donors (all time)', value: m.patrons.slice(0, 5).map((x, k) => `${['🥇', '🥈', '🥉'][k] || '▫️'} ${x.name}: ${x.count}`).join('\n') });
+        if (m.you) e.setFooter({ text: `You've donated ${m.you.donations} all time · ${m.you.firsts} firsts` });
         return i.reply({ embeds: [e], components: [row(linkBtn(siteUrl, 'Visit the museum'))] });
       }
       case 'event': {

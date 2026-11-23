@@ -969,14 +969,16 @@ function museumView() {
   };
   return `<div class="explore-head"><h2 class="section-title">Pond Museum</h2>${back}</div>
     <div class="museum-hero"><div class="museum-icon">🏛️</div>
-      <p>Donate your <b>spare</b> discoveries so everyone can enjoy them. The first donor of each one is credited forever!</p>
+      <p>Donate your <b>spare</b> discoveries so everyone can enjoy them. The first donor of each one gets their name on the exhibit and 20 pearls!</p>
+      ${m.resetsAt ? `<p class="museum-full">🎉 The museum is full! Everything goes into storage <b>${new Date(m.resetsAt).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' })}</b>, and round ${(m.round || 1) + 1} begins with empty halls. Your donation total carries on.</p>` : ''}
       <div class="bar big"><div style="width:${m.pct}%"></div></div>
-      <small><b>${m.species}/${m.totalSpecies}</b> exhibits (${m.pct}%) · ${m.donations} donations from the community${m.you ? ` · you: ${m.you.donations} donated, ${m.you.firsts} firsts` : ''}</small>
+      <small>Round ${m.round || 1}: <b>${m.species}/${m.totalSpecies}</b> exhibits (${m.pct}%) · ${m.donations} donations this round</small>
+      ${m.you ? `<small>You, all time: <b>${m.you.donations}</b> donated · <b>${m.you.firsts}</b> firsts</small>` : ''}
     </div>
-    <h2 class="section-title">Community milestones <small>everyone gets these</small></h2>
+    <h2 class="section-title">Community milestones <small>everyone gets these, every round</small></h2>
     <div class="milestones">${m.milestones.map((x) => `<div class="milestone ${x.reached ? 'on' : ''}"><b>${x.pct}%</b><small><span class="pearl-icon"></span> ${x.pearls}${x.item ? ' + display case' : ''}</small>
       ${x.reached && sync.linked && !x.claimed ? `<button class="btn small primary" data-action="museum-claim" data-id="${x.pct}">Claim</button>` : x.claimed ? '<small>✓ claimed</small>' : '<small>🔒</small>'}</div>`).join('')}</div>
-    <h2 class="section-title">Your spares <small>+5 pearls each</small></h2>
+    <h2 class="section-title">Your spares <small>+5 pearls each, +20 if you're first</small></h2>
     ${!sync.linked ? '<p class="note">Sign in on the Friends tab to donate.</p>' : spares.length ? `<div class="spares">${spares.map(([id, n]) => { const f = FINDS[id] || EVENT_FINDS[id]; return `<div class="card spare"><span class="find-icon">${ic(`finds/${id}`, f.icon)}</span><b>${f.name}</b><small class="muted">you have ${n}</small>${m.exhibits[id] ? '' : '<small class="new-tag">museum needs this!</small>'}<button class="btn small primary" data-action="museum-donate" data-id="${id}">Donate</button></div>`; }).join('')}</div>`
     : '<p class="note">No spares yet. When you find something twice, you can donate the extra copy here.</p>'}
     ${ALL_EXHIBITS().map((h) => `<div class="card journal-loc"><div class="journal-loc-head"><b>${h.icon} ${h.name}</b><span class="muted">${h.finds.filter((f) => m.exhibits[f.id]).length}/${h.finds.length}</span></div>
@@ -2144,7 +2146,7 @@ document.addEventListener('click', async (e) => {
       await pushNow();
       const r = await sync.museumDonate(id);
       if (!r.ok) return toast(r.error || 'Could not donate right now.');
-      adoptRemote(r.state, r.version, r.first ? '🏛️ A first for the museum! Your name is on the exhibit. +5 pearls' : '🏛️ Donated! +5 pearls');
+      adoptRemote(r.state, r.version, r.first ? `🏛️ A first for the museum! Your name is on the exhibit. +${r.pearls || 20} pearls` : `🏛️ Donated! +${r.pearls || 5} pearls`);
       if (!(await playCare('donate'))) burst(['🏛️', '✨'], 6);
       return loadMuseum();
     }

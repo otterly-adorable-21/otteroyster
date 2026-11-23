@@ -80,7 +80,7 @@ const WEBSITE = [
     '**Pond folk** (7): talk daily, do daily favors, unlock their stories',
     '**Mysteries** (4, with 4 chapters each) solved by visiting places at the right time, weather and tide',
     '**Lore Book** (44 pages) and **Treasures** pages (like the journal), **Captain Barnacle\'s boat** (30% off, about 3 days a week)',
-    '**Pond Museum**: donate spares, first-donor credit, community milestones, top donors',
+    '**Pond Museum**: donate spares (+5 pearls, +20 for the first of each exhibit), first-donor credit, community milestones, top donors. Runs in rounds: a day after it fills, it empties and a new round starts; everyone\'s donation totals carry on',
     '**Otter Lane**: stroll past dens and peek inside (anyone can, even without saving online), add friends, share your den, hide your den',
     '**Seasonal events** (11 a year): tokens, daily quests, limited shop, limited discoveries',
   ]],
