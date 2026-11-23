@@ -74,8 +74,9 @@ export function startHttp({ store, social, social2, museum, lane, auth, port, si
         const other = store.byToken(String(b.token || ''));
         if (!other) return send(res, 404, { error: 'Nothing to merge.' });
         if (other.id !== p.id) {
-          const keepState = b.keep === 'other' ? other.state : p.state;
-          social.merge(p.id, other.id, keepState.name ? keepState : (other.state.name ? other.state : p.state));
+          const wanted = b.keep === 'other' ? other.state : p.state;
+          const keepState = wanted.name ? wanted : (other.state.name ? other.state : p.state);
+          social.merge(p.id, other.id, keepState, { keptFrom: keepState === other.state ? 'drop' : 'keep' });
         }
         const fresh = store.get(p.id);
         return send(res, 200, { state: fresh.state, version: fresh.version, discordName: fresh.discordName });
@@ -101,12 +102,16 @@ export function startHttp({ store, social, social2, museum, lane, auth, port, si
           const web = b.state?.name ? b.state : me.state;
           if (d.id !== me.id && web?.name && d.state.name && !keep) return send(res, 409, { conflict: true, server: { name: d.state.name, level: d.state.level } });
           const finalState = keep === 'discord' || !web?.name ? d.state : web;
-          if (d.id !== me.id) social.merge(d.id, me.id, finalState);
+          if (d.id !== me.id) social.merge(d.id, me.id, finalState, { keptFrom: finalState === d.state ? 'keep' : 'drop' });
           store.consumeCode(b.code);
           const fresh = store.get(d.id);
           return send(res, 200, { token: (req.headers.authorization || '').replace(/^Bearer\s+/i, ''), state: fresh.state, version: fresh.version, discordName: fresh.discordName });
         }
+        // Loading this device's otter over an account that already has one releases the old otter.
+        const ownerId = store.redeemCode(b.code);
+        const hadOtter = ownerId ? !!store.get(ownerId)?.state.name : false;
         const r = store.link(b.code, b.state, b.keep === 'web' || b.keep === 'discord' ? b.keep : undefined);
+        if (r.status === 200 && hadOtter && b.keep === 'web' && b.state?.name) social.release(ownerId);
         const { status, ...rest } = r;
         return send(res, status, rest);
       }

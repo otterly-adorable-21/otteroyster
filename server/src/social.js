@@ -253,12 +253,58 @@ export function createSocial(db, store) {
 
     addChallengePoints(x, y) { if (areFriends(x, y)) addPoints(x, y, FRIEND_POINTS.challenge); },
 
-    // Merge account `drop` into `keep` (used when a website account links Discord).
-    merge(keepId, dropId, state) {
+    // An otter was released (its player chose to keep another one): it leaves
+    // everyone's friends list and Otter Lane, and takes its social life with it.
+    // Its old friend code stops working. The account itself stays.
+    release(id, { inTransaction = false } = {}) {
+      const run = (sql, ...args) => { try { db.prepare(sql).run(...args); } catch { /* table not created in this setup */ } };
+      if (!inTransaction) db.exec('BEGIN');
+      try {
+        const friendIds = q.friendsOf.all(id, id).map((r) => (r.a === id ? r.b : r.a));
+        run('DELETE FROM friends WHERE a = ? OR b = ?', id, id);
+        run('DELETE FROM sleepovers WHERE host = ? OR guest = ?', id, id);
+        run('DELETE FROM penpals WHERE a = ? OR b = ?', id, id);
+        run('DELETE FROM penpal_queue WHERE player_id = ?', id);
+        run('DELETE FROM guestbook WHERE owner = ? OR author = ?', id, id);
+        run('DELETE FROM mail WHERE to_id = ? OR from_id = ?', id, id);
+        run('DELETE FROM notices WHERE to_id = ? OR from_id = ?', id, id);
+        run('DELETE FROM challenges WHERE to_id = ? OR from_id = ?', id, id);
+        run('DELETE FROM daily_actions WHERE actor = ? OR target = ?', id, id);
+        run('DELETE FROM gifts WHERE (to_id = ? OR from_id = ?) AND claimed = 0', id, id);
+        run('DELETE FROM scores WHERE player_id = ?', id);
+        q.setCode.run(null, id); // a fresh friend code is made when it's next needed
+        for (const f of friendIds) syncFriendCount(f);
+        syncFriendCount(id);
+        if (!inTransaction) db.exec('COMMIT');
+      } catch (e) {
+        if (!inTransaction) db.exec('ROLLBACK');
+        throw e;
+      }
+    },
+
+    // Merge account `drop` into `keep` (signing in on a device that already had an otter,
+    // linking Discord, loading with a code). Only one otter survives: `keptFrom` says whose
+    // ('keep' or 'drop'); the other otter is released (see release()).
+    merge(keepId, dropId, state, { keptFrom } = {}) {
       if (keepId === dropId) return;
+      const dropRow = store.get(dropId);
+      const keepRow = store.get(keepId);
+      if (!keptFrom) keptFrom = state && dropRow?.state.name && state.created === dropRow.state.created && state.name === dropRow.state.name ? 'drop' : 'keep';
       db.exec('BEGIN');
       try {
         q.mvTokens.run(keepId, dropId);
+        if (keptFrom === 'keep') {
+          // The dropped account's otter is released; nothing of its social life carries over.
+          if (dropRow?.state.name) social.release(dropId, { inTransaction: true });
+          accounts.carry(keepId, dropId);
+          q.delPlayer.run(dropId);
+          if (state) store.mutate(keepId, (s) => { Object.assign(s, core.normalize(state)); });
+          db.exec('COMMIT');
+          return;
+        }
+        // The dropped account's otter is the one kept: release this account's old otter
+        // first, then bring over the kept otter's friends, gifts, scores and friend code.
+        if (keepRow?.state.name) social.release(keepId, { inTransaction: true });
         q.mvGiftsTo.run(keepId, dropId);
         q.mvGiftsFrom.run(keepId, dropId);
         for (const sc of q.scoresOf.all(dropId)) store.recordScore(keepId, sc.game, sc.score);
@@ -275,10 +321,15 @@ export function createSocial(db, store) {
             q.friendPoints.run(r.points, a, b);
           }
         }
+        for (const t of ['sleepovers:host', 'sleepovers:guest', 'penpals:a', 'penpals:b', 'penpal_queue:player_id', 'guestbook:owner', 'guestbook:author', 'mail:to_id', 'mail:from_id', 'notices:to_id', 'notices:from_id', 'challenges:to_id', 'challenges:from_id']) {
+          const [table, col] = t.split(':');
+          try { db.prepare(`UPDATE ${table} SET ${col} = ? WHERE ${col} = ?`).run(keepId, dropId); } catch { /* table not here, or a duplicate pair */ }
+        }
         accounts.carry(keepId, dropId);
         const dropCode = q.getCode.get(dropId)?.friend_code;
+        q.setCode.run(null, dropId);
         q.delPlayer.run(dropId);
-        if (dropCode && !q.getCode.get(keepId)?.friend_code) q.setCode.run(dropCode, keepId);
+        if (dropCode) q.setCode.run(dropCode, keepId);
         if (state) store.mutate(keepId, (s) => { Object.assign(s, core.normalize(state)); });
         db.exec('COMMIT');
       } catch (e) {

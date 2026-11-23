@@ -437,3 +437,64 @@ test('deleted shop items are taken back and refunded once', async () => {
   assert.equal(r.data.state.door.mat, null);
   assert.equal((await call('/api/save', { token: r.data.token })).data.state.pearls, 355);
 });
+
+test('choosing one of two otters releases the other from friends lists and Otter Lane', async () => {
+  const ip = '10.7.7.7';
+  const reg = async (name) => (await call('/api/register', { method: 'POST', ip, body: { state: { ...core.defaultState(), name } } })).data;
+  const befriend = async (x, y) => {
+    await call('/api/friends/add', { method: 'POST', ip, token: x.token, body: { code: y.code } });
+    await call('/api/friends/respond', { method: 'POST', ip, token: y.token, body: { code: x.code, accept: true } });
+  };
+  const friendNames = async (x) => (await call('/api/friends', { token: x.token })).data.friends.map((f) => f.name);
+  const laneNames = async () => {
+    const seen = new Set();
+    for (let i = 0; i < 25; i++) for (const h of (await call('/api/public/lane')).data.neighbors) seen.add(h.name);
+    return seen;
+  };
+
+  // 1) Keep the signed-in account's otter: the device's otter (and its friends) go.
+  const keepA = await reg('KeeperA');
+  const dropB = await reg('ReleasedB');
+  const pal1 = await reg('PalOfA');
+  const pal2 = await reg('PalOfB');
+  await befriend(keepA, pal1);
+  await befriend(dropB, pal2);
+  assert.deepEqual(await friendNames(pal2), ['ReleasedB']);
+  const m1 = await call('/api/merge', { method: 'POST', ip, token: keepA.token, body: { token: dropB.token, keep: 'this' } });
+  assert.equal(m1.status, 200);
+  assert.equal(m1.data.state.name, 'KeeperA');
+  assert.deepEqual(await friendNames(pal2), [], 'the released otter left its friend\'s list');
+  assert.deepEqual(await friendNames(pal1), ['KeeperA']);
+  assert.deepEqual(await friendNames(keepA), ['PalOfA']);
+  assert.ok(!(await laneNames()).has('ReleasedB'));
+  assert.equal((await call(`/api/public/den?code=${dropB.code}`)).status, 404);
+
+  // 2) Keep the device's otter: the account's old otter goes; the kept otter keeps its friends and code.
+  const acct = await reg('OldAccountOtter');
+  const device = await reg('DeviceOtter');
+  const pal3 = await reg('PalOfOld');
+  const pal4 = await reg('PalOfDevice');
+  await befriend(acct, pal3);
+  await befriend(device, pal4);
+  await call('/api/guestbook/sign', { method: 'POST', ip, token: pal3.token, body: { code: acct.code, text: 'hi old otter' } });
+  const m2 = await call('/api/merge', { method: 'POST', ip, token: acct.token, body: { token: device.token, keep: 'other' } });
+  assert.equal(m2.status, 200);
+  assert.equal(m2.data.state.name, 'DeviceOtter');
+  assert.deepEqual(await friendNames(pal3), []);
+  assert.deepEqual(await friendNames(pal4), ['DeviceOtter']);
+  assert.deepEqual(await friendNames(acct), ['PalOfDevice']);
+  const lane = await laneNames();
+  assert.ok(!lane.has('OldAccountOtter'));
+  assert.equal((await call('/api/save', { token: acct.token })).data.code, device.code, 'the kept otter keeps its friend code');
+  assert.equal((await call(`/api/public/den?code=${acct.code}`)).status, 404, 'the released otter\'s code no longer leads anywhere');
+
+  // 3) Loading a device's otter with a code, over an account that has one.
+  const owner = await reg('CodeOwnerOtter');
+  const pal5 = await reg('PalOfCodeOwner');
+  await befriend(owner, pal5);
+  const code = (await call('/api/device-code', { method: 'POST', ip, token: owner.token, body: {} })).data.code;
+  const l = await call('/api/link', { method: 'POST', ip, body: { code, state: { ...core.defaultState(), name: 'NewDeviceOtter' }, keep: 'web' } });
+  assert.equal(l.status, 200);
+  assert.equal(l.data.state.name, 'NewDeviceOtter');
+  assert.deepEqual(await friendNames(pal5), []);
+});
