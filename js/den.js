@@ -10,22 +10,55 @@ import { COMPANIONS } from './companions.js';
 import { TRINKETS, FISH } from './treasures.js';
 
 // What a display case or the aquarium shows inside it (emoji icons, or art).
+// Shelves have fixed spots (things stand on the shelves); open cases spread whatever
+// they hold evenly over their inside (AREAS: x, y, w, h, most per row, item size).
 const SHELF_SPOTS = {
   shellcabinet: [[22, 32], [45, 32], [68, 32], [22, 64], [45, 64], [68, 64], [22, 96], [45, 96], [68, 96]],
   rockshelf: [[12, 20], [30, 20], [48, 20], [66, 20], [84, 20], [100, 20], [12, 48], [30, 48], [48, 48], [66, 48], [84, 48], [100, 48]],
   fossildisplay: [[26, 30], [54, 30], [40, 58]],
-  pearlcase: [[24, 30], [40, 26], [56, 30], [32, 52], [48, 52]],
-  postcardwall: [[18, 22], [42, 20], [66, 24], [90, 22], [30, 48], [56, 50], [80, 48]],
   trophycabinet: [[24, 36], [45, 36], [66, 36], [24, 70], [45, 70], [66, 70], [24, 104], [45, 104], [66, 104]],
 };
+const AREAS = {
+  pearlcase: { x: 10, y: 10, w: 60, h: 54, cols: 2, size: 15 },
+  postcardwall: { x: 6, y: 6, w: 98, h: 58, cols: 4, size: 22 },
+};
+// Centres for n things spread evenly over an area: rows as even as possible, each row centred.
+function spread(n, a) {
+  const rows = Math.max(1, Math.ceil(n / a.cols));
+  const out = [];
+  for (let r = 0; r < rows; r++) {
+    const inRow = Math.ceil((n - out.length) / (rows - r));
+    for (let c = 0; c < inRow; c++) out.push([a.x + (a.w * (c + 1)) / (inRow + 1), a.y + (a.h * (r + 1)) / (rows + 1)]);
+  }
+  return out;
+}
+const POSTCARD_LOOK = { pond: ['#b2f2bb', '🪷'], lighthouse: ['#a5d8ff', '🗼'], reef: ['#99e9f2', '🐠'], moon: ['#b197fc', '🌙'] };
 function displayContents(it, id, state) {
   const icon = (x, y, key, emoji, size) => {
     const url = artUrl(key);
     return url ? `<image href="${url}" x="${x - size / 2}" y="${y - size}" width="${size}" height="${size}"/>` : `<text x="${x}" y="${y}" font-size="${size * 0.8}" text-anchor="middle">${emoji}</text>`;
   };
+  // Centred on (x, y) rather than standing on it.
+  const centered = (x, y, key, emoji, size) => icon(x, y + size / 2, key, emoji, size);
+  if (it.shows === 'postcards') {
+    const cards = [
+      ...Object.keys(state.trinkets || {}).filter((t) => TRINKETS[t]?.group === 'postcards').map((t) => ({ trinket: t })),
+      ...(state.wallCards || []),
+    ].slice(0, 8);
+    const a = AREAS.postcardwall;
+    return spread(cards.length, a).map(([x, y], k) => {
+      const c = cards[k];
+      const tilt = [-6, 4, -3, 7, -5, 3, -7, 5][k % 8];
+      const w = cards.length <= 2 ? 34 : cards.length <= 4 ? 25 : 21, h = Math.round(w * 0.7);
+      const face = c.trinket ? centered(0, 0, `trinkets/${c.trinket}`, TRINKETS[c.trinket].icon, h - 2)
+        : (() => { const art = artUrl(`postcards/${c.design}`); const [bg, em] = POSTCARD_LOOK[c.design] || POSTCARD_LOOK.pond; return art ? `<image href="${art}" x="${-w / 2 + 1}" y="${-h / 2 + 1}" width="${w - 2}" height="${h - 2}" preserveAspectRatio="xMidYMid slice"/>` : `<rect x="${-w / 2 + 1}" y="${-h / 2 + 1}" width="${w - 2}" height="${h - 2}" fill="${bg}"/><text x="0" y="${(h * 0.22).toFixed(1)}" font-size="${(h * 0.55).toFixed(1)}" text-anchor="middle">${em}</text>`; })();
+      return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${tilt})"><rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" rx="1" fill="#fffdf6" stroke="#c9b084" stroke-width=".6"/>${face}<circle cx="0" cy="${-h / 2 + 1}" r="${(w / 15).toFixed(1)}" fill="#e03131"/></g>`;
+    }).join('');
+  }
   if (it.shows) {
-    const groups = it.shows === 'fossil' ? ['fossil'] : it.shows === 'pearls' ? ['pearls'] : [it.shows];
+    const groups = [it.shows];
     const have = Object.keys(state.trinkets || {}).filter((t) => groups.includes(TRINKETS[t]?.group));
+    if (AREAS[id]) { const size = AREAS[id].size * (have.length <= 3 ? 1.35 : 1); return spread(have.length, AREAS[id]).map(([x, y], k) => centered(x, y, `trinkets/${have[k]}`, TRINKETS[have[k]].icon, size)).join(''); }
     return (SHELF_SPOTS[id] || []).slice(0, have.length).map(([x, y], k) => icon(x, y, `trinkets/${have[k]}`, TRINKETS[have[k]].icon, 18)).join('');
   }
   if (it.use === 'aquarium') {

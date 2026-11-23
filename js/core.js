@@ -191,6 +191,8 @@ export function normalize(saved) {
   s.titles = Array.isArray(saved.titles) ? saved.titles : [];
   s.lastSeen = saved.lastSeen || s.lastTick || Date.now();
   s.setsClaimed = Array.isArray(saved.setsClaimed) ? saved.setsClaimed.filter((id) => SET[id]) : [];
+  // The latest Shell Mail postcards you've received, pinned on a Postcard Wall: [{ id, design, from }].
+  s.wallCards = Array.isArray(saved.wallCards) ? saved.wallCards.filter((c) => c && typeof c.design === 'string').slice(0, 6).map((c) => ({ id: c.id, design: c.design, from: String(c.from || '').slice(0, 24) })) : [];
   if (!WALLPAPERS[s.den.wallpaper]) s.den.wallpaper = 'moss';
   if (!FLOORS[s.den.floor]) s.den.floor = 'earth';
   if (!s.wallpapers.includes('moss')) s.wallpapers.unshift('moss');

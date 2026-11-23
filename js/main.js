@@ -1408,6 +1408,9 @@ async function loadFriends() {
 
 function applyInbox(ib) {
   socialData = ib;
+  // Pin the newest postcards you've received on the Postcard Wall.
+  const cards = (ib.mail || []).slice(0, 6).map((m) => ({ id: m.id, design: m.design, from: m.from }));
+  if (cards.length && cards.map((c) => c.id).join() !== (state.wallCards || []).map((c) => c.id).join()) { state.wallCards = cards; commit({ push: false }); if (tab === 'den') redrawDen(); }
   if (ib.notices?.length) {
     recentNotices = [...ib.notices, ...recentNotices].slice(0, 8);
     ib.notices.slice(0, 3).reverse().forEach((n, k) => setTimeout(() => toast(n.text), 600 + k * 2800));
