@@ -2,7 +2,7 @@
 
 Drop a picture into the right folder with the right name and it replaces the
 drawn version on the website (and in Shelly's Discord pictures for the otter,
-clothes and den). **72 of 802** spots have art so far.
+clothes and den). **73 of 802** spots have art so far.
 
 See every spot with a live preview on the site's art checklist page: `/art.html`.
 
@@ -14,7 +14,7 @@ See every spot with a live preview on the site's art checklist page: `/art.html`
 | [`npcs/`](npcs/) | Pond folk (characters) | 0/7 |
 | [`happenings/`](happenings/) | World happenings | 0/10 |
 | [`trinkets/`](trinkets/) | Trinkets | 13/33 |
-| [`books/`](books/) | Storybooks | 4/8 |
+| [`books/`](books/) | Storybooks | 5/8 |
 | [`fish/`](fish/) | Aquarium fish | 0/10 |
 | [`companion-acc/`](companion-acc/) | Companion accessories | 6/7 |
 | [`garden/`](garden/) | Garden | 0/3 |
