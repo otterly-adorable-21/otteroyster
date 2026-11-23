@@ -1,6 +1,7 @@
 {
   "note": "Made automatically by tools/art-manifest.mjs. Do not edit.",
   "files": {
+    "books/tidepoet": "books/tidepoet.png",
     "clothes/lei": "clothes/lei.png",
     "companion-acc/bandana": "companion-acc/bandana.png",
     "companion-acc/bow": "companion-acc/bow.png",

@@ -9,7 +9,7 @@ any spot left empty, the drawn version stays.
 
 | | File name | What | Size (px) | Notes |
 | --- | --- | --- | --- | --- |
-| ⬜ | `tidepoet` | 📘 Poems of the Tide | 240 × 320 |  |
+| ✅ | `tidepoet` | 📘 Poems of the Tide | 240 × 320 |  |
 | ⬜ | `barnaclelog` | 📕 Captain's Log of the Saltwind | 240 × 320 |  |
 | ⬜ | `ottercare` | 📗 A Pup’s Guide to Floating | 240 × 320 |  |
 | ⬜ | `stars` | 📙 The Night Sky Over the Pond | 240 × 320 |  |
