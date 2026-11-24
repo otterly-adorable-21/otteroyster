@@ -1007,7 +1007,13 @@ textarea.note-input { resize: vertical; font: inherit; }
 .tabs button span .art-icon { width: 1.5rem; height: 1.5rem; vertical-align: 0; }
 .has-pearl-art .pearl-icon { background: var(--pearl-art) center/contain no-repeat; box-shadow: none; border-radius: 0; }
 .scene.has-scene-art { background: var(--scene-art) center/cover no-repeat; }
-.scene.has-scene-art .pond-decor, .scene.has-scene-art .phase-sky, .scene.has-scene-art .caustics { display: none; }
+.scene.has-scene-art .pond-decor, .scene.has-scene-art .caustics, .scene.has-phase-art .phase-sky, .scene.has-scene-art .phase-sky i { display: none; }
+/* Uploaded pond art without its own dawn/dusk/night version still gets the time-of-day tint (no drawn sun, moon or stars). */
+.scene.has-scene-art .phase-sky { z-index: 2; mix-blend-mode: multiply; } /* over the pond layers, under the otter */
+.scene.has-scene-art #otter-wrap { z-index: 3; }
+.scene.has-scene-art .weather-fx { z-index: 4; }
+.scene.has-scene-art .speech, .scene.has-scene-art .pond-status { z-index: 5; }
+.scene.has-scene-art[data-phase='night'] .phase-sky { background: linear-gradient(180deg, rgba(55, 65, 135, .65), rgba(45, 60, 125, .5)); }
 .weather-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .house-art { display: block; width: 100%; height: auto; }
 .anim-popup { position: fixed; left: 50%; top: 50%; z-index: 70; width: min(60vw, 260px); aspect-ratio: 800 / 1016; transform: translate(-50%, -50%); pointer-events: none; filter: drop-shadow(0 10px 24px rgba(0,0,0,.35)); }

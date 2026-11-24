@@ -469,6 +469,7 @@ function renderAmbience(scene, away) {
   const fx = $('#weather-fx');
   const sceneArt = artUrl(`scene/${phase}`) || artUrl('scene/base');
   scene.classList.toggle('has-scene-art', !!sceneArt);
+  scene.classList.toggle('has-phase-art', !!artUrl(`scene/${phase}`));
   scene.style.setProperty('--scene-art', sceneArt ? `url("${sceneArt}")` : 'none');
   // Hand-animated water (WebP/APNG), then the lily pads, which the game sets drifting.
   const water = $('#scene-water');

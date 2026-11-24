@@ -9,7 +9,7 @@ any spot left empty, the drawn version stays.
 
 | | File name | What | Size (px) | Notes |
 | --- | --- | --- | --- | --- |
-| ⬜ | `base` | Pond (default) | 1600 × 1000 |  |
+| ✅ | `base` | Pond (default) | 1600 × 1000 |  |
 | ⬜ | `dawn` | Dawn | 1600 × 1000 |  |
 | ⬜ | `day` | Day | 1600 × 1000 |  |
 | ⬜ | `dusk` | Dusk | 1600 × 1000 |  |
