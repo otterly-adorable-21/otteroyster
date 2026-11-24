@@ -8,7 +8,7 @@ pip install numpy pillow opencv-python-headless
 python3 tools/weather/build.py <folder with Misty/ Sunny/ Rainy/ Breezy/ Cloudy/> assets/art/weather [misty sunny ...]
 ```
 
-Each folder holds its frames named `1.png`, `2.png`, …
+Each folder holds its frames named `1.png`, `2.png`, …; they play in number order.
 
 | Overlay | How it's animated |
 | --- | --- |
