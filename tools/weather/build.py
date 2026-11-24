@@ -116,10 +116,10 @@ if want('sunny'):
     save('sunny', [to_image(f, 2.5, shimmer=True) for f in crossfade(frames_of('Sunny', HALF), 8)], 125)
 
 # Clouds: smooth and slow; in-between frames find each cloud and slide it to its next spot.
-# 10 fps, about 10 s.
+# 20 fps (16 in-betweens per drawn frame), about 10 s.
 if want('cloudy'):
     exec(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'clouds.py')).read())
-    save('cloudy', [to_image(f, 1.2) for f in tween_clouds(frames_of('Cloudy', HALF), 8, ease)], 100, q=78, aq=90)
+    save('cloudy', [to_image(f, 1.2) for f in tween_clouds(frames_of('Cloudy', HALF), 16, ease)], 50, q=78, aq=90)
 
 # Rain: fast, the 4 frames as drawn. 15 fps.
 if want('rainy'):

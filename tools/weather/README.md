@@ -14,7 +14,7 @@ Each folder holds its frames named `1.png`, `2.png`, …
 | --- | --- |
 | misty | Slow: each frame melts into the next over a second (6 fps, dithered, lossless transparency so the fog never bands). |
 | sunny | Slow cross-fades between frames, with a fresh dither every frame over the rays for the shine (8 fps). |
-| cloudy | Smooth and slow: each cloud is found and slid to its spot in the next frame (10 fps). |
+| cloudy | Smooth and slow: each cloud is found and slid to its spot in the next frame, at one steady speed (20 fps). |
 | rainy | Fast, frames as drawn (15 fps). |
 | breezy | All frames at 4 fps, then all again at 8 fps, alternating. |
 

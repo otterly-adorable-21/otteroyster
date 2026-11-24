@@ -39,15 +39,26 @@ def match(ba, bb, w):
 
 
 def tween_clouds(keys, steps, ease):
+    """`steps` in-betweens per drawn frame on average, shared out by how far the clouds
+    travel in each stretch, so they drift at one steady speed."""
     out = []
     h, w = keys[0].shape[:2]
+    segs = []
     for k in range(len(keys)):
         A, B = keys[k], keys[(k + 1) % len(keys)]
         ba, bb = blobs(A), blobs(B)
         pairs, used = match(ba, bb, w)
+        travel = np.mean([abs(bb[j][1] - ba[i][1]) + abs(bb[j][2] - ba[i][2]) for i, j in pairs]) if pairs else None
+        segs.append((A, B, ba, bb, pairs, used, travel))
+    known = [t for *_r, t in segs if t]
+    avg = np.mean(known) if known else 1
+    total = steps * len(keys)
+    weights = [(t if t else avg) for *_r, t in segs]
+    counts = [max(3, round(total * wgt / sum(weights))) for wgt in weights]
+    for (A, B, ba, bb, pairs, used, _t), n in zip(segs, counts):
         paired_a = {i for i, _ in pairs}
-        for s in range(steps):
-            t = s / steps
+        for s in range(n):
+            t = s / n
             te = ease(t)
             fr = np.zeros_like(A)
             for i, j in pairs:
