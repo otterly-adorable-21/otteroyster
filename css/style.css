@@ -1198,7 +1198,7 @@ svg.swatch-chip { display: block; }
 .swatch-chip.swatch-art { object-fit: cover; }
 .scene-overlay, .scene-water { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
 .scene-lilies { position: absolute; inset: 0; pointer-events: none; }
-.scene-lily { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; animation: lily-drift var(--dur, 8s) ease-in-out var(--delay, 0s) infinite alternate; will-change: transform; }
+.scene-lily { position: absolute; height: auto; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, .18)); animation: lily-drift var(--dur, 8s) ease-in-out var(--delay, 0s) infinite alternate; will-change: transform; }
 @keyframes lily-drift {
   0% { transform: translate(0, 0); }
   35% { transform: translate(calc(var(--dx) * .6), var(--dy)); }

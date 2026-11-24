@@ -481,8 +481,9 @@ function renderAmbience(scene, away) {
     const want = pads.join('|');
     if (lilies.dataset.pads !== want) {
       lilies.dataset.pads = want;
-      // Each pad gets its own pace and path so they never move in step.
-      lilies.innerHTML = pads.map((url, k) => `<img class="scene-lily" src="${url}" alt="" style="--dur:${(7 + (k * 2.3) % 5).toFixed(1)}s;--delay:${(-k * 1.7).toFixed(1)}s;--dx:${[6, -5, 4, -7, 5, -4, 7, -6][k]}px;--dy:${[3, 4, -3, 2, -4, 3, -2, 4][k]}px" draggable="false">`).join('');
+      // Each pad is placed on the water (left %, top %, width % of the pond), smaller further
+      // back, and gets its own pace and path so they never move in step.
+      lilies.innerHTML = pads.map((url, k) => { const [x, y, w] = LILY_SPOTS[k]; return `<img class="scene-lily" src="${url}" alt="" style="left:${x}%;top:${y}%;width:${w}%;--dur:${(7 + (k * 2.3) % 5).toFixed(1)}s;--delay:${(-k * 1.7).toFixed(1)}s;--dx:${[6, -5, 4, -7, 5, -4, 7, -6][k]}px;--dy:${[3, 4, -3, 2, -4, 3, -2, 4][k]}px" draggable="false">`; }).join('');
     }
   }
   const ov = $('#scene-overlay');
@@ -494,6 +495,10 @@ function renderAmbience(scene, away) {
   fx.innerHTML = weather === 'rainy' ? '<i class="rain"></i>' : weather === 'misty' ? '<i class="mist"></i>' : weather === 'cloudy' ? '<i class="cloud c1"></i><i class="cloud c2"></i>'
     : weather === 'breezy' ? Array.from({ length: 6 }, (_, k) => `<i class="leaf" style="top:${10 + k * 14}%;animation-delay:${-k * 1.3}s">${drops}</i>`).join('') : '';
 }
+
+// Where each uploaded lily pad floats: [left %, top %, width %] of the pond. Pads further
+// back (higher up) are smaller. Kept clear of the middle, where your otter sits.
+const LILY_SPOTS = [[3, 70, 17], [80, 60, 13], [23, 57, 9], [66, 71, 14], [42, 55, 8], [88, 78, 11], [12, 58, 8], [58, 58, 7]];
 
 // Little thoughts: a speech bubble now and then when nothing is urgent.
 let speechTimer = 0;
