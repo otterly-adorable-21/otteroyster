@@ -15,10 +15,10 @@ any spot left empty, the drawn version stays.
 | ⬜ | `dusk` | Dusk | 1600 × 1000 |  |
 | ⬜ | `night` | Night | 1600 × 1000 |  |
 | ⬜ | `water` | Water animation | 1600 × 1000 | hand-animated WebP/APNG of the water, drawn over the background; optional |
-| ⬜ | `lily1` | Lily pad 1 | 1600 × 1000 | transparent PNG on the full 1600 × 1000 canvas, drawn where it floats; the game makes it drift |
-| ⬜ | `lily2` | Lily pad 2 | 1600 × 1000 | transparent PNG on the full 1600 × 1000 canvas, drawn where it floats; the game makes it drift |
-| ⬜ | `lily3` | Lily pad 3 | 1600 × 1000 | transparent PNG on the full 1600 × 1000 canvas, drawn where it floats; the game makes it drift |
-| ⬜ | `lily4` | Lily pad 4 | 1600 × 1000 | transparent PNG on the full 1600 × 1000 canvas, drawn where it floats; the game makes it drift |
+| ✅ | `lily1` | Lily pad 1 | 1600 × 1000 | transparent PNG on the full 1600 × 1000 canvas, drawn where it floats; the game makes it drift |
+| ✅ | `lily2` | Lily pad 2 | 1600 × 1000 | transparent PNG on the full 1600 × 1000 canvas, drawn where it floats; the game makes it drift |
+| ✅ | `lily3` | Lily pad 3 | 1600 × 1000 | transparent PNG on the full 1600 × 1000 canvas, drawn where it floats; the game makes it drift |
+| ✅ | `lily4` | Lily pad 4 | 1600 × 1000 | transparent PNG on the full 1600 × 1000 canvas, drawn where it floats; the game makes it drift |
 | ⬜ | `lily5` | Lily pad 5 | 1600 × 1000 | transparent PNG on the full 1600 × 1000 canvas, drawn where it floats; the game makes it drift |
 | ⬜ | `lily6` | Lily pad 6 | 1600 × 1000 | transparent PNG on the full 1600 × 1000 canvas, drawn where it floats; the game makes it drift |
 | ⬜ | `lily7` | Lily pad 7 | 1600 × 1000 | transparent PNG on the full 1600 × 1000 canvas, drawn where it floats; the game makes it drift |
