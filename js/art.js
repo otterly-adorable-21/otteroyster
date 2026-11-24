@@ -170,7 +170,7 @@ export const GROUPS = [
     ],
   },
   {
-    id: 'weather', size: '1600 × 1000', name: 'Weather overlays', tip: 'Transparent, 1600 × 1000 px, drawn over the pond and the otter (rain falls in front). Animated WebP/GIF works great here. Each one replaces the built-in effect for that weather.',
+    id: 'weather', size: '1600 × 1000', name: 'Weather overlays', tip: 'Transparent, 1600 × 1000 px, drawn over the pond and the otter (rain falls in front). Animated WebP works best (send numbered transparent PNG frames and they can be built with tools/weather). Each one replaces the built-in effect for that weather.',
     slots: Object.entries(WEATHER).map(([id, w]) => ({ id, name: w.name, emoji: w.icon })),
   },
   {

@@ -2,7 +2,7 @@
 
 Drop a picture into the right folder with the right name and it replaces the
 drawn version on the website (and in Shelly's Discord pictures for the otter,
-clothes and den). **78 of 811** spots have art so far.
+clothes and den). **83 of 811** spots have art so far.
 
 See every spot with a live preview on the site's art checklist page: `/art.html`.
 
@@ -25,7 +25,7 @@ See every spot with a live preview on the site's art checklist page: `/art.html`
 | [`floor/`](floor/) | Floors | 0/15 |
 | [`den/`](den/) | The den room | 0/2 |
 | [`scene/`](scene/) | The pond scene | 5/16 |
-| [`weather/`](weather/) | Weather overlays | 0/5 |
+| [`weather/`](weather/) | Weather overlays | 5/5 |
 | [`map/`](map/) | World map | 0/1 |
 | [`places/`](places/) | Places | 0/9 |
 | [`lane/`](lane/) | Otter Lane | 0/2 |

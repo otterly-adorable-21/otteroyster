@@ -78,6 +78,11 @@
     "wallpaper/aurora": "wallpaper/aurora.jpg",
     "wallpaper/moss": "wallpaper/moss.jpg",
     "wallpaper/reef": "wallpaper/reef.jpg",
-    "wallpaper/stars": "wallpaper/stars.jpg"
+    "wallpaper/stars": "wallpaper/stars.jpg",
+    "weather/breezy": "weather/breezy.webp",
+    "weather/cloudy": "weather/cloudy.webp",
+    "weather/misty": "weather/misty.webp",
+    "weather/rainy": "weather/rainy.webp",
+    "weather/sunny": "weather/sunny.webp"
   }
 }
