@@ -470,6 +470,20 @@ function renderAmbience(scene, away) {
   const sceneArt = artUrl(`scene/${phase}`) || artUrl('scene/base');
   scene.classList.toggle('has-scene-art', !!sceneArt);
   scene.style.setProperty('--scene-art', sceneArt ? `url("${sceneArt}")` : 'none');
+  // Hand-animated water (WebP/APNG), then the lily pads, which the game sets drifting.
+  const water = $('#scene-water');
+  const waterArt = artUrl('scene/water');
+  if (water) { water.hidden = !waterArt; if (waterArt && water.getAttribute('src') !== waterArt) water.src = waterArt; }
+  const lilies = $('#scene-lilies');
+  if (lilies) {
+    const pads = Array.from({ length: 8 }, (_, k) => artUrl(`scene/lily${k + 1}`)).filter(Boolean);
+    const want = pads.join('|');
+    if (lilies.dataset.pads !== want) {
+      lilies.dataset.pads = want;
+      // Each pad gets its own pace and path so they never move in step.
+      lilies.innerHTML = pads.map((url, k) => `<img class="scene-lily" src="${url}" alt="" style="--dur:${(7 + (k * 2.3) % 5).toFixed(1)}s;--delay:${(-k * 1.7).toFixed(1)}s;--dx:${[6, -5, 4, -7, 5, -4, 7, -6][k]}px;--dy:${[3, 4, -3, 2, -4, 3, -2, 4][k]}px" draggable="false">`).join('');
+    }
+  }
   const ov = $('#scene-overlay');
   const ovArt = (phase === 'night' && artUrl('scene/overlay-night')) || artUrl('scene/overlay');
   if (ov) { ov.hidden = !ovArt; if (ovArt && ov.getAttribute('src') !== ovArt) ov.src = ovArt; }

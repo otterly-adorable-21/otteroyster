@@ -159,10 +159,12 @@ export const GROUPS = [
     ],
   },
   {
-    id: 'scene', size: '1600 × 1000', name: 'The pond scene', tip: 'The picture behind your otter on the Otter page, 1600 × 1000 px. The pond box is wide on computers and narrower on phones, so keep the important parts in the middle 1100 px; the left and right edges get trimmed on phones. Your otter stands in the bottom middle. Uploading a scene replaces the drawn willows, lily pads, lilies, sky and water shimmer. Optional overlays (transparent, can be animated GIF/WebP) sit on top of the background but under the otter: use them for moving water, bobbing lily pads or swaying reeds.',
+    id: 'scene', size: '1600 × 1000', name: 'The pond scene', tip: 'The picture behind your otter on the Otter page, 1600 × 1000 px. The pond box is wide on computers and narrower on phones, so keep the important parts in the middle 1100 px; the left and right edges get trimmed on phones. Your otter stands in the bottom middle. Uploading a scene replaces the drawn willows, lily pads, lilies, sky and water shimmer. Layers, bottom to top: the background (still), `water` (your hand-animated WebP/APNG of the water), the lily pads `lily1`–`lily8` (one transparent PNG each, drawn on the full 1600 × 1000 canvas exactly where it floats; the game makes each drift gently at its own pace), then `overlay` (anything else animated, e.g. swaying reeds). All sit under the otter.',
     slots: [
       { id: 'base', name: 'Pond (default)' },
       { id: 'dawn', name: 'Dawn' }, { id: 'day', name: 'Day' }, { id: 'dusk', name: 'Dusk' }, { id: 'night', name: 'Night' },
+      { id: 'water', name: 'Water animation', note: 'hand-animated WebP/APNG of the water, drawn over the background; optional' },
+      ...Array.from({ length: 8 }, (_, k) => ({ id: `lily${k + 1}`, name: `Lily pad ${k + 1}`, note: 'transparent PNG on the full 1600 × 1000 canvas, drawn where it floats; the game makes it drift' })),
       { id: 'overlay', name: 'Animated overlay (all day)', note: 'transparent; optional' },
       { id: 'overlay-night', name: 'Animated overlay at night', note: 'transparent; optional, replaces the overlay at night' },
     ],

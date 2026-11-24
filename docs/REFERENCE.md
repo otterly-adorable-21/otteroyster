@@ -114,7 +114,7 @@ Every command works in servers, in DMs with Shelly, and in any chat if the app i
 
 ## Art
 
-**802 picture spots** plus the brand art. Upload each file to the folder shown, named like the code (plus `.png`). PNG works everywhere; WebP/GIF only on the website. Until a spot has art, a drawn version shows. Live checklist with previews: `/art.html`.
+**811 picture spots** plus the brand art. Upload each file to the folder shown, named like the code (plus `.png`). PNG works everywhere; WebP/GIF only on the website. Until a spot has art, a drawn version shows. Live checklist with previews: `/art.html`.
 
 ### Brand art (`assets/`)
 | File | Size | Where |
@@ -278,10 +278,10 @@ The whole floor strip, 1600 × 416 px.
 
 - **1600 × 1200**: `back` Window and tunnel _(Sits on the wallpaper, behind furniture)_ · `frame` Burrow frame _(The arch around the den, on top of everything. Keep the middle see-through)_
 
-### The pond scene (`assets/art/scene/`) · 7
-The picture behind your otter on the Otter page, 1600 × 1000 px. The pond box is wide on computers and narrower on phones, so keep the important parts in the middle 1100 px; the left and right edges get trimmed on phones. Your otter stands in the bottom middle. Uploading a scene replaces the drawn willows, lily pads, lilies, sky and water shimmer. Optional overlays (transparent, can be animated GIF/WebP) sit on top of the background but under the otter: use them for moving water, bobbing lily pads or swaying reeds.
+### The pond scene (`assets/art/scene/`) · 16
+The picture behind your otter on the Otter page, 1600 × 1000 px. The pond box is wide on computers and narrower on phones, so keep the important parts in the middle 1100 px; the left and right edges get trimmed on phones. Your otter stands in the bottom middle. Uploading a scene replaces the drawn willows, lily pads, lilies, sky and water shimmer. Layers, bottom to top: the background (still), `water` (your hand-animated WebP/APNG of the water), the lily pads `lily1`–`lily8` (one transparent PNG each, drawn on the full 1600 × 1000 canvas exactly where it floats; the game makes each drift gently at its own pace), then `overlay` (anything else animated, e.g. swaying reeds). All sit under the otter.
 
-- **1600 × 1000**: `base` Pond (default) · `dawn` Dawn · `day` Day · `dusk` Dusk · `night` Night · `overlay` Animated overlay (all day) _(transparent; optional)_ · `overlay-night` Animated overlay at night _(transparent; optional, replaces the overlay at night)_
+- **1600 × 1000**: `base` Pond (default) · `dawn` Dawn · `day` Day · `dusk` Dusk · `night` Night · `water` Water animation _(hand-animated WebP/APNG of the water, drawn over the background; optional)_ · `lily1` Lily pad 1 _(transparent PNG on the full 1600 × 1000 canvas, drawn where it floats; the game makes it drift)_ · `lily2` Lily pad 2 _(transparent PNG on the full 1600 × 1000 canvas, drawn where it floats; the game makes it drift)_ · `lily3` Lily pad 3 _(transparent PNG on the full 1600 × 1000 canvas, drawn where it floats; the game makes it drift)_ · `lily4` Lily pad 4 _(transparent PNG on the full 1600 × 1000 canvas, drawn where it floats; the game makes it drift)_ · `lily5` Lily pad 5 _(transparent PNG on the full 1600 × 1000 canvas, drawn where it floats; the game makes it drift)_ · `lily6` Lily pad 6 _(transparent PNG on the full 1600 × 1000 canvas, drawn where it floats; the game makes it drift)_ · `lily7` Lily pad 7 _(transparent PNG on the full 1600 × 1000 canvas, drawn where it floats; the game makes it drift)_ · `lily8` Lily pad 8 _(transparent PNG on the full 1600 × 1000 canvas, drawn where it floats; the game makes it drift)_ · `overlay` Animated overlay (all day) _(transparent; optional)_ · `overlay-night` Animated overlay at night _(transparent; optional, replaces the overlay at night)_
 
 ### Weather overlays (`assets/art/weather/`) · 5
 Transparent, 1600 × 1000 px, drawn over the pond and the otter (rain falls in front). Animated WebP/GIF works great here. Each one replaces the built-in effect for that weather.

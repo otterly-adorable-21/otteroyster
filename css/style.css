@@ -1190,7 +1190,16 @@ svg.swatch-chip { display: block; }
 .acc-buy .try-btn { padding: 6px 8px; }
 .try-note { margin: 8px 4px 0; font-size: .85rem; }
 .swatch-chip.swatch-art { object-fit: cover; }
-.scene-overlay { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+.scene-overlay, .scene-water { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+.scene-lilies { position: absolute; inset: 0; pointer-events: none; }
+.scene-lily { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; animation: lily-drift var(--dur, 8s) ease-in-out var(--delay, 0s) infinite alternate; will-change: transform; }
+@keyframes lily-drift {
+  0% { transform: translate(0, 0); }
+  35% { transform: translate(calc(var(--dx) * .6), var(--dy)); }
+  70% { transform: translate(var(--dx), calc(var(--dy) * -.4)); }
+  100% { transform: translate(calc(var(--dx) * .3), calc(var(--dy) * .5)); }
+}
+@media (prefers-reduced-motion: reduce) { .scene-lily { animation: none; } }
 .scene.has-scene-art .tide-sand { display: none; }
 
 /* ---------- themed collections ---------- */
