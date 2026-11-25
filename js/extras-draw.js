@@ -312,7 +312,10 @@ export function gardenSVG(state, { now = Date.now(), extraAttrs = '', raining = 
       <g fill="#c9a66b">${Array.from({ length: 14 }, (_, k) => `<rect x="${10 + k * 29}" y="78" width="9" height="42" rx="3"/>`).join('')}</g>
       <path d="M330,70 Q330,22 366,22 Q400,22 400,70Z" fill="#4f6b4a"/><path d="M352,70 V50 Q352,40 366,40 Q380,40 380,50 V70Z" fill="#2a1d14"/>
       <circle cx="40" cy="30" r="14" fill="#fff3bf" opacity=".8"/>`}
-    ${raining ? '<g stroke="#d0ebff" stroke-width="1.5" opacity=".6">' + Array.from({ length: 30 }, (_, k) => `<path d="M${(k * 37) % 400},${(k * 53) % 300} l-4,10"/>`).join('') + '</g>' : ''}
+    ${raining ? (artUrl('weather/rainy')
+    // The same hand-drawn rain as over the pond, falling over the garden (doesn't block taps on the plots).
+    ? `<image href="${artUrl('weather/rainy')}" x="0" y="0" width="400" height="300" preserveAspectRatio="xMidYMid slice" pointer-events="none"/>`
+    : '<g stroke="#d0ebff" stroke-width="1.5" opacity=".6" pointer-events="none">' + Array.from({ length: 30 }, (_, k) => `<path d="M${(k * 37) % 400},${(k * 53) % 300} l-4,10"/>`).join('') + '</g>') : ''}
     ${plots}
   </svg>`;
 }
